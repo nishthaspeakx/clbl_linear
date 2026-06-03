@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "English Town Map",
+    "slug": "english-town-map",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#FDF6EC"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.englishtown.map"
+    },
+    "web": {},
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
