@@ -198,7 +198,8 @@ function buildLayout() {
   // The gift-shop car drives along the LEFT verge so it never crosses the plaza.
   const cars = [
     { x: WORLD_W * 0.2, y: lessons[3].py + 14, span: WORLD_W * 0.34, color: '#5BA6C9' },
-    { x: WORLD_W * 0.12, y: lessons[12].py - 6, span: WORLD_W * 0.5, color: '#E0764B' },
+    // Front-left verge, below the bakery — keeps the car off the shopkeeper.
+    { x: WORLD_W * 0.16, y: lessons[12].py + 22, span: WORLD_W * 0.4, color: '#E0764B' },
   ];
   // Two pedestrians pacing a sidewalk near a scene.
   const walkers = [
