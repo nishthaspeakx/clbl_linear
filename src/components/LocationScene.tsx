@@ -36,6 +36,18 @@ import { LayoutScene } from '../utils/mapLayout';
 import CafePremiumScene from '../assets/scenes/CafePremiumScene';
 import GiftShopPremiumScene from '../assets/scenes/GiftShopPremiumScene';
 import ParkPremiumScene from '../assets/scenes/ParkPremiumScene';
+import {
+  LivingRoomPremiumScene, KitchenPremiumScene, BedroomPremiumScene,
+  DiningPremiumScene, BalconyPremiumScene, DoorwayPremiumScene,
+} from '../assets/scenes/interiorScenes';
+import {
+  RestaurantHostPremiumScene, RestaurantEntrancePremiumScene, RestaurantMenuPremiumScene,
+  RestaurantOrderingPremiumScene, RestaurantBillingPremiumScene, RestaurantExitPremiumScene,
+} from '../assets/scenes/restaurantScenes';
+import {
+  TownSquarePremiumScene, HomeExteriorPremiumScene, BusStopPremiumScene,
+  TownGatePremiumScene, NeighbourhoodParkPremiumScene,
+} from '../assets/scenes/exteriorScenes';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
@@ -1547,30 +1559,30 @@ export {
 /* ───────────────────────── dispatcher ───────────────────────── */
 
 const SCENES: Record<string, () => React.ReactElement> = {
-  town_square: TownSquareScene,
+  town_square: TownSquarePremiumScene,
   park: ParkPremiumScene,
   cafe_corner: CafePremiumScene,
   gift_shop: GiftShopPremiumScene,
-  home_routine: HomeRoutineScene,
-  bus_stop: BusStopScene,
-  town_gate: TownGateScene,
-  living_room: LivingRoomScene,
-  kitchen: KitchenScene,
-  bedroom_trip: BedroomTripScene,
-  doorway_sorry: DoorwaySorryScene,
-  dining_table: DiningTableScene,
-  neighbourhood_park: NeighbourhoodParkScene,
-  balcony: BalconyScene,
-  restaurant_host: RestaurantHostScene,
-  restaurant_entrance: RestaurantEntranceScene,
-  restaurant_menu: RestaurantMenuScene,
-  restaurant_ordering: RestaurantOrderingScene,
-  restaurant_billing: RestaurantBillingScene,
-  restaurant_exit: RestaurantExitScene,
+  home_routine: HomeExteriorPremiumScene,
+  bus_stop: BusStopPremiumScene,
+  town_gate: TownGatePremiumScene,
+  living_room: LivingRoomPremiumScene,
+  kitchen: KitchenPremiumScene,
+  bedroom_trip: BedroomPremiumScene,
+  doorway_sorry: DoorwayPremiumScene,
+  dining_table: DiningPremiumScene,
+  neighbourhood_park: NeighbourhoodParkPremiumScene,
+  balcony: BalconyPremiumScene,
+  restaurant_host: RestaurantHostPremiumScene,
+  restaurant_entrance: RestaurantEntrancePremiumScene,
+  restaurant_menu: RestaurantMenuPremiumScene,
+  restaurant_ordering: RestaurantOrderingPremiumScene,
+  restaurant_billing: RestaurantBillingPremiumScene,
+  restaurant_exit: RestaurantExitPremiumScene,
 };
 
 function LocationScene({ scene }: { scene: LayoutScene }) {
-  const Comp = SCENES[scene.sceneType] ?? ParkScene;
+  const Comp = SCENES[scene.sceneType] ?? ParkPremiumScene;
   return (
     <G transform={`translate(${scene.ox} ${scene.oy}) scale(${scene.s})`}>
       <Comp />
