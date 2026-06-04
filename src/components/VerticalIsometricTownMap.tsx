@@ -9,7 +9,7 @@
  * Layers (back → front): ground bands → road → scenes → coins → topic signs →
  * lesson pins → character.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -58,8 +58,7 @@ interface Props {
 const SCENES = [...LAYOUT.scenes].sort((a, b) => a.oy - b.oy);
 
 function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, currentId, completedIds }: Props) {
-  const [revealId, setRevealId] = useState<number | null>(null);
-  const press = (id: number) => { setRevealId(id); onPinPress(id); };
+  const press = onPinPress;
   const savedY = useSharedValue(translateY.value);
   const pan = Gesture.Pan()
     .onStart(() => {
@@ -201,13 +200,13 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
             <LessonPin key={l.id} id={l.id} cx={l.px} cy={l.py} status={statusOf(l.id)} onPress={press} />
           ))}
 
-          {/* Level/location labels (only current ± a few, to avoid clutter) */}
-          {visibleLabels(currentId, completedIds, revealId).map((L) => {
+          {/* Subtopic + location labels for every level (status-coloured) */}
+          {visibleLabels(currentId, completedIds).map((L) => {
             const l = LAYOUT.lessons[L.id - 1];
             const sub = SUBTOPICS[L.id - 1];
-            const cardH = L.variant === 'compact' ? 40 : 62;
+            const cardH = 48;
             const gap = 22;
-            const vOff = L.status === 'current' ? -34 : -6;
+            const vOff = L.status === 'current' ? -30 : -6;
             const innerX = L.side === 'right' ? l.px + gap : l.px - gap;
             const innerY = l.py + vOff;
             const top = innerY - cardH / 2;
@@ -225,7 +224,7 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
               <React.Fragment key={`lbl${L.id}`}>
                 <View pointerEvents="none" style={{ position: 'absolute', left: cmx - len / 2, top: cmy - 1, width: len, height: 2, backgroundColor: conn, opacity: 0.5, borderRadius: 1, transform: [{ rotate: `${ang}deg` }] }} />
                 <View style={wrap}>
-                  <LevelLabel id={L.id} title={sub.title} location={sub.location} status={L.status} compact={L.variant === 'compact'} onPress={() => press(L.id)} />
+                  <LevelLabel title={sub.title} location={sub.location} status={L.status} onPress={() => press(L.id)} />
                 </View>
               </React.Fragment>
             );

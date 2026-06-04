@@ -1,7 +1,7 @@
 /**
- * LevelLabel — a compact card near a pin telling the learner the level number,
- * the subtopic, and the location. Styled by status: orange (current),
- * green/✓ (completed), grey/🔒 (locked). `compact` shrinks completed history.
+ * LevelLabel — a compact card near a pin showing the subtopic name and a
+ * map-pin location chip. Styled by status: orange (current), green (completed),
+ * grey (locked). No level number — just what the learner will do + where.
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -9,41 +9,36 @@ import LocationPinLabel from './LocationPinLabel';
 import { LabelStatus } from '../../utils/labelPlacement';
 
 interface Props {
-  id: number;
   title: string;
   location: string;
   status: LabelStatus;
-  compact?: boolean;
   onPress: () => void;
 }
 
-const C: Record<LabelStatus, { bar: string; num: string; title: string; loc: string; border: string; bg: string; icon: string }> = {
-  current: { bar: '#FF7A00', num: '#E0741B', title: '#2A2E33', loc: '#8A6A48', border: '#FF7A00', bg: '#FFFFFF', icon: '' },
-  completed: { bar: '#33A867', num: '#2E9E63', title: '#5A6066', loc: '#9AA0A6', border: '#CFEBDB', bg: '#FFFFFF', icon: '✓' },
-  locked: { bar: '#C7CDD3', num: '#9AA0A6', title: '#A9AFB5', loc: '#BcC2C8', border: '#E7E8EB', bg: '#F7F8FA', icon: '🔒' },
+const C: Record<LabelStatus, {
+  bar: string; border: string; bg: string; title: string; pin: string; locText: string; locBg: string;
+}> = {
+  current: { bar: '#FF7A00', border: '#FF7A00', bg: '#FFFFFF', title: '#2A2E33', pin: '#FF7A00', locText: '#B06A22', locBg: '#FFF3E6' },
+  completed: { bar: '#33A867', border: '#CFEBDB', bg: '#FFFFFF', title: '#2A3430', pin: '#33A867', locText: '#2E9E63', locBg: '#EAF7EE' },
+  locked: { bar: '#C7CDD3', border: '#E7E8EB', bg: '#F8F9FB', title: '#9AA0A6', pin: '#AEB4BA', locText: '#A9AFB5', locBg: '#EEF0F2' },
 };
 
-export default function LevelLabel({ id, title, location, status, compact, onPress }: Props) {
+export default function LevelLabel({ title, location, status, onPress }: Props) {
   const c = C[status];
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.card,
-        { borderColor: c.border, backgroundColor: c.bg, maxWidth: compact ? 150 : 168 },
+        { borderColor: c.border, backgroundColor: c.bg },
         status === 'current' && styles.cardCurrent,
+        status === 'locked' && { opacity: 0.94 },
       ]}
     >
       <View style={[styles.bar, { backgroundColor: c.bar }]} />
       <View style={styles.body}>
-        <View style={styles.head}>
-          {c.icon ? <Text style={[styles.icon, { color: c.num }]}>{c.icon}</Text> : null}
-          <Text style={[styles.level, { color: c.num }, compact && { fontSize: 11 }]}>Level {id}</Text>
-        </View>
-        <Text style={[styles.title, { color: c.title }, compact && { fontSize: 11.5 }]} numberOfLines={compact ? 1 : 2}>
-          {title}
-        </Text>
-        {!compact && <LocationPinLabel location={location} color={c.loc} />}
+        <Text style={[styles.title, { color: c.title }]} numberOfLines={2}>{title}</Text>
+        <LocationPinLabel location={location} pin={c.pin} text={c.locText} bg={c.locBg} />
       </View>
     </Pressable>
   );
@@ -55,22 +50,17 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     borderWidth: 1.5,
     paddingRight: 10,
+    maxWidth: 172,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOpacity: 0.14,
+    shadowOpacity: 0.13,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
     elevation: 5,
   },
-  cardCurrent: {
-    shadowColor: '#FF7A00',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
+  cardCurrent: { shadowColor: '#FF7A00', shadowOpacity: 0.32, shadowRadius: 11 },
   bar: { width: 4 },
-  body: { paddingVertical: 7, paddingLeft: 9, flexShrink: 1 },
-  head: { flexDirection: 'row', alignItems: 'center' },
-  icon: { fontSize: 11, fontWeight: '900', marginRight: 4 },
-  level: { fontSize: 12, fontWeight: '900', letterSpacing: 0.2 },
-  title: { fontSize: 13, fontWeight: '800', marginTop: 1 },
+  body: { paddingVertical: 8, paddingLeft: 10, flexShrink: 1 },
+  title: { fontSize: 13.5, fontWeight: '800' },
 });
