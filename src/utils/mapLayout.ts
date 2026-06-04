@@ -172,9 +172,15 @@ function buildLayout() {
     // lamp posts hugging BOTH sides of the road (denser, like a real street).
     decor.push({ kind: 'lamp', x: lessons[i].px - 46, y: py + 16, s: 0.95 });
     decor.push({ kind: 'lamp', x: lessons[i].px + 46, y: py + 16, s: 0.95 });
-    // parked scooter / cycle by the kerb (extra street life).
-    if (i % 3 === 0) decor.push({ kind: 'scooter', x: lessons[i].px - 52, y: py + 38, s: 0.7, color: CAR_COLORS[(i + 1) % CAR_COLORS.length] });
-    if (i % 3 === 2) decor.push({ kind: 'cycle', x: lessons[i].px + 52, y: py + 38, s: 0.7, color: CAR_COLORS[i % CAR_COLORS.length] });
+    // parked scooter / cycle by the kerb (extra street life) — only beside
+    // OUTDOOR scenes; never under an interior cutaway (looks odd in a kitchen).
+    const INTERIOR = new Set([
+      'living_room', 'kitchen', 'bedroom_trip', 'doorway_sorry', 'dining_table', 'balcony',
+      'restaurant_host', 'restaurant_menu', 'restaurant_ordering', 'restaurant_billing',
+    ]);
+    const outdoor = !INTERIOR.has(sc.sceneType);
+    if (outdoor && i % 3 === 0) decor.push({ kind: 'scooter', x: lessons[i].px - 52, y: py + 38, s: 0.7, color: CAR_COLORS[(i + 1) % CAR_COLORS.length] });
+    if (outdoor && i % 3 === 2) decor.push({ kind: 'cycle', x: lessons[i].px + 52, y: py + 38, s: 0.7, color: CAR_COLORS[i % CAR_COLORS.length] });
   });
 
   // ── Animated actors (rendered by AmbientMotion) ──────────────────────────
