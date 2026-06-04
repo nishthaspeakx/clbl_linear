@@ -31,6 +31,29 @@ import { LayoutScene } from '../utils/mapLayout';
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedG = Animated.createAnimatedComponent(G);
+
+/** Gently rocks its children back and forth around a pivot (hanging signs, swings). */
+function Sway({
+  px, py, amp = 6, dur = 1600, children,
+}: { px: number; py: number; amp?: number; dur?: number; children: React.ReactNode }) {
+  const t = useSharedValue(0);
+  React.useEffect(() => {
+    t.value = withRepeat(withTiming(1, { duration: dur, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [t, dur]);
+  const props = useAnimatedProps(() => ({ transform: `rotate(${(t.value - 0.5) * 2 * amp} ${px} ${py})` }));
+  return <AnimatedG animatedProps={props}>{children}</AnimatedG>;
+}
+
+/** Tiny vertical bob for awning scallops / flags (flutter). */
+function Bob({ amp = 1.6, dur = 1300, children }: { amp?: number; dur?: number; children: React.ReactNode }) {
+  const t = useSharedValue(0);
+  React.useEffect(() => {
+    t.value = withRepeat(withTiming(1, { duration: dur, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [t, dur]);
+  const props = useAnimatedProps(() => ({ transform: `translate(0 ${(t.value - 0.5) * amp})` }));
+  return <AnimatedG animatedProps={props}>{children}</AnimatedG>;
+}
 
 const GX = 110;
 const GY = 98;
@@ -196,10 +219,10 @@ export function WalkPerson({ x, y, s = 1, shirt = '#5BA6C9' }: { x: number; y: n
 /* ───────────────────────── buildings & props ───────────────────────── */
 
 function Build({
-  x, base, w, h, wall, roof, label, awning, peak, glow, chimney, steps, hangSign,
+  x, base, w, h, wall, roof, label, awning, peak, glow, chimney, steps, hangSign, awningFlutter,
 }: {
   x: number; base: number; w: number; h: number; wall: string; roof: string;
-  label?: string; awning?: boolean; peak?: boolean; glow?: boolean; chimney?: boolean; steps?: boolean; hangSign?: string;
+  label?: string; awning?: boolean; peak?: boolean; glow?: boolean; chimney?: boolean; steps?: boolean; hangSign?: string; awningFlutter?: boolean;
 }) {
   const night = React.useContext(NightContext);
   const wallC = night ? shade(wall, 70) : wall;
@@ -244,7 +267,7 @@ function Build({
       )}
       <Rect x={x + w / 2 - w * 0.11} y={base - h * 0.34} width={w * 0.22} height={h * 0.34} rx={2} fill={night ? '#6E5536' : '#9A744B'} />
       <Circle cx={x + w / 2 + w * 0.06} cy={base - h * 0.17} r={1.3} fill="#E8C77A" />
-      {awning && <Awning x={x} y={topY + h * 0.46} w={w} color={roofC} />}
+      {awning && <Awning x={x} y={topY + h * 0.46} w={w} color={roofC} flutter={awningFlutter} />}
       {peak ? (
         <>
           <Polygon points={`${x - 5},${topY + 2} ${x + w / 2},${topY - w * 0.42} ${x + w + 5},${topY + 2}`} fill={roofC} />
@@ -263,26 +286,33 @@ function Build({
       {hangSign ? (
         <G>
           <Line x1={x + w + dx - 2} y1={topY - dy + 6} x2={x + w + dx - 2} y2={topY - dy + 14} stroke="#7E5736" strokeWidth={1.4} />
-          <Rect x={x + w + dx - 14} y={topY - dy + 14} width={24} height={11} rx={2} fill="#9B6B4B" stroke="#FFF" strokeWidth={1} />
-          <SvgText x={x + w + dx - 2} y={topY - dy + 22} fontSize={6.5} fontWeight="bold" fill="#FFF" textAnchor="middle">{hangSign}</SvgText>
+          <Sway px={x + w + dx - 2} py={topY - dy + 6} amp={9} dur={1700}>
+            <Rect x={x + w + dx - 14} y={topY - dy + 14} width={24} height={11} rx={2} fill="#9B6B4B" stroke="#FFF" strokeWidth={1} />
+            <SvgText x={x + w + dx - 2} y={topY - dy + 22} fontSize={6.5} fontWeight="bold" fill="#FFF" textAnchor="middle">{hangSign}</SvgText>
+          </Sway>
         </G>
       ) : null}
     </G>
   );
 }
 
-function Awning({ x, y, w, color }: { x: number; y: number; w: number; color: string }) {
+function Awning({ x, y, w, color, flutter }: { x: number; y: number; w: number; color: string; flutter?: boolean }) {
   const n = 5;
   const sw = w / n;
+  const scallops = (
+    <>
+      {Array.from({ length: n }).map((_, i) => (
+        <Path key={`s${i}`} d={`M ${x + i * sw} ${y + 15} q ${sw / 2} 5 ${sw} 0`} fill={i % 2 === 0 ? color : '#FFF7EE'} />
+      ))}
+    </>
+  );
   return (
     <G>
       <Polygon points={`${x},${y + 8} ${x + w},${y + 8} ${x + w - 3},${y + 15} ${x + 3},${y + 15}`} fill={shade(color)} />
       {Array.from({ length: n }).map((_, i) => (
         <Rect key={i} x={x + i * sw} y={y} width={sw} height={8} fill={i % 2 === 0 ? color : '#FFF7EE'} />
       ))}
-      {Array.from({ length: n }).map((_, i) => (
-        <Path key={`s${i}`} d={`M ${x + i * sw} ${y + 15} q ${sw / 2} 5 ${sw} 0`} fill={i % 2 === 0 ? color : '#FFF7EE'} />
-      ))}
+      {flutter ? <Bob amp={1.5} dur={1300}>{scallops}</Bob> : scallops}
     </G>
   );
 }
@@ -882,7 +912,7 @@ function CafeCornerScene() {
   return (
     <G>
       <Platform top={T_PAVE} side="#CCC0A6" paved />
-      <Build x={GX + 14} base={GY - 2} w={70} h={60} wall="#F3DDB6" roof="#C0533B" label="CAFÉ" awning glow hangSign="OPEN" />
+      <Build x={GX + 14} base={GY - 2} w={70} h={60} wall="#F3DDB6" roof="#C0533B" label="CAFÉ" awning glow hangSign="OPEN" awningFlutter />
       <Umbrella x={GX - 34} base={GY + 4} color="#C0533B" />
       <RoundTable x={GX - 34} base={GY + 10} />
       <Chair x={GX - 50} base={GY + 13} />
@@ -905,7 +935,7 @@ function GiftShopScene() {
   return (
     <G>
       <Platform top={T_PAVE} side="#CCC0A6" paved />
-      <Build x={GX - 6} base={GY - 2} w={72} h={60} wall="#FAD9E2" roof="#E0699A" label="GIFTS" awning glow hangSign="GIFTS" />
+      <Build x={GX - 6} base={GY - 2} w={72} h={60} wall="#FAD9E2" roof="#E0699A" label="GIFTS" awning glow hangSign="GIFTS" awningFlutter />
       {/* balloons */}
       <Line x1={GX + 58} y1={GY - 40} x2={GX + 58} y2={GY - 18} stroke="#C99A6B" strokeWidth={1} />
       <Circle cx={GX + 54} cy={GY - 44} r={5} fill="#E0699A" />
@@ -1218,9 +1248,11 @@ function NeighbourhoodParkScene() {
       <Rect x={GX - 72} y={GY - 32} width={3} height={32} fill="#9A764C" />
       <Rect x={GX - 44} y={GY - 32} width={3} height={32} fill="#9A764C" />
       <Rect x={GX - 73} y={GY - 34} width={32} height={3} rx={1.5} fill="#A9764C" />
-      <Line x1={GX - 60} y1={GY - 31} x2={GX - 60} y2={GY - 12} stroke="#7E6B5A" strokeWidth={1.2} />
-      <Line x1={GX - 53} y1={GY - 31} x2={GX - 53} y2={GY - 12} stroke="#7E6B5A" strokeWidth={1.2} />
-      <Rect x={GX - 62} y={GY - 12} width={8} height={2.6} fill="#5C6BC0" />
+      <Sway px={GX - 56.5} py={GY - 33} amp={11} dur={1500}>
+        <Line x1={GX - 60} y1={GY - 31} x2={GX - 60} y2={GY - 12} stroke="#7E6B5A" strokeWidth={1.2} />
+        <Line x1={GX - 53} y1={GY - 31} x2={GX - 53} y2={GY - 12} stroke="#7E6B5A" strokeWidth={1.2} />
+        <Rect x={GX - 62} y={GY - 12} width={8} height={2.6} fill="#5C6BC0" />
+      </Sway>
       <Tree x={GX + 70} base={GY} s={1.15} />
       <Bush x={GX - 84} y={GY + 12} s={0.9} />
       {/* picnic */}
