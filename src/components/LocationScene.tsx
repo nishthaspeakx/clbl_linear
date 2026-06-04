@@ -19,7 +19,18 @@ import {
   Rect,
   Text as SvgText,
 } from 'react-native-svg';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { LayoutScene } from '../utils/mapLayout';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const GX = 110;
 const GY = 98;
@@ -609,17 +620,56 @@ export function Monument({ x, y, s = 1 }: { x: number; y: number; s?: number }) 
   );
 }
 
-/** A standalone fountain for the opposite side (town centre). */
+/** A standalone fountain with FLOWING WATER (animated jet, droplets, ripples). */
 export function Fountain({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  const jet = useSharedValue(0); // 0..1..0 — jet height pulse
+  const drop = useSharedValue(0); // 0..1 — droplets falling (loops)
+  const ripple = useSharedValue(0); // 0..1 — basin ripple expanding (loops)
+
+  React.useEffect(() => {
+    jet.value = withRepeat(withTiming(1, { duration: 850, easing: Easing.inOut(Easing.ease) }), -1, true);
+    drop.value = withRepeat(withTiming(1, { duration: 1000, easing: Easing.linear }), -1, false);
+    ripple.value = withRepeat(withTiming(1, { duration: 1500, easing: Easing.out(Easing.ease) }), -1, false);
+  }, [jet, drop, ripple]);
+
+  // Central water column grows/shrinks from the spout (top at y=-24).
+  const jetProps = useAnimatedProps(() => {
+    const h = 7 + jet.value * 12;
+    return { y: -23 - (h - 7), height: h };
+  });
+  // Two droplets arc out left / right and fall into the basin, looping.
+  const leftDrop = useAnimatedProps(() => {
+    const p = drop.value;
+    return { cx: -p * 13, cy: -24 + p * p * 24, opacity: 0.85 - p * 0.3 };
+  });
+  const rightDrop = useAnimatedProps(() => {
+    const p = (drop.value + 0.5) % 1;
+    return { cx: p * 13, cy: -24 + p * p * 24, opacity: 0.85 - p * 0.3 };
+  });
+  // Expanding ripple ring on the water surface.
+  const rippleProps = useAnimatedProps(() => ({
+    rx: 5 + ripple.value * 17,
+    ry: 2.5 + ripple.value * 7.5,
+    opacity: (1 - ripple.value) * 0.55,
+  }));
+
   return (
     <G transform={`translate(${x} ${y}) scale(${s})`}>
       <Ellipse cx={0} cy={5} rx={28} ry={11} fill="#000" opacity={0.1} />
+      {/* basin */}
       <Ellipse cx={0} cy={2} rx={27} ry={12} fill="#AFC8D2" />
       <Ellipse cx={0} cy={0} rx={22} ry={10} fill="#BFE6F5" />
       <Ellipse cx={0} cy={-1} rx={12} ry={5.5} fill="#9FD0EC" />
+      {/* animated ripple on the surface */}
+      <AnimatedEllipse cx={0} cy={-1} fill="none" stroke="#FFFFFF" strokeWidth={1} animatedProps={rippleProps} />
+      {/* pedestal + spout */}
       <Rect x={-2.6} y={-24} width={5.2} height={18} rx={2} fill="#CBD8DE" />
-      <Circle cx={0} cy={-26} r={5.4} fill="#CFEFFB" />
-      <Path d={`M -7 -22 Q 0 -32 7 -22`} stroke="#CFEFFB" strokeWidth={2} fill="none" />
+      {/* animated water column */}
+      <AnimatedRect x={-1.6} width={3.2} rx={1.6} fill="#CFEFFB" opacity={0.9} animatedProps={jetProps} />
+      <Circle cx={0} cy={-26} r={3} fill="#E6F7FF" opacity={0.9} />
+      {/* falling droplets */}
+      <AnimatedCircle r={1.6} fill="#CFEFFB" animatedProps={leftDrop} />
+      <AnimatedCircle r={1.6} fill="#CFEFFB" animatedProps={rightDrop} />
     </G>
   );
 }
@@ -777,13 +827,8 @@ function TownSquareScene() {
       <Platform top={T_STONE} side="#CBBE9E" paved />
       <Hedge x={GX - 96} y={GY + 6} w={30} />
       <Hedge x={GX + 66} y={GY + 6} w={30} />
-      {/* fountain */}
-      <Ellipse cx={GX} cy={GY - 2} rx={26} ry={12} fill="#AFC8D2" />
-      <Ellipse cx={GX} cy={GY - 4} rx={22} ry={10} fill="#BFE6F5" />
-      <Ellipse cx={GX} cy={GY - 5} rx={12} ry={5.5} fill="#9FD0EC" />
-      <Rect x={GX - 2.4} y={GY - 24} width={4.8} height={16} rx={2} fill="#CBD8DE" />
-      <Circle cx={GX} cy={GY - 26} r={5} fill="#CFEFFB" />
-      <Path d={`M ${GX - 6} ${GY - 22} Q ${GX} ${GY - 30} ${GX + 6} ${GY - 22}`} stroke="#CFEFFB" strokeWidth={2} fill="none" />
+      {/* animated central fountain */}
+      <Fountain x={GX} y={GY - 2} s={1.05} />
       <Lamp x={GX - 74} base={GY - 2} />
       <Lamp x={GX + 74} base={GY - 2} />
       <Bench x={GX - 54} base={GY + 16} />
