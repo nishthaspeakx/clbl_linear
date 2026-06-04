@@ -11,12 +11,16 @@
 import React from 'react';
 import {
   Circle,
+  Defs,
   Ellipse,
   G,
   Line,
+  LinearGradient,
   Path,
   Polygon,
+  RadialGradient,
   Rect,
+  Stop,
   Text as SvgText,
 } from 'react-native-svg';
 import Animated, {
@@ -27,6 +31,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { LayoutScene } from '../utils/mapLayout';
+// Premium asset-library scenes (composable, gradient-lit). These override the
+// older inline vignettes for the locations that have been upgraded.
+import CafePremiumScene from '../assets/scenes/CafePremiumScene';
+import GiftShopPremiumScene from '../assets/scenes/GiftShopPremiumScene';
+import ParkPremiumScene from '../assets/scenes/ParkPremiumScene';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
@@ -80,6 +89,21 @@ function tint(hex: string, amt = 22): string {
   return `rgb(${r},${g},${b})`;
 }
 
+/** Collision-free gradient id for a single primitive instance. */
+function useGid(): string {
+  return 'g' + React.useId().replace(/[:]/g, '');
+}
+
+/** A reusable vertical light→dark gradient definition (premium soft lighting). */
+function VGrad({ id, top, bottom }: { id: string; top: string; bottom: string }) {
+  return (
+    <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <Stop offset="0" stopColor={top} />
+      <Stop offset="1" stopColor={bottom} />
+    </LinearGradient>
+  );
+}
+
 /* ───────────────────────── reward token ───────────────────────── */
 
 export function Coin({ x, y, star = false }: { x: number; y: number; star?: boolean }) {
@@ -110,6 +134,7 @@ function starPath(cx: number, cy: number, r: number): string {
 function Platform({
   top, side, w = 208, h = 94, flowers = false, paved = false,
 }: { top: string; side: string; w?: number; h?: number; flowers?: boolean; paved?: boolean }) {
+  const gid = useGid();
   const hw = w / 2;
   const hh = h / 2;
   const dep = 12;
@@ -121,16 +146,25 @@ function Platform({
     : [];
   return (
     <G>
-      <Ellipse cx={GX} cy={GY + hh + 10} rx={hw * 0.98} ry={hh * 0.46} fill="#000" opacity={0.1} />
+      <Defs>
+        <VGrad id={`${gid}t`} top={tint(top, 16)} bottom={shade(top, 12)} />
+        <RadialGradient id={`${gid}p`} cx="50%" cy="42%" r="62%">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.16} />
+          <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      {/* soft, layered contact shadow */}
+      <Ellipse cx={GX} cy={GY + hh + 12} rx={hw * 1.02} ry={hh * 0.5} fill="#000" opacity={0.07} />
+      <Ellipse cx={GX} cy={GY + hh + 9} rx={hw * 0.86} ry={hh * 0.4} fill="#000" opacity={0.08} />
       {/* depth sides */}
       <Polygon points={`${GX - hw},${GY} ${GX},${GY + hh} ${GX},${GY + hh + dep} ${GX - hw},${GY + dep}`} fill={shade(side, 18)} />
       <Polygon points={`${GX + hw},${GY} ${GX},${GY + hh} ${GX},${GY + hh + dep} ${GX + hw},${GY + dep}`} fill={shade(side, 40)} />
-      {/* top */}
-      <Polygon points={`${GX},${GY - hh} ${GX + hw},${GY} ${GX},${GY + hh} ${GX - hw},${GY}`} fill={top} />
+      {/* gradient top */}
+      <Polygon points={`${GX},${GY - hh} ${GX + hw},${GY} ${GX},${GY + hh} ${GX - hw},${GY}`} fill={`url(#${gid}t)`} />
       {/* rim highlight */}
-      <Polygon points={`${GX},${GY - hh} ${GX + hw},${GY} ${GX},${GY + hh} ${GX - hw},${GY}`} fill="none" stroke={tint(top, 18)} strokeWidth={2} opacity={0.7} />
-      {/* warm light pool */}
-      <Ellipse cx={GX} cy={GY - 2} rx={hw * 0.5} ry={hh * 0.4} fill="#FFFFFF" opacity={0.08} />
+      <Polygon points={`${GX},${GY - hh} ${GX + hw},${GY} ${GX},${GY + hh} ${GX - hw},${GY}`} fill="none" stroke={tint(top, 20)} strokeWidth={2} opacity={0.7} />
+      {/* warm ambient light pool */}
+      <Polygon points={`${GX},${GY - hh} ${GX + hw},${GY} ${GX},${GY + hh} ${GX - hw},${GY}`} fill={`url(#${gid}p)`} />
       {paved &&
         [-1, 0, 1].map((i) => (
           <Line key={i} x1={GX + i * 34 - hh} y1={GY + i * 0 - hh / 2} x2={GX + i * 34 + hh} y2={GY + hh / 2} stroke={shade(top, 12)} strokeWidth={1} opacity={0.4} />
@@ -152,30 +186,55 @@ function Platform({
 /* ───────────────────────── people ───────────────────────── */
 
 function Person({
-  x, base, skin = '#C68A5E', shirt = '#E0764B', pants = '#3C4A66', hair = '#2A2018', s = 1, wave = false, dress = false,
-}: { x: number; base: number; skin?: string; shirt?: string; pants?: string; hair?: string; s?: number; wave?: boolean; dress?: boolean }) {
+  x, base, skin = '#C68A5E', shirt = '#E0764B', pants = '#3C4A66', hair = '#2A2018', s = 1, wave = false, dress = false, shoes = '#3A3A3A',
+}: { x: number; base: number; skin?: string; shirt?: string; pants?: string; hair?: string; s?: number; wave?: boolean; dress?: boolean; shoes?: string }) {
+  const hi = tint(shirt, 26);
   return (
     <G>
-      <Ellipse cx={x} cy={base + 2} rx={7 * s} ry={2.4 * s} fill="#000" opacity={0.13} />
+      {/* layered soft shadow */}
+      <Ellipse cx={x} cy={base + 2.6 * s} rx={7.6 * s} ry={2.6 * s} fill="#000" opacity={0.1} />
+      <Ellipse cx={x} cy={base + 2 * s} rx={5.2 * s} ry={1.8 * s} fill="#000" opacity={0.1} />
       {dress ? (
-        <Polygon points={`${x - 6 * s},${base} ${x + 6 * s},${base} ${x + 4 * s},${base - 14 * s} ${x - 4 * s},${base - 14 * s}`} fill={shirt} />
+        <>
+          <Polygon points={`${x - 6.4 * s},${base} ${x + 6.4 * s},${base} ${x + 4 * s},${base - 14 * s} ${x - 4 * s},${base - 14 * s}`} fill={shirt} />
+          <Polygon points={`${x - 6.4 * s},${base} ${x - 1 * s},${base} ${x - 2.4 * s},${base - 14 * s} ${x - 4 * s},${base - 14 * s}`} fill={hi} opacity={0.45} />
+        </>
       ) : (
         <>
-          <Rect x={x - 4 * s} y={base - 9 * s} width={3.3 * s} height={9 * s} rx={1.4 * s} fill={pants} />
-          <Rect x={x + 0.7 * s} y={base - 9 * s} width={3.3 * s} height={9 * s} rx={1.4 * s} fill={pants} />
+          <Rect x={x - 4 * s} y={base - 9 * s} width={3.3 * s} height={8.4 * s} rx={1.4 * s} fill={pants} />
+          <Rect x={x + 0.7 * s} y={base - 9 * s} width={3.3 * s} height={8.4 * s} rx={1.4 * s} fill={shade(pants, 12)} />
+          {/* shoes */}
+          <Rect x={x - 4.6 * s} y={base - 1.4 * s} width={4.4 * s} height={2.6 * s} rx={1.3 * s} fill={shoes} />
+          <Rect x={x + 0.3 * s} y={base - 1.4 * s} width={4.4 * s} height={2.6 * s} rx={1.3 * s} fill={shade(shoes, 14)} />
         </>
       )}
+      {/* torso + sunny-side highlight */}
       <Rect x={x - 5.2 * s} y={base - 19 * s} width={10.4 * s} height={dress ? 6 * s : 11 * s} rx={4 * s} fill={shirt} />
-      <Rect x={x - 7.4 * s} y={base - 18 * s} width={3 * s} height={8 * s} rx={1.5 * s} fill={shade(shirt, 12)} />
+      <Rect x={x - 5.2 * s} y={base - 19 * s} width={4.2 * s} height={dress ? 6 * s : 11 * s} rx={3.4 * s} fill={hi} opacity={0.5} />
+      {/* collar */}
+      <Path d={`M ${x - 2.4 * s} ${base - 19 * s} L ${x} ${base - 16.4 * s} L ${x + 2.4 * s} ${base - 19 * s} Z`} fill={shade(shirt, 18)} />
+      {/* left arm */}
+      <Rect x={x - 7.4 * s} y={base - 18 * s} width={3 * s} height={8 * s} rx={1.5 * s} fill={shade(shirt, 14)} />
       {wave ? (
-        <Rect x={x + 4.6 * s} y={base - 25 * s} width={3 * s} height={9 * s} rx={1.5 * s} fill={shade(shirt, 12)} transform={`rotate(28 ${x + 6 * s} ${base - 20 * s})`} />
+        <Rect x={x + 4.6 * s} y={base - 25 * s} width={3 * s} height={9 * s} rx={1.5 * s} fill={shade(shirt, 10)} transform={`rotate(28 ${x + 6 * s} ${base - 20 * s})`} />
       ) : (
-        <Rect x={x + 4.4 * s} y={base - 18 * s} width={3 * s} height={8 * s} rx={1.5 * s} fill={shade(shirt, 12)} />
+        <Rect x={x + 4.4 * s} y={base - 18 * s} width={3 * s} height={8 * s} rx={1.5 * s} fill={shade(shirt, 10)} />
       )}
-      <Circle cx={x} cy={base - 23 * s} r={4.6 * s} fill={skin} />
-      <Circle cx={x - 1.4 * s} cy={base - 23 * s} r={0.7 * s} fill="#2A2018" />
-      <Circle cx={x + 1.4 * s} cy={base - 23 * s} r={0.7 * s} fill="#2A2018" />
-      <Path d={`M ${x - 4.7 * s} ${base - 23.5 * s} Q ${x} ${base - 32 * s} ${x + 4.7 * s} ${base - 23.5 * s} Q ${x} ${base - 26 * s} ${x - 4.7 * s} ${base - 23.5 * s} Z`} fill={hair} />
+      {/* hands */}
+      <Circle cx={x - 5.9 * s} cy={base - 10.5 * s} r={1.5 * s} fill={skin} />
+      {!wave && <Circle cx={x + 5.9 * s} cy={base - 10.5 * s} r={1.5 * s} fill={skin} />}
+      {/* neck */}
+      <Rect x={x - 1.4 * s} y={base - 20.5 * s} width={2.8 * s} height={3 * s} fill={shade(skin, 12)} />
+      {/* head */}
+      <Circle cx={x} cy={base - 23 * s} r={4.7 * s} fill={skin} />
+      <Circle cx={x - 1.6 * s} cy={base - 24 * s} r={2.2 * s} fill={tint(skin, 16)} opacity={0.5} />
+      <Circle cx={x + 4.5 * s} cy={base - 22.6 * s} r={1.2 * s} fill={shade(skin, 8)} />
+      <Circle cx={x - 1.5 * s} cy={base - 23 * s} r={0.7 * s} fill="#2A2018" />
+      <Circle cx={x + 1.5 * s} cy={base - 23 * s} r={0.7 * s} fill="#2A2018" />
+      <Path d={`M ${x - 1.8 * s} ${base - 20.4 * s} q ${1.8 * s} ${1.4 * s} ${3.6 * s} 0`} stroke={shade(skin, 30)} strokeWidth={0.6 * s} fill="none" strokeLinecap="round" />
+      {/* hair */}
+      <Path d={`M ${x - 4.9 * s} ${base - 23.5 * s} Q ${x} ${base - 32.5 * s} ${x + 4.9 * s} ${base - 23.5 * s} Q ${x} ${base - 26.5 * s} ${x - 4.9 * s} ${base - 23.5 * s} Z`} fill={hair} />
+      <Path d={`M ${x - 4.4 * s} ${base - 24.5 * s} Q ${x - 2 * s} ${base - 29 * s} ${x + 1 * s} ${base - 27.5 * s}`} stroke={tint(hair, 26)} strokeWidth={0.7 * s} fill="none" opacity={0.6} strokeLinecap="round" />
     </G>
   );
 }
@@ -225,8 +284,11 @@ function Build({
   label?: string; awning?: boolean; peak?: boolean; glow?: boolean; chimney?: boolean; steps?: boolean; hangSign?: string; awningFlutter?: boolean;
 }) {
   const night = React.useContext(NightContext);
+  const gid = useGid();
   const wallC = night ? shade(wall, 70) : wall;
   const roofC = night ? shade(roof, 60) : roof;
+  const wallGrad = `url(#${gid}w)`;
+  const roofGrad = `url(#${gid}r)`;
   const d = w * 0.34;
   const dx = d * 0.7;
   const dy = d * 0.4;
@@ -252,10 +314,16 @@ function Build({
   }
   return (
     <G>
-      <Ellipse cx={x + w / 2 + dx / 2} cy={base + 3} rx={w * 0.68} ry={6} fill="#000" opacity={0.13} />
+      <Defs>
+        <VGrad id={`${gid}w`} top={tint(wallC, 18)} bottom={shade(wallC, 16)} />
+        <VGrad id={`${gid}r`} top={tint(roofC, 20)} bottom={shade(roofC, 12)} />
+      </Defs>
+      {/* soft grounded contact shadow */}
+      <Ellipse cx={x + w / 2 + dx / 2} cy={base + 4} rx={w * 0.74} ry={7} fill="#000" opacity={0.1} />
+      <Ellipse cx={x + w / 2 + dx / 2} cy={base + 3} rx={w * 0.6} ry={4.5} fill="#000" opacity={0.08} />
       {chimney && <Rect x={x + w * 0.7} y={topY - w * 0.34} width={w * 0.12} height={w * 0.22} fill={shade(roofC, 30)} />}
-      <Polygon points={`${x + w},${base} ${x + w + dx},${base - dy} ${x + w + dx},${topY - dy} ${x + w},${topY}`} fill={shade(wallC)} />
-      <Rect x={x} y={topY} width={w} height={h} fill={wallC} stroke="#00000010" strokeWidth={1} />
+      <Polygon points={`${x + w},${base} ${x + w + dx},${base - dy} ${x + w + dx},${topY - dy} ${x + w},${topY}`} fill={shade(wallC, 34)} />
+      <Rect x={x} y={topY} width={w} height={h} fill={wallGrad} stroke="#00000010" strokeWidth={1} />
       {/* base trim */}
       <Rect x={x} y={base - 6} width={w} height={6} fill={shade(wallC, 14)} />
       {wins}
@@ -270,14 +338,14 @@ function Build({
       {awning && <Awning x={x} y={topY + h * 0.46} w={w} color={roofC} flutter={awningFlutter} />}
       {peak ? (
         <>
-          <Polygon points={`${x - 5},${topY + 2} ${x + w / 2},${topY - w * 0.42} ${x + w + 5},${topY + 2}`} fill={roofC} />
-          <Polygon points={`${x + w / 2},${topY - w * 0.42} ${x + w + 5},${topY + 2} ${x + w + 5 + dx},${topY + 2 - dy} ${x + w / 2 + dx},${topY - w * 0.42 - dy}`} fill={shade(roofC)} />
-          <Polygon points={`${x - 5},${topY + 2} ${x + w / 2},${topY - w * 0.42} ${x + w / 2},${topY - w * 0.34} ${x},${topY + 4}`} fill={tint(roofC, 14)} opacity={0.5} />
+          <Polygon points={`${x - 5},${topY + 2} ${x + w / 2},${topY - w * 0.42} ${x + w + 5},${topY + 2}`} fill={roofGrad} />
+          <Polygon points={`${x + w / 2},${topY - w * 0.42} ${x + w + 5},${topY + 2} ${x + w + 5 + dx},${topY + 2 - dy} ${x + w / 2 + dx},${topY - w * 0.42 - dy}`} fill={shade(roofC, 30)} />
+          <Polygon points={`${x - 5},${topY + 2} ${x + w / 2},${topY - w * 0.42} ${x + w / 2},${topY - w * 0.34} ${x},${topY + 4}`} fill={tint(roofC, 22)} opacity={0.55} />
         </>
       ) : (
         <>
-          <Polygon points={`${x},${topY} ${x + w},${topY} ${x + w + dx},${topY - dy} ${x + dx},${topY - dy}`} fill={roofC} />
-          <Rect x={x - 2} y={topY - 7} width={w + 4} height={8} rx={2} fill={shade(roofC)} />
+          <Polygon points={`${x},${topY} ${x + w},${topY} ${x + w + dx},${topY - dy} ${x + dx},${topY - dy}`} fill={roofGrad} />
+          <Rect x={x - 2} y={topY - 7} width={w + 4} height={8} rx={2} fill={shade(roofC, 24)} />
         </>
       )}
       {label ? (
@@ -318,15 +386,29 @@ function Awning({ x, y, w, color, flutter }: { x: number; y: number; w: number; 
 }
 
 function Tree({ x, base, s = 1 }: { x: number; base: number; s?: number }) {
+  const gid = useGid();
   return (
     <G>
-      <Ellipse cx={x} cy={base + 2} rx={14 * s} ry={4 * s} fill="#000" opacity={0.1} />
+      <Defs>
+        <RadialGradient id={`${gid}f`} cx="38%" cy="30%" r="78%">
+          <Stop offset="0" stopColor="#AEDB86" />
+          <Stop offset="0.55" stopColor="#75AE52" />
+          <Stop offset="1" stopColor="#56883D" />
+        </RadialGradient>
+      </Defs>
+      {/* layered soft shadow */}
+      <Ellipse cx={x + 2 * s} cy={base + 3 * s} rx={15 * s} ry={4.2 * s} fill="#000" opacity={0.09} />
       <Rect x={x - 2.6 * s} y={base - 9 * s} width={5.2 * s} height={12 * s} rx={2} fill="#9A6B43" />
-      <Circle cx={x} cy={base - 20 * s} r={13 * s} fill="#6FA84E" />
-      <Circle cx={x - 8 * s} cy={base - 13 * s} r={8.5 * s} fill="#82BC5E" />
-      <Circle cx={x + 8 * s} cy={base - 13 * s} r={8.5 * s} fill="#5E9642" />
-      <Circle cx={x - 3 * s} cy={base - 25 * s} r={7 * s} fill="#9AD07A" opacity={0.85} />
-      <Circle cx={x + 4 * s} cy={base - 22 * s} r={5 * s} fill="#B6E294" opacity={0.6} />
+      <Rect x={x - 2.6 * s} y={base - 9 * s} width={2 * s} height={12 * s} rx={1} fill="#B5824F" opacity={0.7} />
+      {/* back canopy for depth */}
+      <Circle cx={x} cy={base - 19 * s} r={14.5 * s} fill="#5E9642" opacity={0.6} />
+      {/* main gradient canopy */}
+      <Circle cx={x} cy={base - 20 * s} r={13 * s} fill={`url(#${gid}f)`} />
+      <Circle cx={x - 8 * s} cy={base - 13 * s} r={8 * s} fill={`url(#${gid}f)`} />
+      <Circle cx={x + 8 * s} cy={base - 13 * s} r={8 * s} fill="#5E9642" />
+      {/* sun-side highlights */}
+      <Circle cx={x - 4 * s} cy={base - 25 * s} r={6 * s} fill="#C4E8A0" opacity={0.8} />
+      <Circle cx={x + 3 * s} cy={base - 22 * s} r={4 * s} fill="#DCF3C0" opacity={0.55} />
     </G>
   );
 }
@@ -1466,9 +1548,9 @@ export {
 
 const SCENES: Record<string, () => React.ReactElement> = {
   town_square: TownSquareScene,
-  park: ParkScene,
-  cafe_corner: CafeCornerScene,
-  gift_shop: GiftShopScene,
+  park: ParkPremiumScene,
+  cafe_corner: CafePremiumScene,
+  gift_shop: GiftShopPremiumScene,
   home_routine: HomeRoutineScene,
   bus_stop: BusStopScene,
   town_gate: TownGateScene,

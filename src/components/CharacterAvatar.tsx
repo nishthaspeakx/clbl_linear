@@ -18,8 +18,8 @@ import Animated, {
 
 // Drawn in a 56×84 viewBox but rendered a touch smaller so the avatar sits on
 // the level node without covering the scene people behind it.
-const AVATAR_W = 51;
-const AVATAR_H = 76;
+const AVATAR_W = 50;
+const AVATAR_H = 75;
 
 interface Props {
   x: SharedValue<number>;

@@ -34,8 +34,8 @@ export type PinStatus = 'locked' | 'current' | 'completed';
 // Virtual-px wrapper big enough to hold the glow + pulse rings.
 const WRAP = 120;
 const CENTER = WRAP / 2;
-const R_NORMAL = 25;
-const R_CURRENT = 27;
+const R_NORMAL = 24;
+const R_CURRENT = 26;
 
 interface Props {
   id: number;
