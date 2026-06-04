@@ -10,7 +10,7 @@
  * lesson pins → character.
  */
 import React from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -32,8 +32,8 @@ import LocationScene, {
 import AmbientMotion from './AmbientMotion';
 import LessonPin, { PinStatus } from './LessonPin';
 import CharacterAvatar from './CharacterAvatar';
+import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
 
-const { width: VIEWPORT_W, height: VIEWPORT_H } = Dimensions.get('window');
 const MIN_Y = Math.min(0, VIEWPORT_H - WORLD_H);
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);

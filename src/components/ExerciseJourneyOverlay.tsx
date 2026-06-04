@@ -9,7 +9,7 @@
  * Exercise progress is persisted per level (closing never resets it).
  */
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -28,8 +28,8 @@ import { playSound } from '../utils/sound';
 import ExerciseNode, { ExStatus } from './ExerciseNode';
 import ExerciseActivityModal from './ExerciseActivityModal';
 import RewardAnimation from './RewardAnimation';
+import { VIEWPORT_W as SW, VIEWPORT_H as SH } from '../utils/viewport';
 
-const { width: SW, height: SH } = Dimensions.get('window');
 const CARD_W = SW * 0.92;
 const CARD_H = Math.min(SH * 0.84, 660);
 const HEADER_H = 96;

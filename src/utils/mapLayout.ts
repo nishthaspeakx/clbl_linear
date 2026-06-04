@@ -8,13 +8,12 @@
  * Deterministic (no Math.random). Scenes are authored in a 220×170 local box
  * (see LocationScene.tsx); here we compute each scene's translate + scale.
  */
-import { Dimensions } from 'react-native';
 import { SUBTOPICS } from '../data/subtopics';
 import { locationScenes } from '../data/locationScenes';
 import { TOPIC_ZONES } from '../data/topicZones';
 import { buildCurvedPath } from './position';
+import { VIEWPORT_W as SCREEN_W } from './viewport';
 
-const { width: SCREEN_W } = Dimensions.get('window');
 export const WORLD_W = Math.max(380, SCREEN_W);
 
 const STEP = 250; // generous vertical room for a scene per lesson

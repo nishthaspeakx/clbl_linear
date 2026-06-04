@@ -9,13 +9,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { VIEWPORT_H } from '../utils/viewport';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 
@@ -24,7 +23,7 @@ import { TOPIC_ZONES, topicZoneOf } from '../data/topicZones';
 import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
-import TopProgressHeader from '../components/TopProgressHeader';
+import AppHeader, { HEADER_HEIGHT } from '../components/AppHeader';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
@@ -39,7 +38,6 @@ import VerticalIsometricTownMap from '../components/VerticalIsometricTownMap';
 import { PinStatus } from '../components/LessonPin';
 import RewardAnimation from '../components/RewardAnimation';
 
-const { height: VIEWPORT_H } = Dimensions.get('window');
 const MIN_Y = Math.min(0, VIEWPORT_H - WORLD_H);
 const CENTER_BIAS = VIEWPORT_H * 0.44;
 
@@ -191,9 +189,10 @@ export default function EnglishTownScreen() {
 
   const curTopic = topicProgress(progress.currentId, progress.completedIds);
   const completedCount = progress.completedIds.length;
+  const pct = curTopic.total > 0 ? (curTopic.completed / curTopic.total) * 100 : 0;
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <View style={styles.root}>
       <StatusBar style="dark" />
 
       <VerticalIsometricTownMap
@@ -206,17 +205,32 @@ export default function EnglishTownScreen() {
         walking={walking}
       />
 
-      {/* Compact top header — current topic + topic progress only */}
-      <TopProgressHeader
-        zone={curTopic.zone}
-        completed={curTopic.completed}
-        total={curTopic.total}
-        stars={completedCount * 10}
-        night={night}
-        onToggleNight={toggleNight}
-        soundOn={soundOn}
-        onToggleSound={toggleSound}
-      />
+      {/* SpeakX-style app header (language · translate · trophy · coin) */}
+      <AppHeader trophies={completedCount} coins={completedCount * 10} />
+
+      {/* Small floating topic-progress card */}
+      <View style={[styles.topicCard, { top: HEADER_HEIGHT + 10 }]}>
+        <View style={[styles.topicBadge, { backgroundColor: curTopic.zone.accent + '22' }]}>
+          <Text style={styles.topicBadgeText}>{curTopic.zone.emoji}</Text>
+        </View>
+        <View style={styles.topicCenter}>
+          <Text style={styles.topicName} numberOfLines={1}>{curTopic.zone.name}</Text>
+          <Text style={styles.topicProgress}>{curTopic.completed}/{curTopic.total} levels completed</Text>
+          <View style={styles.topicTrack}>
+            <View style={[styles.topicFill, { width: `${pct}%`, backgroundColor: curTopic.zone.accent }]} />
+          </View>
+        </View>
+      </View>
+
+      {/* Floating day/night + sound toggles (kept off the header) */}
+      <View style={[styles.toggleStack, { top: HEADER_HEIGHT + 10 }]}>
+        <Pressable onPress={toggleSound} style={styles.toggleBtn} hitSlop={8}>
+          <Text style={styles.toggleText}>{soundOn ? '🔊' : '🔇'}</Text>
+        </Pressable>
+        <Pressable onPress={toggleNight} style={[styles.toggleBtn, night && styles.toggleBtnNight]} hitSlop={8}>
+          <Text style={styles.toggleText}>{night ? '🌙' : '☀️'}</Text>
+        </Pressable>
+      </View>
 
       <RewardAnimation trigger={rewardTrigger} />
 
@@ -276,7 +290,7 @@ export default function EnglishTownScreen() {
           }}
         />
       )}
-    </GestureHandlerRootView>
+    </View>
   );
 }
 
@@ -284,50 +298,54 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#DCEBD6' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DCEBD6' },
   loadingText: { marginTop: 12, color: '#7C8186', fontWeight: '600' },
-  header: {
+
+  // Floating topic-progress card (small, below the app header)
+  topicCard: {
     position: 'absolute',
-    top: 52,
     left: 12,
-    right: 12,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    width: 220,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
+    zIndex: 15,
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center' },
-  headerBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  headerBadgeText: { fontSize: 20 },
-  headerTopic: { fontSize: 17, fontWeight: '800', color: '#2A2E33' },
-  headerCount: { fontSize: 14, fontWeight: '700', color: '#9AA0A6' },
-  dayNight: {
+  topicBadge: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 9 },
+  topicBadgeText: { fontSize: 17 },
+  topicCenter: { flex: 1 },
+  topicName: { fontSize: 14, fontWeight: '800', color: '#2A2E33' },
+  topicProgress: { fontSize: 10.5, color: '#9AA0A6', fontWeight: '600' },
+  topicTrack: { height: 4, borderRadius: 3, backgroundColor: '#EEF0F2', marginTop: 4, overflow: 'hidden' },
+  topicFill: { height: '100%', borderRadius: 3 },
+
+  // Floating day/night + sound toggles (right side, under header)
+  toggleStack: { position: 'absolute', right: 12, alignItems: 'center', zIndex: 15 },
+  toggleBtn: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#FFF6E0',
-    borderWidth: 1.5,
-    borderColor: '#FFE0BC',
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderWidth: 1,
+    borderColor: '#ECEDEF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
-  dayNightOn: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
-  dayNightText: { fontSize: 18 },
-  coinPill: {
-    backgroundColor: '#FFF1E2',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1.5,
-    borderColor: '#FFE0BC',
-  },
-  coinText: { color: '#E07B1E', fontWeight: '800', fontSize: 15 },
-  progressTrack: { height: 6, borderRadius: 4, backgroundColor: '#EFF1F3', marginTop: 6, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 4 },
+  toggleBtnNight: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
+  toggleText: { fontSize: 17 },
+
   celebration: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',

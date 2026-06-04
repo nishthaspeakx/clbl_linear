@@ -7,7 +7,7 @@
  * every completion). Each new value replays the burst.
  */
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import Animated, {
   Easing,
@@ -19,8 +19,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { playSound } from '../utils/sound';
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+import { VIEWPORT_W as SCREEN_W, VIEWPORT_H as SCREEN_H } from '../utils/viewport';
 
 interface Props {
   /** Increment this number to (re)play the animation. 0 = nothing yet. */
