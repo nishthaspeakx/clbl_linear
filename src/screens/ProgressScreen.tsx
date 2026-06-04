@@ -8,6 +8,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 import { resetApp } from '../utils/resetApp';
+import { useAvatar } from '../components/avatar/AvatarContext';
+import UserAvatar from '../components/avatar/UserAvatar';
+import AvatarSelector from '../components/avatar/AvatarSelector';
 
 const PRIMARY = '#FF7A00';
 const TOP = 44;
@@ -30,6 +33,7 @@ function SentenceChart() {
 }
 
 export default function ProgressScreen() {
+  const { selection } = useAvatar();
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -50,7 +54,9 @@ export default function ProgressScreen() {
         </Pressable>
         <View style={styles.avatarWrap}>
           <View style={styles.avatar}>
-            <Text style={{ fontSize: 44 }}>👧🏻</Text>
+            <View style={styles.avatarInner}>
+              <UserAvatar userType={selection.userType} gender={selection.gender} age={selection.age} size={150} shadow={false} />
+            </View>
           </View>
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>Level 1</Text>
@@ -82,6 +88,9 @@ export default function ProgressScreen() {
           </View>
         </View>
 
+        {/* Dynamic avatar picker (profession × gender × age) */}
+        <AvatarSelector />
+
         {/* Reset the whole app back to Level 1 (clears all saved progress). */}
         <Pressable style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]} onPress={resetApp}>
           <Text style={styles.resetText}>↺  Reset progress (start from scratch)</Text>
@@ -110,10 +119,12 @@ const styles = StyleSheet.create({
     borderRadius: 46,
     backgroundColor: '#F0E6DA',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     borderWidth: 3,
     borderColor: '#FFFFFF',
+    overflow: 'hidden',
   },
+  avatarInner: { position: 'absolute', top: 14, alignItems: 'center' },
   levelBadge: {
     position: 'absolute',
     bottom: -10,

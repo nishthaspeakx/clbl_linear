@@ -24,6 +24,7 @@ import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import AppHeader, { HEADER_HEIGHT } from '../components/AppHeader';
+import { useAvatar } from '../components/avatar/AvatarContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
@@ -48,6 +49,7 @@ function isTopicEnd(id: number): boolean {
 }
 
 export default function EnglishTownScreen() {
+  const { selection: avatar } = useAvatar();
   const [loaded, setLoaded] = useState(false);
   const [progress, setProgress] = useState<Progress>(DEFAULT_PROGRESS);
   const [selectedId, setSelectedId] = useState(1);
@@ -203,6 +205,7 @@ export default function EnglishTownScreen() {
         charX={charX}
         charY={charY}
         walking={walking}
+        avatar={avatar}
       />
 
       {/* SpeakX-style app header (language · translate · trophy · coin) */}

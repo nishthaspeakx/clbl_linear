@@ -20,6 +20,7 @@ import MembershipScreen from '../screens/MembershipScreen';
 import AICallScreen from '../screens/AICallScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
+import { AvatarProvider } from '../components/avatar/AvatarContext';
 
 export default function AppTabs() {
   const [tab, setTab] = useState<TabKey>('home');
@@ -41,10 +42,8 @@ export default function AppTabs() {
   );
 
   // On web, center the phone frame on a dark backdrop.
-  if (IS_WEB) {
-    return <View style={styles.backdrop}>{shell}</View>;
-  }
-  return shell;
+  const tree = IS_WEB ? <View style={styles.backdrop}>{shell}</View> : shell;
+  return <AvatarProvider>{tree}</AvatarProvider>;
 }
 
 const styles = StyleSheet.create({

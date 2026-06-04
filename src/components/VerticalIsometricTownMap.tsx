@@ -46,12 +46,13 @@ interface Props {
   charX: SharedValue<number>;
   charY: SharedValue<number>;
   walking: SharedValue<number>;
+  avatar: { userType: import('../data/avatarProfiles').UserType; gender: import('../data/avatarProfiles').Gender; age: number };
 }
 
 // Draw nearer scenes (larger oy) on top of farther ones.
 const SCENES = [...LAYOUT.scenes].sort((a, b) => a.oy - b.oy);
 
-function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking }: Props) {
+function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar }: Props) {
   const savedY = useSharedValue(translateY.value);
   const pan = Gesture.Pan()
     .onStart(() => {
@@ -194,7 +195,7 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
           ))}
 
           {/* Character */}
-          <CharacterAvatar x={charX} y={charY} walking={walking} />
+          <CharacterAvatar x={charX} y={charY} walking={walking} userType={avatar.userType} gender={avatar.gender} age={avatar.age} />
         </Animated.View>
       </View>
     </GestureDetector>
