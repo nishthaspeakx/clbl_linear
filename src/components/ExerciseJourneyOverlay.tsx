@@ -21,6 +21,7 @@ import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from 're
 import { exerciseTypes, TOTAL_EXERCISES } from '../data/exercises';
 import { loadLevelExercises, saveLevelExercises } from '../storage/exerciseProgressStorage';
 import { buildCurvedPath } from '../utils/position';
+import { playSound } from '../utils/sound';
 import ExerciseNode, { ExStatus } from './ExerciseNode';
 import ExerciseActivityModal from './ExerciseActivityModal';
 import RewardAnimation from './RewardAnimation';
@@ -106,7 +107,8 @@ function ExerciseJourneyOverlay({
     setCurrentId(nextCur);
     setActiveId(null);
     await saveLevelExercises(levelId, { completedExerciseIds: nextCompleted, currentExerciseId: nextCur });
-    setReward((r) => r + 1); // little burst each exercise
+    setReward((r) => r + 1); // little burst (+ coin sound) each exercise
+    if (nextCompleted.length >= TOTAL_EXERCISES) playSound('success');
   };
 
   const activeEx = activeId != null ? exerciseTypes[activeId - 1] : null;
@@ -175,7 +177,10 @@ function ExerciseJourneyOverlay({
                 label={ex.title}
                 status={statusOf(ex.id)}
                 accent={accent}
-                onPress={() => setActiveId(ex.id)}
+                onPress={() => {
+                  playSound('tap');
+                  setActiveId(ex.id);
+                }}
               />
             ))}
         </View>

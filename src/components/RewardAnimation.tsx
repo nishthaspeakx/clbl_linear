@@ -18,6 +18,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { playSound } from '../utils/sound';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -102,6 +103,7 @@ function RewardAnimation({ trigger, onDone }: Props) {
 
   useEffect(() => {
     if (trigger === 0) return;
+    playSound('coin');
     setVisible(true);
     labelScale.value = 0;
     labelScale.value = withSequence(

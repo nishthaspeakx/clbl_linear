@@ -16,9 +16,11 @@ interface Props {
   stars: number;
   night: boolean;
   onToggleNight: () => void;
+  soundOn: boolean;
+  onToggleSound: () => void;
 }
 
-function TopProgressHeader({ zone, completed, total, stars, night, onToggleNight }: Props) {
+function TopProgressHeader({ zone, completed, total, stars, night, onToggleNight, soundOn, onToggleSound }: Props) {
   const pct = total > 0 ? (completed / total) * 100 : 0;
   return (
     <View style={styles.header}>
@@ -32,6 +34,9 @@ function TopProgressHeader({ zone, completed, total, stars, night, onToggleNight
           <View style={[styles.fill, { width: `${pct}%`, backgroundColor: zone.accent }]} />
         </View>
       </View>
+      <Pressable onPress={onToggleSound} style={styles.iconBtn} hitSlop={8}>
+        <Text style={styles.iconText}>{soundOn ? '🔊' : '🔇'}</Text>
+      </Pressable>
       <Pressable onPress={onToggleNight} style={[styles.dayNight, night && styles.dayNightOn]} hitSlop={8}>
         <Text style={styles.dayNightText}>{night ? '🌙' : '☀️'}</Text>
       </Pressable>
@@ -87,6 +92,18 @@ const styles = StyleSheet.create({
   },
   dayNightOn: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
   dayNightText: { fontSize: 15 },
+  iconBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#F2F4F6',
+    borderWidth: 1,
+    borderColor: '#E4E7EA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  iconText: { fontSize: 14 },
   coinPill: {
     backgroundColor: '#FFF1E2',
     borderRadius: 14,

@@ -26,6 +26,7 @@ import { clamp } from '../utils/position';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import TopProgressHeader from '../components/TopProgressHeader';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
+import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
   loadProgress,
   saveProgress,
@@ -57,6 +58,7 @@ export default function EnglishTownScreen() {
   const [townDone, setTownDone] = useState(false);
   const [celebrateTopic, setCelebrateTopic] = useState<number | null>(null);
   const [night, setNight] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   /** Subtopic id whose exercise journey overlay is open (null = closed). */
   const [overlayLevelId, setOverlayLevelId] = useState<number | null>(null);
@@ -76,6 +78,7 @@ export default function EnglishTownScreen() {
   );
 
   useEffect(() => {
+    initSounds();
     (async () => {
       const p = await loadProgress();
       setProgress(p);
@@ -101,6 +104,7 @@ export default function EnglishTownScreen() {
 
   const handlePinPress = useCallback(
     (id: number) => {
+      playSound('tap');
       setSelectedId(id);
       focusLesson(id);
       setSheetOpen(true); // sheet opens only on a pin tap
@@ -112,6 +116,7 @@ export default function EnglishTownScreen() {
     (id: number) => {
       if (id !== progress.currentId || townDone) return;
 
+      playSound('levelup');
       setRewardTrigger((t) => t + 1);
 
       const isLast = id === TOTAL_SUBTOPICS;
@@ -131,6 +136,7 @@ export default function EnglishTownScreen() {
       setSelectedId(nextId);
 
       const target = lessonPos(nextId);
+      playSound('walk');
       walking.value = 1;
       charX.value = withTiming(target.x, { duration: 1100 });
       charY.value = withTiming(target.y, { duration: 1100 }, (finished) => {
@@ -149,7 +155,22 @@ export default function EnglishTownScreen() {
 
   /** Start Lesson → open the gamified exercise-journey overlay for that level. */
   const handleStartLesson = useCallback((id: number) => {
+    playSound('tap');
     setOverlayLevelId(id);
+  }, []);
+
+  const toggleNight = useCallback(() => {
+    playSound('toggle');
+    setNight((n) => !n);
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    setSoundOn((s) => {
+      const next = !s;
+      setSoundEnabled(next);
+      if (next) playSound('tap'); // little confirm blip when turning on
+      return next;
+    });
   }, []);
 
   const handleReset = useCallback(async () => {
@@ -201,7 +222,9 @@ export default function EnglishTownScreen() {
         total={curTopic.total}
         stars={completedCount * 10}
         night={night}
-        onToggleNight={() => setNight((n) => !n)}
+        onToggleNight={toggleNight}
+        soundOn={soundOn}
+        onToggleSound={toggleSound}
       />
 
       {/* Bottom lesson sheet — opens only on a pin tap, dismissible */}
