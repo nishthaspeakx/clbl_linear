@@ -19,12 +19,18 @@ export interface Progress {
   currentId: number;
   /** ids of lessons already completed. */
   completedIds: number[];
+  /** running coin total (collected while walking + level rewards). */
+  coins?: number;
 }
 
 export const DEFAULT_PROGRESS: Progress = {
   currentId: 1,
   completedIds: [],
+  coins: 0,
 };
+
+/** Coins awarded per level (collected as a trail while walking to the next). */
+export const COINS_PER_LEVEL = 10;
 
 /** Load saved progress, or the default (start at lesson 1) if none exists. */
 export async function loadProgress(): Promise<Progress> {

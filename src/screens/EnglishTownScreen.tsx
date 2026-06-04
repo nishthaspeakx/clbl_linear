@@ -14,18 +14,22 @@ import {
   Text,
   View,
 } from 'react-native';
-import { VIEWPORT_H } from '../utils/viewport';
-import { useSharedValue, withTiming } from 'react-native-reanimated';
+import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
+import { Easing, useAnimatedReaction, useSharedValue, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 
 import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
 import { TOPIC_ZONES, topicZoneOf } from '../data/topicZones';
 import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
+import { samplePath, pointAt } from '../utils/pathInterpolation';
+import { generateCoinTrail, playCoinSound, triggerLightHaptic } from '../utils/rewardUtils';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import AppHeader, { HEADER_HEIGHT } from '../components/AppHeader';
 import { useAvatar } from '../components/avatar/AvatarContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
+import FlyingCoin from '../components/map/FlyingCoin';
+import ProgressionReward from '../components/map/ProgressionReward';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
   loadProgress,
@@ -34,10 +38,14 @@ import {
   isTownCompleted,
   Progress,
   DEFAULT_PROGRESS,
+  COINS_PER_LEVEL,
 } from '../storage/progressStorage';
 import VerticalIsometricTownMap from '../components/VerticalIsometricTownMap';
 import { PinStatus } from '../components/LessonPin';
 import RewardAnimation from '../components/RewardAnimation';
+
+const WALK_MS = 1450;
+const COIN_TARGET = { x: VIEWPORT_W - 46, y: 58 }; // coin counter (top-right)
 
 const MIN_Y = Math.min(0, VIEWPORT_H - WORLD_H);
 const CENTER_BIAS = VIEWPORT_H * 0.44;
@@ -69,10 +77,41 @@ export default function EnglishTownScreen() {
     toastTimer.current = setTimeout(() => setToast(null), 1700);
   }, []);
 
+  // Coin + reward + walk-sequence state
+  const [coins, setCoins] = useState(0);
+  const [busy, setBusy] = useState(false); // taps disabled during the completion walk
+  const [coinTrail, setCoinTrail] = useState<{ index: number; x: number; y: number; value: number }[]>([]);
+  const [coinsCollected, setCoinsCollected] = useState(0);
+  const [flyingCoins, setFlyingCoins] = useState<{ key: string; x: number; y: number; value: number }[]>([]);
+  const [rewardNonce, setRewardNonce] = useState(0);
+  const [rewardCoins, setRewardCoins] = useState(COINS_PER_LEVEL);
+  const seqTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const flyKey = useRef(0);
+  useEffect(() => () => { seqTimers.current.forEach(clearTimeout); }, []);
+
   const translateY = useSharedValue(0);
   const charX = useSharedValue(0);
   const charY = useSharedValue(0);
   const walking = useSharedValue(0);
+  // Walk-along-the-road: walkT drives charX/charY along the sampled path.
+  const walkT = useSharedValue(0);
+  const pathXs = useSharedValue<number[]>([]);
+  const pathYs = useSharedValue<number[]>([]);
+  useAnimatedReaction(
+    () => walkT.value,
+    (t) => {
+      'worklet';
+      const xs = pathXs.value;
+      const ys = pathYs.value;
+      const n = xs.length;
+      if (n < 2) return;
+      const f = t * (n - 1);
+      const i = Math.min(n - 2, Math.floor(f));
+      const frac = f - i;
+      charX.value = xs[i] + (xs[i + 1] - xs[i]) * frac;
+      charY.value = ys[i] + (ys[i + 1] - ys[i]) * frac;
+    },
+  );
 
   const focusLesson = useCallback(
     (id: number, animated = true) => {
@@ -89,6 +128,7 @@ export default function EnglishTownScreen() {
       const p = await loadProgress();
       setProgress(p);
       setSelectedId(p.currentId);
+      setCoins(p.coins ?? p.completedIds.length * COINS_PER_LEVEL);
       setTownDone(isTownCompleted(p));
       const start = lessonPos(p.currentId);
       charX.value = start.x;
@@ -110,10 +150,11 @@ export default function EnglishTownScreen() {
 
   const handlePinPress = useCallback(
     (id: number) => {
+      if (busy) return; // taps disabled during the completion walk
       playSound('tap');
       const locked = !progress.completedIds.includes(id) && id !== progress.currentId;
       if (locked) {
-        showToast('Complete previous level first.');
+        showToast('🔒 Complete previous level first.');
         return;
       }
       setSelectedId(id);
@@ -121,48 +162,88 @@ export default function EnglishTownScreen() {
       // Open the exercise journey directly (no bottom sheet).
       setOverlayLevelId(id);
     },
-    [focusLesson, progress, showToast]
+    [focusLesson, progress, showToast, busy]
   );
 
-  const handleComplete = useCallback(
+  /**
+   * Premium level-completion sequence:
+   * disable taps → mark complete → lay a coin trail → walk the character along
+   * the road collecting coins (each flies to the counter) → unlock next level →
+   * reward burst → re-enable taps.
+   */
+  const completeCurrentLevelWithAnimation = useCallback(
     (id: number) => {
-      if (id !== progress.currentId || townDone) return;
-
+      if (id !== progress.currentId || townDone || busy) return;
+      setBusy(true);
       playSound('levelup');
-      setRewardTrigger((t) => t + 1);
 
       const isLast = id === TOTAL_SUBTOPICS;
       const nextId = isLast ? id : id + 1;
+      const startCoins = coins;
+
+      // 2. mark completed + persist
       const next: Progress = {
         currentId: nextId,
         completedIds: [...progress.completedIds, id],
+        coins: startCoins,
       };
       setProgress(next);
       saveProgress(next);
+      setSelectedId(nextId);
 
       if (isLast) {
         setTownDone(true);
+        setRewardCoins(COINS_PER_LEVEL);
+        setRewardNonce((n) => n + 1);
+        setBusy(false);
         return;
       }
 
-      setSelectedId(nextId);
+      // 3. coin trail + sampled walk path
+      const trail = generateCoinTrail(COINS_PER_LEVEL, 5);
+      const { xs, ys, pts } = samplePath(id, nextId, 24);
+      setCoinTrail(trail.map((tc) => { const p = pointAt(pts, tc.t); return { index: tc.index, x: p.x, y: p.y, value: tc.value }; }));
+      setCoinsCollected(0);
+      setFlyingCoins([]);
 
-      const target = lessonPos(nextId);
-      playSound('walk');
+      // 4. walk along the path + camera follows
+      pathXs.value = xs;
+      pathYs.value = ys;
+      walkT.value = 0;
       walking.value = 1;
-      charX.value = withTiming(target.x, { duration: 1100 });
-      charY.value = withTiming(target.y, { duration: 1100 }, (finished) => {
+      playSound('walk');
+      walkT.value = withTiming(1, { duration: WALK_MS, easing: Easing.inOut(Easing.ease) }, (fin) => {
         'worklet';
-        if (finished) walking.value = 0;
+        if (fin) walking.value = 0;
+      });
+      const camTarget = clamp(CENTER_BIAS - lessonPos(nextId).y, MIN_Y, 0);
+      translateY.value = withTiming(camTarget, { duration: WALK_MS, easing: Easing.inOut(Easing.ease) });
+
+      // 5–6. collect coins one by one → fly to counter → increment
+      trail.forEach((tc) => {
+        seqTimers.current.push(setTimeout(() => {
+          setCoinsCollected((c) => Math.max(c, tc.index + 1));
+          playCoinSound();
+          triggerLightHaptic();
+          const jitter = (tc.index % 2 === 0 ? -1 : 1) * (10 + tc.index * 5);
+          const key = `fc-${id}-${tc.index}-${flyKey.current++}`;
+          setFlyingCoins((fc) => [...fc, { key, x: VIEWPORT_W * 0.5 + jitter, y: VIEWPORT_H * 0.5 - 6, value: tc.value }]);
+        }, Math.round(WALK_MS * tc.t)));
       });
 
-      focusLesson(nextId);
-
-      if (isTopicEnd(id)) {
-        setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
-      }
+      // 7–8. arrival: unlock + reward + persist final coins + cleanup
+      seqTimers.current.push(setTimeout(() => {
+        saveProgress({ ...next, coins: startCoins + COINS_PER_LEVEL });
+        setRewardCoins(COINS_PER_LEVEL);
+        setRewardNonce((n) => n + 1);
+        showToast(`🎉 Level ${nextId} unlocked!`);
+        setCoinTrail([]);
+        setCoinsCollected(0);
+        setBusy(false);
+        if (isTopicEnd(id)) setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
+      }, WALK_MS + 260));
     },
-    [progress, townDone, focusLesson, charX, charY, walking]
+    [progress, townDone, busy, coins, charX, charY, walking, walkT, pathXs, pathYs, translateY, showToast]
   );
 
   const toggleNight = useCallback(() => {
@@ -181,16 +262,27 @@ export default function EnglishTownScreen() {
 
   const handleReset = useCallback(async () => {
     await resetProgress();
+    seqTimers.current.forEach(clearTimeout);
+    seqTimers.current = [];
     const start = lessonPos(1);
+    pathXs.value = [];
+    pathYs.value = [];
+    walkT.value = 0;
+    walking.value = 0;
     charX.value = start.x;
     charY.value = start.y;
     focusLesson(1);
     setProgress(DEFAULT_PROGRESS);
     setSelectedId(1);
+    setCoins(0);
+    setBusy(false);
+    setCoinTrail([]);
+    setCoinsCollected(0);
+    setFlyingCoins([]);
     setTownDone(false);
     setCelebrateTopic(null);
     setOverlayLevelId(null);
-  }, [charX, charY, focusLesson]);
+  }, [charX, charY, focusLesson, walkT, pathXs, pathYs, walking]);
 
   if (!loaded) {
     return (
@@ -220,10 +312,12 @@ export default function EnglishTownScreen() {
         avatar={avatar}
         currentId={progress.currentId}
         completedIds={progress.completedIds}
+        coinTrail={coinTrail}
+        coinsCollected={coinsCollected}
       />
 
       {/* SpeakX-style app header (language · translate · trophy · coin) */}
-      <AppHeader trophies={completedCount} coins={completedCount * 10} />
+      <AppHeader trophies={completedCount} coins={coins} />
 
       {/* Small floating topic-progress card */}
       <View style={[styles.topicCard, { top: HEADER_HEIGHT + 10 }]}>
@@ -250,6 +344,25 @@ export default function EnglishTownScreen() {
       </View>
 
       <RewardAnimation trigger={rewardTrigger} />
+
+      {/* Coins flying from the road to the counter as they're collected */}
+      {flyingCoins.map((fc) => (
+        <FlyingCoin
+          key={fc.key}
+          startX={fc.x}
+          startY={fc.y}
+          targetX={COIN_TARGET.x}
+          targetY={COIN_TARGET.y}
+          value={fc.value}
+          onArrive={() => {
+            setCoins((c) => c + fc.value);
+            setFlyingCoins((list) => list.filter((x) => x.key !== fc.key));
+          }}
+        />
+      ))}
+
+      {/* Level-complete reward burst (+coins / star burst, ~1.2s, non-blocking) */}
+      <ProgressionReward nonce={rewardNonce} coins={rewardCoins} />
 
       {/* Topic completion celebration */}
       {celebrateTopic !== null && (
@@ -302,16 +415,16 @@ export default function EnglishTownScreen() {
           onToggleNight={toggleNight}
           onClose={() => setOverlayLevelId(null)}
           onCompleteLevel={(id) => {
-            handleComplete(id);
             setOverlayLevelId(null);
+            completeCurrentLevelWithAnimation(id);
           }}
         />
       )}
 
-      {/* Toast (e.g. tapping a locked level) */}
+      {/* Toast (locked level / level unlocked) */}
       {toast && (
         <View style={styles.toast} pointerEvents="none">
-          <Text style={styles.toastText}>🔒 {toast}</Text>
+          <Text style={styles.toastText}>{toast}</Text>
         </View>
       )}
     </View>

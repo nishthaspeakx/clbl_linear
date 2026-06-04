@@ -33,8 +33,10 @@ import AmbientMotion from './AmbientMotion';
 import LessonPin, { PinStatus } from './LessonPin';
 import CharacterAvatar from './CharacterAvatar';
 import LevelLabel from './map/LevelLabel';
+import CoinTrail from './map/CoinTrail';
 import { visibleLabels } from '../utils/labelPlacement';
-import { SUBTOPICS } from '../data/subtopics';
+import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
+import { samplePath } from '../utils/pathInterpolation';
 import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
 
 const MIN_Y = Math.min(0, VIEWPORT_H - WORLD_H);
@@ -52,12 +54,16 @@ interface Props {
   avatar: { userType: import('../data/avatarProfiles').UserType; gender: import('../data/avatarProfiles').Gender; age: number };
   currentId: number;
   completedIds: number[];
+  /** Coins laid along the road during a level-completion walk. */
+  coinTrail?: { index: number; x: number; y: number; value: number }[];
+  /** How many of those coins have been collected so far. */
+  coinsCollected?: number;
 }
 
 // Draw nearer scenes (larger oy) on top of farther ones.
 const SCENES = [...LAYOUT.scenes].sort((a, b) => a.oy - b.oy);
 
-function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, currentId, completedIds }: Props) {
+function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, currentId, completedIds, coinTrail, coinsCollected = 0 }: Props) {
   const press = onPinPress;
   const savedY = useSharedValue(translateY.value);
   const pan = Gesture.Pan()
@@ -195,18 +201,51 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
             <Path d={`M0 0 H ${WORLD_W} V ${WORLD_H} H 0 Z`} fill="url(#wash)" />
           </Svg>
 
+          {/* Glowing direction path on the CURRENT → NEXT segment, with chevrons */}
+          {currentId < TOTAL_SUBTOPICS && (
+            <Svg width={WORLD_W} height={WORLD_H} style={StyleSheet.absoluteFill} pointerEvents="none">
+              {(() => {
+                const { pts } = samplePath(currentId, currentId + 1, 16);
+                const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+                const chevrons = [0.34, 0.55, 0.76].map((tt, k) => {
+                  const i = Math.min(pts.length - 2, Math.floor(tt * (pts.length - 1)));
+                  const p = pts[i];
+                  const ang = (Math.atan2(pts[i + 1].y - p.y, pts[i + 1].x - p.x) * 180) / Math.PI + 90;
+                  return (
+                    <Path key={k} d="M -6 4 L 0 -3 L 6 4" fill="none" stroke="#FF7A00" strokeWidth={3}
+                      strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
+                      transform={`translate(${p.x} ${p.y}) rotate(${ang})`} />
+                  );
+                });
+                return (
+                  <>
+                    <Path d={d} stroke="#FF9A3D" strokeWidth={15} fill="none" strokeLinecap="round" opacity={0.16} />
+                    <AnimatedPath d={d} stroke="#FF7A00" strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray="2 14" animatedProps={dotsProps} opacity={0.9} />
+                    {chevrons}
+                  </>
+                );
+              })()}
+            </Svg>
+          )}
+
+          {/* Collectible coin trail (during a level-completion walk) */}
+          {coinTrail && coinTrail.length > 0 && (
+            <CoinTrail coins={coinTrail} collected={coinsCollected} />
+          )}
+
           {/* Lesson pins (on the road) */}
           {LAYOUT.lessons.map((l) => (
             <LessonPin key={l.id} id={l.id} cx={l.px} cy={l.py} status={statusOf(l.id)} onPress={press} />
           ))}
 
-          {/* Subtopic + location labels for every level (status-coloured) */}
+          {/* Subtopic + location labels — only current, previous & next */}
           {visibleLabels(currentId, completedIds).map((L) => {
             const l = LAYOUT.lessons[L.id - 1];
             const sub = SUBTOPICS[L.id - 1];
-            const cardH = 48;
+            const compact = L.variant === 'compact';
+            const cardH = compact ? 40 : 50;
             const gap = 22;
-            const vOff = L.status === 'current' ? -30 : -6;
+            const vOff = L.status === 'current' ? -32 : -6;
             const innerX = L.side === 'right' ? l.px + gap : l.px - gap;
             const innerY = l.py + vOff;
             const top = innerY - cardH / 2;
@@ -224,7 +263,7 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
               <React.Fragment key={`lbl${L.id}`}>
                 <View pointerEvents="none" style={{ position: 'absolute', left: cmx - len / 2, top: cmy - 1, width: len, height: 2, backgroundColor: conn, opacity: 0.5, borderRadius: 1, transform: [{ rotate: `${ang}deg` }] }} />
                 <View style={wrap}>
-                  <LevelLabel title={sub.title} location={sub.location} status={L.status} onPress={() => press(L.id)} />
+                  <LevelLabel id={L.id} title={sub.title} location={sub.location} status={L.status} compact={compact} onPress={() => press(L.id)} />
                 </View>
               </React.Fragment>
             );
