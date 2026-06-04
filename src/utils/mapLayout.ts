@@ -18,7 +18,10 @@ export const WORLD_W = Math.max(380, SCREEN_W);
 
 const STEP = 250; // generous vertical room for a scene per lesson
 const TOPIC_GAP = 96; // extra space at a topic change (for the signboard)
-const BOTTOM_PAD = 170;
+// Lesson 1 ends up at on-screen y = VIEWPORT_H − BOTTOM_PAD (camera is clamped to
+// the world bottom). Keep this small so Town Square sits just above the footer
+// with only a little breathing room — not a big empty green gap.
+const BOTTOM_PAD = 132;
 const TOP_PAD = 210;
 
 const SCENE_LOCAL_W = 220;

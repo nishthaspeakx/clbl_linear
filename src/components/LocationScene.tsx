@@ -862,10 +862,12 @@ function TownSquareScene() {
       <Lamp x={GX - 74} base={GY - 2} />
       <Lamp x={GX + 74} base={GY - 2} />
       <Bench x={GX - 54} base={GY + 16} />
-      <Bench x={GX + 54} base={GY + 16} />
+      <Bench x={GX + 58} base={GY + 16} />
+      {/* Greeting group clustered left of centre so the Level-1 node (which sits
+          on the road at the plaza's right corner) doesn't cover anyone. */}
       <Person x={GX - 30} base={GY + 22} shirt="#5BA6C9" wave />
-      <Person x={GX + 30} base={GY + 22} shirt="#E0764B" dress />
-      <Person x={GX + 44} base={GY + 24} s={0.85} shirt="#7FB04F" />
+      <Person x={GX - 48} base={GY + 24} s={0.9} shirt="#E0764B" dress />
+      <Person x={GX - 14} base={GY + 26} s={0.85} shirt="#7FB04F" />
       <Tree x={GX - 90} base={GY + 2} s={0.85} />
       <Tree x={GX + 92} base={GY + 4} s={0.85} />
       <Flower x={GX - 16} y={GY + 24} color="#FF9FC0" />

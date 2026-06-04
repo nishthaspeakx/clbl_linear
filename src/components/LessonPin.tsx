@@ -35,7 +35,7 @@ export type PinStatus = 'locked' | 'current' | 'completed';
 const WRAP = 120;
 const CENTER = WRAP / 2;
 const R_NORMAL = 25;
-const R_CURRENT = 31;
+const R_CURRENT = 27;
 
 interface Props {
   id: number;
@@ -83,12 +83,12 @@ function LessonPin({ id, cx, cy, status, onPress, approximate, debugLabel }: Pro
   }, [isCurrent, pulse1, pulse2, sparkle]);
 
   const ring1Style = useAnimatedStyle(() => ({
-    opacity: (1 - pulse1.value) * 0.65,
-    transform: [{ scale: 0.55 + pulse1.value * 1.5 }],
+    opacity: (1 - pulse1.value) * 0.45,
+    transform: [{ scale: 0.5 + pulse1.value * 1.15 }],
   }));
   const ring2Style = useAnimatedStyle(() => ({
-    opacity: (1 - pulse2.value) * 0.65,
-    transform: [{ scale: 0.55 + pulse2.value * 1.5 }],
+    opacity: (1 - pulse2.value) * 0.45,
+    transform: [{ scale: 0.5 + pulse2.value * 1.15 }],
   }));
   const sparkleStyle = useAnimatedStyle(() => ({
     opacity: 0.4 + sparkle.value * 0.6,
@@ -123,12 +123,13 @@ function LessonPin({ id, cx, cy, status, onPress, approximate, debugLabel }: Pro
         {/* Drop shadow */}
         <Ellipse cx={CENTER} cy={CENTER + R + 5} rx={R * 0.82} ry={R * 0.28} fill="#000" opacity={0.18} />
 
-        {/* Soft outer glow for current (stacked for a strong "tap me" halo) */}
+        {/* Soft outer glow for current (gentle "tap me" halo — kept subtle so it
+            doesn't dominate the scene art beneath it) */}
         {isCurrent && (
           <>
-            <Circle cx={CENTER} cy={CENTER} r={R + 30} fill="#FFC074" opacity={0.16} />
-            <Circle cx={CENTER} cy={CENTER} r={R + 20} fill="#FFB45A" opacity={0.24} />
-            <Circle cx={CENTER} cy={CENTER} r={R + 11} fill="#FFA94D" opacity={0.34} />
+            <Circle cx={CENTER} cy={CENTER} r={R + 18} fill="#FFC074" opacity={0.1} />
+            <Circle cx={CENTER} cy={CENTER} r={R + 11} fill="#FFB45A" opacity={0.16} />
+            <Circle cx={CENTER} cy={CENTER} r={R + 5} fill="#FFA94D" opacity={0.24} />
           </>
         )}
 
@@ -249,10 +250,10 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 4,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 3,
     borderColor: '#FF9A3D',
   },
   sparkle: {

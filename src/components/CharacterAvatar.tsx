@@ -16,8 +16,10 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-const AVATAR_W = 56;
-const AVATAR_H = 84;
+// Drawn in a 56×84 viewBox but rendered a touch smaller so the avatar sits on
+// the level node without covering the scene people behind it.
+const AVATAR_W = 51;
+const AVATAR_H = 76;
 
 interface Props {
   x: SharedValue<number>;

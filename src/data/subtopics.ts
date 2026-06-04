@@ -16,7 +16,7 @@ export interface Subtopic {
 }
 
 export const SUBTOPICS: Subtopic[] = [
-  { id: 1, topic: 'Everyday Life', title: 'Meet & Greet New People', location: 'Town Square', xPercent: 50, yPercent: 95, visualObject: 'town_square', topicIndex: 1 },
+  { id: 1, topic: 'Everyday Life', title: 'Meet & Greet New People', location: 'Town Square', xPercent: 57, yPercent: 95, visualObject: 'town_square', topicIndex: 1 },
   { id: 2, topic: 'Everyday Life', title: 'Talk about Yourself', location: 'Park', xPercent: 56.3, yPercent: 90.3, visualObject: 'park', topicIndex: 1 },
   { id: 3, topic: 'Everyday Life', title: 'Make New Friends', location: 'Cafe Corner', xPercent: 57.8, yPercent: 85.5, visualObject: 'cafe_corner', topicIndex: 1 },
   { id: 4, topic: 'Everyday Life', title: 'Say "Thank You"', location: 'Gift Shop', xPercent: 53.4, yPercent: 80.8, visualObject: 'gift_shop', topicIndex: 1 },
