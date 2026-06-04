@@ -27,6 +27,7 @@ import { buildCurvedPath } from '../utils/position';
 import { playSound } from '../utils/sound';
 import ExerciseNode, { ExStatus } from './ExerciseNode';
 import ExerciseActivityModal from './ExerciseActivityModal';
+import VocabularyExerciseScreen from '../screens/exercises/VocabularyExerciseScreen';
 import RewardAnimation from './RewardAnimation';
 import { VIEWPORT_W as SW, VIEWPORT_H as SH } from '../utils/viewport';
 
@@ -342,7 +343,12 @@ function ExerciseJourneyOverlay({
         </View>
       </Animated.View>
 
-      {activeEx && (
+      {/* The first exercise (Vocabulary) opens the full SpeakX-style flow;
+          the rest still use the lightweight placeholder for now. */}
+      {activeEx && activeId === 1 && (
+        <VocabularyExerciseScreen onClose={() => setActiveId(null)} onComplete={markComplete} />
+      )}
+      {activeEx && activeId !== 1 && (
         <ExerciseActivityModal exercise={activeEx} accent={accent} onMarkComplete={markComplete} onClose={() => setActiveId(null)} />
       )}
       <RewardAnimation trigger={reward} />
