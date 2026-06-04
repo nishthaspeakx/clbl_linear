@@ -37,7 +37,6 @@ import {
 } from '../storage/progressStorage';
 import VerticalIsometricTownMap from '../components/VerticalIsometricTownMap';
 import { PinStatus } from '../components/LessonPin';
-import LessonBottomCard from '../components/LessonBottomCard';
 import RewardAnimation from '../components/RewardAnimation';
 
 const { height: VIEWPORT_H } = Dimensions.get('window');
@@ -59,7 +58,6 @@ export default function EnglishTownScreen() {
   const [celebrateTopic, setCelebrateTopic] = useState<number | null>(null);
   const [night, setNight] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
   /** Subtopic id whose exercise journey overlay is open (null = closed). */
   const [overlayLevelId, setOverlayLevelId] = useState<number | null>(null);
 
@@ -107,9 +105,11 @@ export default function EnglishTownScreen() {
       playSound('tap');
       setSelectedId(id);
       focusLesson(id);
-      setSheetOpen(true); // sheet opens only on a pin tap
+      // Open the exercise journey directly (no bottom sheet). Locked pins can't be opened.
+      const locked = !progress.completedIds.includes(id) && id !== progress.currentId;
+      if (!locked) setOverlayLevelId(id);
     },
-    [focusLesson]
+    [focusLesson, progress]
   );
 
   const handleComplete = useCallback(
@@ -153,12 +153,6 @@ export default function EnglishTownScreen() {
     [progress, townDone, focusLesson, charX, charY, walking]
   );
 
-  /** Start Lesson → open the gamified exercise-journey overlay for that level. */
-  const handleStartLesson = useCallback((id: number) => {
-    playSound('tap');
-    setOverlayLevelId(id);
-  }, []);
-
   const toggleNight = useCallback(() => {
     playSound('toggle');
     setNight((n) => !n);
@@ -183,7 +177,6 @@ export default function EnglishTownScreen() {
     setSelectedId(1);
     setTownDone(false);
     setCelebrateTopic(null);
-    setSheetOpen(false); // start fresh with no bottom sheet — opens only on tap
     setOverlayLevelId(null);
   }, [charX, charY, focusLesson]);
 
@@ -196,8 +189,6 @@ export default function EnglishTownScreen() {
     );
   }
 
-  const selected = SUBTOPICS[selectedId - 1];
-  const selectedZone = topicZoneOf(selected.topicIndex);
   const curTopic = topicProgress(progress.currentId, progress.completedIds);
   const completedCount = progress.completedIds.length;
 
@@ -226,19 +217,6 @@ export default function EnglishTownScreen() {
         soundOn={soundOn}
         onToggleSound={toggleSound}
       />
-
-      {/* Bottom lesson sheet — opens only on a pin tap, dismissible */}
-      {sheetOpen && (
-        <LessonBottomCard
-          subtopic={selected}
-          status={statusOf(selected.id)}
-          level={levelInTopic(selected.id)}
-          topicAccent={selectedZone.accent}
-          onComplete={handleComplete}
-          onStartLesson={handleStartLesson}
-          onClose={() => setSheetOpen(false)}
-        />
-      )}
 
       <RewardAnimation trigger={rewardTrigger} />
 
@@ -288,11 +266,13 @@ export default function EnglishTownScreen() {
           location={SUBTOPICS[overlayLevelId - 1].location}
           accent={topicZoneOf(SUBTOPICS[overlayLevelId - 1].topicIndex).accent}
           canComplete={overlayLevelId === progress.currentId && !townDone}
+          nextLevelNumber={overlayLevelId < TOTAL_SUBTOPICS ? levelInTopic(overlayLevelId + 1) : null}
+          night={night}
+          onToggleNight={toggleNight}
           onClose={() => setOverlayLevelId(null)}
           onCompleteLevel={(id) => {
             handleComplete(id);
             setOverlayLevelId(null);
-            setSheetOpen(false);
           }}
         />
       )}
