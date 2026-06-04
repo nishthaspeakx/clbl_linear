@@ -23,6 +23,8 @@ import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
 import { TOPIC_ZONES, topicZoneOf } from '../data/topicZones';
 import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
+import { topicProgress, levelInTopic } from '../utils/progressUtils';
+import TopProgressHeader from '../components/TopProgressHeader';
 import {
   loadProgress,
   saveProgress,
@@ -171,7 +173,7 @@ export default function EnglishTownScreen() {
 
   const selected = SUBTOPICS[selectedId - 1];
   const selectedZone = topicZoneOf(selected.topicIndex);
-  const currentZone = topicZoneOf(SUBTOPICS[progress.currentId - 1].topicIndex);
+  const curTopic = topicProgress(progress.currentId, progress.completedIds);
   const completedCount = progress.completedIds.length;
 
   return (
@@ -188,40 +190,22 @@ export default function EnglishTownScreen() {
         walking={walking}
       />
 
-      {/* Top topic card — topic icon, name, progress, day/night, coins */}
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={[styles.headerBadge, { backgroundColor: currentZone.accent + '22' }]}>
-            <Text style={styles.headerBadgeText}>{currentZone.emoji}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTopic}>
-              {currentZone.name} <Text style={styles.headerCount}>— {completedCount}/{TOTAL_SUBTOPICS}</Text>
-            </Text>
-            <View style={styles.progressTrack}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${(completedCount / TOTAL_SUBTOPICS) * 100}%`, backgroundColor: currentZone.accent },
-                ]}
-              />
-            </View>
-          </View>
-          <Pressable onPress={() => setNight((n) => !n)} style={[styles.dayNight, night && styles.dayNightOn]}>
-            <Text style={styles.dayNightText}>{night ? '🌙' : '☀️'}</Text>
-          </Pressable>
-          <View style={styles.coinPill}>
-            <Text style={styles.coinText}>⭐ {completedCount * 10}</Text>
-          </View>
-        </View>
-      </View>
+      {/* Compact top header — current topic + topic progress only */}
+      <TopProgressHeader
+        zone={curTopic.zone}
+        completed={curTopic.completed}
+        total={curTopic.total}
+        stars={completedCount * 10}
+        night={night}
+        onToggleNight={() => setNight((n) => !n)}
+      />
 
       {/* Bottom lesson sheet — opens only on a pin tap, dismissible */}
       {sheetOpen && (
         <LessonBottomCard
           subtopic={selected}
           status={statusOf(selected.id)}
-          topicName={selectedZone.name}
+          level={levelInTopic(selected.id)}
           topicAccent={selectedZone.accent}
           onComplete={handleComplete}
           onStartLesson={handleStartLesson}

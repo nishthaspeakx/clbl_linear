@@ -10,7 +10,7 @@
  * lesson pins → character.
  */
 import React from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -188,14 +188,6 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
             <Path d={`M0 0 H ${WORLD_W} V ${WORLD_H} H 0 Z`} fill="url(#wash)" />
           </Svg>
 
-          {/* Small roadside topic signboards */}
-          {LAYOUT.zones.map((z) => (
-            <View key={`sign${z.topicIndex}`} style={[styles.sign, { top: z.signY - 16, borderColor: z.accent }]}>
-              <View style={[styles.signDot, { backgroundColor: z.accent }]} />
-              <Text style={styles.signText}>{z.name}</Text>
-            </View>
-          ))}
-
           {/* Lesson pins (on the road) */}
           {LAYOUT.lessons.map((l) => (
             <LessonPin key={l.id} id={l.id} cx={l.px} cy={l.py} status={statusOf(l.id)} onPress={onPinPress} />
@@ -213,28 +205,6 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
 const styles = StyleSheet.create({
   viewport: { width: VIEWPORT_W, height: VIEWPORT_H, overflow: 'hidden', backgroundColor: '#DCEBD6' },
   world: { width: WORLD_W, height: WORLD_H },
-  sign: {
-    position: 'absolute',
-    left: '50%',
-    marginLeft: -78,
-    width: 156,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 16,
-    borderWidth: 2,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.14,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
-  },
-  signDot: { width: 9, height: 9, borderRadius: 5 },
-  signText: { fontSize: 13, fontWeight: '800', color: '#2A2E33' },
 });
 
 export default VerticalIsometricTownMap;

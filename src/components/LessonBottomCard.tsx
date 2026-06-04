@@ -15,13 +15,14 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Subtopic, TOTAL_SUBTOPICS } from '../data/subtopics';
+import { Subtopic } from '../data/subtopics';
 import { PinStatus } from './LessonPin';
 
 interface Props {
   subtopic: Subtopic;
   status: PinStatus;
-  topicName?: string;
+  /** 1-based level number within the topic. */
+  level: number;
   topicAccent?: string;
   onComplete: (id: number) => void;
   onStartLesson?: (id: number) => void;
@@ -35,7 +36,7 @@ const STATUS_META: Record<PinStatus, { label: string; color: string; bg: string 
 };
 
 function LessonBottomCard({
-  subtopic, status, topicName, topicAccent = '#FF8A3D', onComplete, onStartLesson, onClose,
+  subtopic, status, level, topicAccent = '#FF8A3D', onComplete, onStartLesson, onClose,
 }: Props) {
   const meta = STATUS_META[status];
   const ty = useSharedValue(420);
@@ -82,9 +83,9 @@ function LessonBottomCard({
 
       <View style={styles.headerRow}>
         <View style={[styles.numberBadge, { backgroundColor: topicAccent }]}>
-          <Text style={styles.numberText}>{subtopic.id}</Text>
+          <Text style={styles.numberText}>{level}</Text>
         </View>
-        <Text style={styles.counter}>Lesson {subtopic.id} of {TOTAL_SUBTOPICS}</Text>
+        <Text style={styles.counter}>Level {level}</Text>
         <View style={[styles.statusChip, { backgroundColor: meta.bg }]}>
           <Text style={[styles.statusText, { color: meta.color }]}>{meta.label}</Text>
         </View>
@@ -93,11 +94,6 @@ function LessonBottomCard({
       <Text style={styles.title} numberOfLines={2}>{subtopic.title}</Text>
       <View style={styles.metaRow}>
         <Text style={styles.location}>📍 {subtopic.location}</Text>
-        {topicName ? (
-          <View style={[styles.districtChip, { backgroundColor: topicAccent + '1A', borderColor: topicAccent + '55' }]}>
-            <Text style={[styles.districtText, { color: topicAccent }]}>{topicName}</Text>
-          </View>
-        ) : null}
       </View>
 
       {status === 'locked' && (
