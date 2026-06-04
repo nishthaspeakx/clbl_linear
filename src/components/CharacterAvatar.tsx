@@ -9,6 +9,7 @@ import { StyleSheet } from 'react-native';
 import Svg from 'react-native-svg';
 import Animated, {
   SharedValue,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -32,28 +33,43 @@ interface Props {
 }
 
 function CharacterAvatar({ x, y, walking, userType, gender, age }: Props) {
+  // A single continuously-advancing phase drives a smooth sine gait (no yoyo
+  // easing artefacts), and `walk` smoothly ramps the gait in/out so the start
+  // and stop of the walk never pop.
+  const phase = useSharedValue(0);
   const idle = useSharedValue(0);
-  const bob = useSharedValue(0);
+  const walk = useSharedValue(0);
   React.useEffect(() => {
-    idle.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.ease) }), -1, true);
-    bob.value = withRepeat(withTiming(1, { duration: 300, easing: Easing.inOut(Easing.ease) }), -1, true);
-  }, [idle, bob]);
+    phase.value = withRepeat(withTiming(1, { duration: 760, easing: Easing.linear }), -1, false);
+    idle.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.ease) }), -1, true);
+  }, [phase, idle]);
+  useAnimatedReaction(
+    () => walking.value,
+    (w) => {
+      'worklet';
+      walk.value = withTiming(w, { duration: 220, easing: Easing.inOut(Easing.ease) });
+    },
+  );
 
   const containerStyle = useAnimatedStyle(() => {
-    const idleOffset = (idle.value - 0.5) * 4;
-    const walkOffset = (bob.value - 0.5) * 12;
-    const offset = walking.value * walkOffset + (1 - walking.value) * idleOffset;
+    const w = walk.value;
+    const ph = phase.value * Math.PI * 2;
+    const bob = Math.sin(ph) * 3;            // gentle, continuous up-down
+    const idleBob = (idle.value - 0.5) * 2.4; // soft breathing when still
+    const offsetY = w * bob + (1 - w) * idleBob;
+    const lean = w * Math.sin(ph + 0.5) * 2; // subtle sway → reads as a stride
     return {
       transform: [
         { translateX: x.value - AVATAR_W / 2 },
-        { translateY: y.value - AVATAR_H + offset },
+        { translateY: y.value - AVATAR_H + offsetY },
+        { rotate: `${lean}deg` },
       ],
     };
   });
 
   const shadowStyle = useAnimatedStyle(() => {
-    const squash = 1 - walking.value * (bob.value * 0.25) - (1 - walking.value) * idle.value * 0.08;
-    return { transform: [{ scaleX: squash }], opacity: 0.24 };
+    const squash = 1 - walk.value * (Math.abs(Math.sin(phase.value * Math.PI * 2)) * 0.16);
+    return { transform: [{ scaleX: squash }], opacity: 0.22 };
   });
 
   const style = styleFor(userType, gender, ageToGroup(age));
