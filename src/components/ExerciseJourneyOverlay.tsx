@@ -189,17 +189,17 @@ function ExerciseJourneyOverlay({
         <View style={styles.footer}>
           {allDone ? (
             <Pressable
-              style={({ pressed }) => [styles.completeBtn, { backgroundColor: accent }, pressed && { opacity: 0.85 }]}
+              style={({ pressed }) => [styles.completeBtn, { backgroundColor: '#33A867' }, pressed && { opacity: 0.85 }]}
               onPress={() => {
                 if (canComplete) onCompleteLevel(levelId);
                 onClose();
               }}
             >
-              <Text style={styles.completeText}>{canComplete ? '🎉 Complete Level' : 'Done — Close'}</Text>
+              <Text style={styles.completeText}>🎉 Level {levelNumber} Completed!</Text>
             </Pressable>
           ) : (
             <View style={[styles.completeBtn, styles.completeDisabled]}>
-              <Text style={styles.completeDisabledText}>Finish all 6 exercises to complete</Text>
+              <Text style={styles.completeDisabledText}>Finish all 6 lessons to complete Level {levelNumber}</Text>
             </View>
           )}
         </View>

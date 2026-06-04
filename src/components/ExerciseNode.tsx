@@ -71,7 +71,7 @@ function ExerciseNode({ x, y, icon, label, status, accent, onPress }: Props) {
       </View>
       <Text style={[styles.label, status === 'locked' && { color: '#A9AFB5' }]}>{label}</Text>
       {status === 'current' && (
-        <View style={[styles.startTag, { backgroundColor: '#FF8A3D' }]}>
+        <View style={[styles.startTag, { backgroundColor: '#33A867' }]}>
           <Text style={styles.startText}>Start</Text>
         </View>
       )}
