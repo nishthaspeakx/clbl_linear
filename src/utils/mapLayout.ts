@@ -136,25 +136,37 @@ function buildLayout() {
     { label: 'SALON', wall: '#F3E0EC', roof: '#C77FB0', person: '#7E6BD0' },
     { label: 'PHARMA', wall: '#E6F4EC', roof: '#3BB273', person: '#5BA6C9' },
   ];
-  type DecorKind = 'tree' | 'bush' | 'flower' | 'lamp' | 'hedge' | 'pond' | 'flowerbed' | 'bench' | 'car' | 'bird' | 'shop' | 'scooter' | 'cycle';
+  type DecorKind = 'tree' | 'bush' | 'flower' | 'lamp' | 'hedge' | 'pond' | 'flowerbed' | 'bench' | 'car' | 'bird' | 'shop' | 'scooter' | 'cycle' | 'monument' | 'fountain';
   const decor: { kind: DecorKind; x: number; y: number; s: number; w?: number; color?: string; shop?: typeof SHOPS[number] }[] = [];
   scenes.forEach((sc, i) => {
     const py = lessons[i].py;
-    const gutters = sc.side === 'center' ? [0.1, 0.9] : sc.side === 'left' ? [0.88] : [0.12];
-    gutters.forEach((gx) => {
-      const opp = gx < 0.5; // this gutter is on the opposite side of the scene
-      // A real little shop on the opposite side every other lesson → town on both sides.
-      if (i % 2 === 0) {
-        decor.push({ kind: 'shop', x: WORLD_W * (opp ? 0.16 : 0.84), y: py - 10, s: WORLD_W / 470, shop: SHOPS[(i / 2) % SHOPS.length] });
-        decor.push({ kind: 'flower', x: WORLD_W * (opp ? 0.06 : 0.94), y: py + 22, s: 1, color: FLOWER_COLORS[i % FLOWER_COLORS.length] });
-      } else {
-        const feat = FEATURES[i % FEATURES.length];
-        decor.push({ kind: feat, x: WORLD_W * (opp ? 0.16 : 0.84), y: py - 2, s: feat === 'car' ? 0.95 : 1, color: CAR_COLORS[i % CAR_COLORS.length] });
-        decor.push({ kind: 'tree', x: WORLD_W * (opp ? 0.06 : 0.94), y: py - 24, s: 1.15 });
-      }
-      decor.push({ kind: 'bush', x: WORLD_W * (opp ? gx + 0.04 : gx - 0.04), y: py + 44, s: 0.75 });
-      decor.push({ kind: 'hedge', x: WORLD_W * (opp ? 0.0 : 0.86), y: py + 72, s: 1, w: WORLD_W * 0.14 });
-    });
+    const isCenter = sc.side === 'center';
+    // Centre scenes (Town Square / Town Gate) get a monument on one side and a
+    // fountain + trees on the other — never duplicate shops.
+    if (isCenter) {
+      decor.push({ kind: 'monument', x: WORLD_W * 0.15, y: py - 6, s: WORLD_W / 480 });
+      decor.push({ kind: 'tree', x: WORLD_W * 0.04, y: py - 26, s: 1.2 });
+      decor.push({ kind: 'fountain', x: WORLD_W * 0.85, y: py - 2, s: WORLD_W / 430 });
+      decor.push({ kind: 'tree', x: WORLD_W * 0.96, y: py - 26, s: 1.2 });
+      decor.push({ kind: 'hedge', x: 0, y: py + 72, s: 1, w: WORLD_W * 0.14 });
+      decor.push({ kind: 'hedge', x: WORLD_W * 0.86, y: py + 72, s: 1, w: WORLD_W * 0.14 });
+    } else {
+      const gutters = sc.side === 'left' ? [0.88] : [0.12];
+      gutters.forEach((gx) => {
+        const opp = gx < 0.5; // this gutter is on the opposite side of the scene
+        // A real little shop on the opposite side every other lesson → town on both sides.
+        if (i % 2 === 0) {
+          decor.push({ kind: 'shop', x: WORLD_W * (opp ? 0.16 : 0.84), y: py - 10, s: WORLD_W / 470, shop: SHOPS[(i / 2) % SHOPS.length] });
+          decor.push({ kind: 'flower', x: WORLD_W * (opp ? 0.06 : 0.94), y: py + 22, s: 1, color: FLOWER_COLORS[i % FLOWER_COLORS.length] });
+        } else {
+          const feat = FEATURES[i % FEATURES.length];
+          decor.push({ kind: feat, x: WORLD_W * (opp ? 0.16 : 0.84), y: py - 2, s: feat === 'car' ? 0.95 : 1, color: CAR_COLORS[i % CAR_COLORS.length] });
+          decor.push({ kind: 'tree', x: WORLD_W * (opp ? 0.06 : 0.94), y: py - 24, s: 1.15 });
+        }
+        decor.push({ kind: 'bush', x: WORLD_W * (opp ? gx + 0.04 : gx - 0.04), y: py + 44, s: 0.75 });
+        decor.push({ kind: 'hedge', x: WORLD_W * (opp ? 0.0 : 0.86), y: py + 72, s: 1, w: WORLD_W * 0.14 });
+      });
+    }
     // lamp posts hugging BOTH sides of the road (denser, like a real street).
     decor.push({ kind: 'lamp', x: lessons[i].px - 46, y: py + 16, s: 0.95 });
     decor.push({ kind: 'lamp', x: lessons[i].px + 46, y: py + 16, s: 0.95 });

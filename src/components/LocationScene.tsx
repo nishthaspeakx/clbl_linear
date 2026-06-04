@@ -587,6 +587,43 @@ export function MiniShop({
   );
 }
 
+/** A civic monument / museum building for the opposite side (town centre). */
+export function Monument({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G transform={`translate(${x} ${y}) scale(${s})`}>
+      <Ellipse cx={0} cy={7} rx={50} ry={9} fill="#000" opacity={0.12} />
+      <Rect x={-46} y={-10} width={92} height={12} rx={2} fill="#D8D0BE" />
+      <Rect x={-46} y={-2} width={92} height={4} fill={shade('#D8D0BE', 16)} />
+      {[-36, -18, 0, 18, 36].map((cx, i) => (
+        <G key={i}>
+          <Rect x={cx - 4} y={-54} width={8} height={44} fill="#ECE6D6" />
+          <Rect x={cx - 4} y={-54} width={2.4} height={44} fill={tint('#ECE6D6', 10)} />
+        </G>
+      ))}
+      <Polygon points={`-50,-54 50,-54 0,-78`} fill="#C9BFA6" />
+      <Polygon points={`-50,-54 50,-54 44,-60 -44,-60`} fill="#B8AE97" />
+      <SvgText x={0} y={-60} fontSize={9} fontWeight="bold" fill="#7E7460" textAnchor="middle">MUSEUM</SvgText>
+      <Person x={-14} base={4} s={0.85} shirt="#5BA6C9" />
+      <Person x={6} base={4} s={0.85} shirt="#E0764B" dress />
+    </G>
+  );
+}
+
+/** A standalone fountain for the opposite side (town centre). */
+export function Fountain({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G transform={`translate(${x} ${y}) scale(${s})`}>
+      <Ellipse cx={0} cy={5} rx={28} ry={11} fill="#000" opacity={0.1} />
+      <Ellipse cx={0} cy={2} rx={27} ry={12} fill="#AFC8D2" />
+      <Ellipse cx={0} cy={0} rx={22} ry={10} fill="#BFE6F5" />
+      <Ellipse cx={0} cy={-1} rx={12} ry={5.5} fill="#9FD0EC" />
+      <Rect x={-2.6} y={-24} width={5.2} height={18} rx={2} fill="#CBD8DE" />
+      <Circle cx={0} cy={-26} r={5.4} fill="#CFEFFB" />
+      <Path d={`M -7 -22 Q 0 -32 7 -22`} stroke="#CFEFFB" strokeWidth={2} fill="none" />
+    </G>
+  );
+}
+
 /** Sparse night stars across the world. */
 export function Stars({ width, height }: { width: number; height: number }) {
   const items: React.ReactElement[] = [];
@@ -937,7 +974,7 @@ function TownGateScene() {
       <Rect x={GX + 46} y={GY - 72} width={20} height={72} rx={3} fill="#CDA877" />
       <Rect x={GX - 72} y={GY - 88} width={144} height={22} rx={6} fill="#B98E5A" />
       <Polygon points={`${GX - 72},${GY - 88} ${GX + 72},${GY - 88} ${GX + 60},${GY - 98} ${GX - 60},${GY - 98}`} fill="#A77E4C" />
-      <SvgText x={GX} y={GY - 73} fontSize={11} fontWeight="bold" fill="#FFF7EE" textAnchor="middle">ENGLISH TOWN</SvgText>
+      <SvgText x={GX} y={GY - 73} fontSize={12} fontWeight="bold" fill="#FFF7EE" textAnchor="middle">TOWN GATE</SvgText>
       <Lamp x={GX - 80} base={GY} />
       <Lamp x={GX + 80} base={GY} />
       <Hedge x={GX - 104} y={GY + 8} w={26} />

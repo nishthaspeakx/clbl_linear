@@ -157,6 +157,7 @@ export default function EnglishTownScreen() {
     setSelectedId(1);
     setTownDone(false);
     setCelebrateTopic(null);
+    setSheetOpen(false); // start fresh with no bottom sheet — opens only on tap
   }, [charX, charY, focusLesson]);
 
   if (!loaded) {
