@@ -12,6 +12,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 
 import { VOCAB_QUESTIONS, COINS_PER_CORRECT, VocabQuestion } from '../../data/vocabQuestions';
+import { IS_WEB, VIEWPORT_W, VIEWPORT_H } from '../../utils/viewport';
 import { playSound } from '../../utils/sound';
 import ExerciseHeader from '../../components/exercises/ExerciseHeader';
 import AudioButton from '../../components/exercises/AudioButton';
@@ -136,12 +137,13 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
   const showAudio = q.kind === 'image' || q.kind === 'word' || q.kind === 'fill';
 
   return (
-    <Modal visible animationType="slide" transparent={false} onRequestClose={onClose} statusBarTranslucent>
-      <View style={styles.root}>
+    <Modal visible animationType="slide" transparent onRequestClose={onClose} statusBarTranslucent>
+      <View style={styles.backdrop}>
+       <View style={styles.frame}>
         <ExerciseHeader progress={progress} coins={coins} onClose={onClose} />
         <Watermark />
 
-        <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>{q.title}</Text>
           <Text style={styles.subtitle}>{q.subtitle}</Text>
 
@@ -199,13 +201,24 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
             onContinue={onComplete}
           />
         )}
+       </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFFFFF' },
+  // On web, keep the exercise inside the same centred phone frame as the app.
+  backdrop: {
+    flex: 1,
+    backgroundColor: IS_WEB ? '#1A1B1E' : '#FFFFFF',
+    alignItems: IS_WEB ? 'center' : 'stretch',
+    justifyContent: IS_WEB ? 'center' : 'flex-start',
+  },
+  frame: IS_WEB
+    ? { width: VIEWPORT_W, height: VIEWPORT_H, backgroundColor: '#FFFFFF', overflow: 'hidden', borderRadius: 28 }
+    : { flex: 1, backgroundColor: '#FFFFFF' },
+  scroll: { flex: 1, alignSelf: 'stretch' },
   watermark: { position: 'absolute', left: -8, top: 96, opacity: 0.12 },
   body: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 120, alignItems: 'center' },
   title: { fontSize: 24, fontWeight: '900', color: '#2A2E33', textAlign: 'center', alignSelf: 'stretch' },

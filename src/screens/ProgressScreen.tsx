@@ -4,9 +4,10 @@
  * card with a dotted progress curve toward the next goal. Static/mock only.
  */
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
+import { resetApp } from '../utils/resetApp';
 
 const PRIMARY = '#FF7A00';
 const TOP = 44;
@@ -44,9 +45,9 @@ export default function ProgressScreen() {
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#ph)" />
         </Svg>
-        <View style={styles.gear}>
+        <Pressable style={styles.gear} onPress={resetApp} hitSlop={10}>
           <Text style={{ fontSize: 18 }}>⚙️</Text>
-        </View>
+        </Pressable>
         <View style={styles.avatarWrap}>
           <View style={styles.avatar}>
             <Text style={{ fontSize: 44 }}>👧🏻</Text>
@@ -80,6 +81,12 @@ export default function ProgressScreen() {
             <Text style={styles.tipText}>✨ Wow! You are among the top 50% English speakers.</Text>
           </View>
         </View>
+
+        {/* Reset the whole app back to Level 1 (clears all saved progress). */}
+        <Pressable style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]} onPress={resetApp}>
+          <Text style={styles.resetText}>↺  Reset progress (start from scratch)</Text>
+        </Pressable>
+        <Text style={styles.resetHint}>Returns to Level 1 with Vocabulary playable from the start.</Text>
       </ScrollView>
     </View>
   );
@@ -155,4 +162,10 @@ const styles = StyleSheet.create({
     borderColor: '#FBE7B8',
   },
   tipText: { fontSize: 13, color: '#9A7B1E', fontWeight: '700', textAlign: 'center' },
+  resetBtn: {
+    marginTop: 22, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
+    backgroundColor: '#FFF1E2', borderWidth: 1.5, borderColor: '#FFD8B0',
+  },
+  resetText: { color: '#E07B1E', fontWeight: '800', fontSize: 14.5 },
+  resetHint: { marginTop: 8, fontSize: 11.5, color: '#A9AFB5', fontWeight: '600', textAlign: 'center' },
 });
