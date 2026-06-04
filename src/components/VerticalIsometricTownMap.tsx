@@ -9,7 +9,7 @@
  * Layers (back → front): ground bands → road → scenes → coins → topic signs →
  * lesson pins → character.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -32,6 +32,9 @@ import LocationScene, {
 import AmbientMotion from './AmbientMotion';
 import LessonPin, { PinStatus } from './LessonPin';
 import CharacterAvatar from './CharacterAvatar';
+import LevelLabel from './map/LevelLabel';
+import { visibleLabels } from '../utils/labelPlacement';
+import { SUBTOPICS } from '../data/subtopics';
 import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
 
 const MIN_Y = Math.min(0, VIEWPORT_H - WORLD_H);
@@ -47,12 +50,16 @@ interface Props {
   charY: SharedValue<number>;
   walking: SharedValue<number>;
   avatar: { userType: import('../data/avatarProfiles').UserType; gender: import('../data/avatarProfiles').Gender; age: number };
+  currentId: number;
+  completedIds: number[];
 }
 
 // Draw nearer scenes (larger oy) on top of farther ones.
 const SCENES = [...LAYOUT.scenes].sort((a, b) => a.oy - b.oy);
 
-function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar }: Props) {
+function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, currentId, completedIds }: Props) {
+  const [revealId, setRevealId] = useState<number | null>(null);
+  const press = (id: number) => { setRevealId(id); onPinPress(id); };
   const savedY = useSharedValue(translateY.value);
   const pan = Gesture.Pan()
     .onStart(() => {
@@ -191,8 +198,38 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
 
           {/* Lesson pins (on the road) */}
           {LAYOUT.lessons.map((l) => (
-            <LessonPin key={l.id} id={l.id} cx={l.px} cy={l.py} status={statusOf(l.id)} onPress={onPinPress} />
+            <LessonPin key={l.id} id={l.id} cx={l.px} cy={l.py} status={statusOf(l.id)} onPress={press} />
           ))}
+
+          {/* Level/location labels (only current ± a few, to avoid clutter) */}
+          {visibleLabels(currentId, completedIds, revealId).map((L) => {
+            const l = LAYOUT.lessons[L.id - 1];
+            const sub = SUBTOPICS[L.id - 1];
+            const cardH = L.variant === 'compact' ? 40 : 62;
+            const gap = 22;
+            const vOff = L.status === 'current' ? -34 : -6;
+            const innerX = L.side === 'right' ? l.px + gap : l.px - gap;
+            const innerY = l.py + vOff;
+            const top = innerY - cardH / 2;
+            const conn = L.status === 'current' ? '#FF7A00' : L.status === 'completed' ? '#33A867' : '#C7CDD3';
+            const dx = innerX - l.px;
+            const dy = innerY - l.py;
+            const len = Math.hypot(dx, dy);
+            const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+            const cmx = (l.px + innerX) / 2;
+            const cmy = (l.py + innerY) / 2;
+            const wrap = L.side === 'right'
+              ? { position: 'absolute' as const, left: l.px + gap, top }
+              : { position: 'absolute' as const, right: WORLD_W - (l.px - gap), top };
+            return (
+              <React.Fragment key={`lbl${L.id}`}>
+                <View pointerEvents="none" style={{ position: 'absolute', left: cmx - len / 2, top: cmy - 1, width: len, height: 2, backgroundColor: conn, opacity: 0.5, borderRadius: 1, transform: [{ rotate: `${ang}deg` }] }} />
+                <View style={wrap}>
+                  <LevelLabel id={L.id} title={sub.title} location={sub.location} status={L.status} compact={L.variant === 'compact'} onPress={() => press(L.id)} />
+                </View>
+              </React.Fragment>
+            );
+          })}
 
           {/* Character */}
           <CharacterAvatar x={charX} y={charY} walking={walking} userType={avatar.userType} gender={avatar.gender} age={avatar.age} />

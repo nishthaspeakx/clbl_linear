@@ -6,7 +6,7 @@
  * lesson walks the character up the road to the next pin. A small celebration
  * plays when a TOPIC is finished, and "English Champion" after lesson 60.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -60,6 +60,14 @@ export default function EnglishTownScreen() {
   const [soundOn, setSoundOn] = useState(true);
   /** Subtopic id whose exercise journey overlay is open (null = closed). */
   const [overlayLevelId, setOverlayLevelId] = useState<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 1700);
+  }, []);
 
   const translateY = useSharedValue(0);
   const charX = useSharedValue(0);
@@ -103,13 +111,17 @@ export default function EnglishTownScreen() {
   const handlePinPress = useCallback(
     (id: number) => {
       playSound('tap');
+      const locked = !progress.completedIds.includes(id) && id !== progress.currentId;
+      if (locked) {
+        showToast('Complete previous level first.');
+        return;
+      }
       setSelectedId(id);
       focusLesson(id);
-      // Open the exercise journey directly (no bottom sheet). Locked pins can't be opened.
-      const locked = !progress.completedIds.includes(id) && id !== progress.currentId;
-      if (!locked) setOverlayLevelId(id);
+      // Open the exercise journey directly (no bottom sheet).
+      setOverlayLevelId(id);
     },
-    [focusLesson, progress]
+    [focusLesson, progress, showToast]
   );
 
   const handleComplete = useCallback(
@@ -206,6 +218,8 @@ export default function EnglishTownScreen() {
         charY={charY}
         walking={walking}
         avatar={avatar}
+        currentId={progress.currentId}
+        completedIds={progress.completedIds}
       />
 
       {/* SpeakX-style app header (language · translate · trophy · coin) */}
@@ -293,6 +307,13 @@ export default function EnglishTownScreen() {
           }}
         />
       )}
+
+      {/* Toast (e.g. tapping a locked level) */}
+      {toast && (
+        <View style={styles.toast} pointerEvents="none">
+          <Text style={styles.toastText}>🔒 {toast}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -348,6 +369,24 @@ const styles = StyleSheet.create({
   },
   toggleBtnNight: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
   toggleText: { fontSize: 17 },
+
+  toast: {
+    position: 'absolute',
+    bottom: 96,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(30,32,38,0.94)',
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    maxWidth: '82%',
+    zIndex: 60,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 12,
+  },
+  toastText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14, textAlign: 'center' },
 
   celebration: {
     ...StyleSheet.absoluteFillObject,

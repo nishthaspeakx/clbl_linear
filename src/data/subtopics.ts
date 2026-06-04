@@ -13,6 +13,10 @@ export interface Subtopic {
   yPercent: number;
   visualObject: string;
   topicIndex: number;
+  /** Optional manual label placement overrides (auto-computed if omitted). */
+  labelSide?: 'left' | 'right' | 'top' | 'bottom';
+  labelOffsetX?: number;
+  labelOffsetY?: number;
 }
 
 export const SUBTOPICS: Subtopic[] = [
