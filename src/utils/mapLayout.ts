@@ -136,7 +136,7 @@ function buildLayout() {
     { label: 'SALON', wall: '#F3E0EC', roof: '#C77FB0', person: '#7E6BD0' },
     { label: 'PHARMA', wall: '#E6F4EC', roof: '#3BB273', person: '#5BA6C9' },
   ];
-  type DecorKind = 'tree' | 'bush' | 'flower' | 'lamp' | 'hedge' | 'pond' | 'flowerbed' | 'bench' | 'car' | 'bird' | 'shop';
+  type DecorKind = 'tree' | 'bush' | 'flower' | 'lamp' | 'hedge' | 'pond' | 'flowerbed' | 'bench' | 'car' | 'bird' | 'shop' | 'scooter' | 'cycle';
   const decor: { kind: DecorKind; x: number; y: number; s: number; w?: number; color?: string; shop?: typeof SHOPS[number] }[] = [];
   scenes.forEach((sc, i) => {
     const py = lessons[i].py;
@@ -158,6 +158,9 @@ function buildLayout() {
     // lamp posts hugging BOTH sides of the road (denser, like a real street).
     decor.push({ kind: 'lamp', x: lessons[i].px - 46, y: py + 16, s: 0.95 });
     decor.push({ kind: 'lamp', x: lessons[i].px + 46, y: py + 16, s: 0.95 });
+    // parked scooter / cycle by the kerb (extra street life).
+    if (i % 3 === 0) decor.push({ kind: 'scooter', x: lessons[i].px - 52, y: py + 38, s: 0.7, color: CAR_COLORS[(i + 1) % CAR_COLORS.length] });
+    if (i % 3 === 2) decor.push({ kind: 'cycle', x: lessons[i].px + 52, y: py + 38, s: 0.7, color: CAR_COLORS[i % CAR_COLORS.length] });
   });
 
   // ── Animated actors (rendered by AmbientMotion) ──────────────────────────

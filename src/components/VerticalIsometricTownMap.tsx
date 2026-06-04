@@ -27,7 +27,7 @@ import { LAYOUT, WORLD_W, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
 import LocationScene, {
   Coin, WorldTree, Bush, Flower, Hedge, WorldLamp, Pond, FlowerBed, WorldBench, Car,
-  Skyline, Stars, NightContext, MiniShop,
+  Skyline, Stars, NightContext, MiniShop, Scooter, Cycle,
 } from './LocationScene';
 import AmbientMotion from './AmbientMotion';
 import LessonPin, { PinStatus } from './LessonPin';
@@ -142,6 +142,8 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
                 case 'flowerbed': return <FlowerBed key={`d${i}`} x={d.x} y={d.y} s={d.s} />;
                 case 'bench': return <WorldBench key={`d${i}`} x={d.x} y={d.y} s={d.s} />;
                 case 'car': return <Car key={`d${i}`} x={d.x} y={d.y} s={d.s} color={d.color} />;
+                case 'scooter': return <Scooter key={`d${i}`} x={d.x} y={d.y} s={d.s} color={d.color} />;
+                case 'cycle': return <Cycle key={`d${i}`} x={d.x} y={d.y} s={d.s} color={d.color} />;
                 case 'shop':
                   return d.shop ? (
                     <MiniShop key={`d${i}`} x={d.x} y={d.y} s={d.s} label={d.shop.label} wall={d.shop.wall} roof={d.shop.roof} person={d.shop.person} />

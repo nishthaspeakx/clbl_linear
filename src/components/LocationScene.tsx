@@ -599,6 +599,134 @@ export function Stars({ width, height }: { width: number; height: number }) {
   return <G>{items}</G>;
 }
 
+/* ───────────────── extra small props (scene enrichment) ───────────────── */
+
+function Pigeon({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G>
+      <Ellipse cx={x} cy={y + 2 * s} rx={4 * s} ry={1.3 * s} fill="#000" opacity={0.1} />
+      <Ellipse cx={x} cy={y - 2 * s} rx={3.6 * s} ry={2.4 * s} fill="#9AA6B0" />
+      <Circle cx={x + 3 * s} cy={y - 4 * s} r={1.8 * s} fill="#AEB8C2" />
+      <Path d={`M ${x + 4.4 * s} ${y - 4 * s} l 2 -0.6 l -1.6 1.4 z`} fill="#E0A05A" />
+      <Rect x={x - 0.5 * s} y={y - 0.5 * s} width={1 * s} height={2 * s} fill="#E0A05A" />
+    </G>
+  );
+}
+
+function FlowerPot({ x, y, s = 1, color = '#E0699A' }: { x: number; y: number; s?: number; color?: string }) {
+  return (
+    <G>
+      <Polygon points={`${x - 5 * s},${y} ${x + 5 * s},${y} ${x + 4 * s},${y - 8 * s} ${x - 4 * s},${y - 8 * s}`} fill="#C98A5A" />
+      <Rect x={x - 5 * s} y={y - 9 * s} width={10 * s} height={2.4 * s} rx={1} fill={shade('#C98A5A', 14)} />
+      <Circle cx={x} cy={y - 12 * s} r={3.4 * s} fill="#7CB257" />
+      <Flower x={x - 2 * s} y={y - 13 * s} color={color} s={0.6 * s} />
+      <Flower x={x + 2.4 * s} y={y - 14 * s} color="#FFD24C" s={0.55 * s} />
+    </G>
+  );
+}
+
+function Dustbin({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G>
+      <Ellipse cx={x} cy={y + 1 * s} rx={5 * s} ry={1.6 * s} fill="#000" opacity={0.1} />
+      <Rect x={x - 4 * s} y={y - 12 * s} width={8 * s} height={12 * s} rx={1.5} fill="#5C9B5C" />
+      <Rect x={x - 5 * s} y={y - 13 * s} width={10 * s} height={2.4 * s} rx={1} fill="#4A874A" />
+      <Rect x={x - 1 * s} y={y - 16 * s} width={2 * s} height={3 * s} fill="#4A874A" />
+      <Line x1={x} y1={y - 10 * s} x2={x} y2={y - 2 * s} stroke="#4A874A" strokeWidth={0.8} />
+    </G>
+  );
+}
+
+function NoticeBoard({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G>
+      <Rect x={x - 1.6 * s} y={y - 12 * s} width={3.2 * s} height={12 * s} fill="#8A6A45" />
+      <Rect x={x - 14 * s} y={y - 30 * s} width={28 * s} height={20 * s} rx={2} fill="#B98456" stroke="#8A5E3C" strokeWidth={1.4} />
+      <Rect x={x - 11 * s} y={y - 27 * s} width={22 * s} height={14 * s} rx={1} fill="#F4ECD8" />
+      <Rect x={x - 9 * s} y={y - 24 * s} width={8 * s} height={5 * s} fill="#9FD0EC" />
+      <Rect x={x + 1 * s} y={y - 24 * s} width={8 * s} height={3 * s} fill="#E0699A" />
+      <Line x1={x - 9 * s} y1={y - 17 * s} x2={x + 9 * s} y2={y - 17 * s} stroke="#C2A87E" strokeWidth={0.8} />
+    </G>
+  );
+}
+
+function MenuBoard({ x, y, s = 1, text = 'MENU' }: { x: number; y: number; s?: number; text?: string }) {
+  return (
+    <G>
+      <Polygon points={`${x - 6 * s},${y} ${x + 6 * s},${y} ${x + 4 * s},${y - 3 * s} ${x - 4 * s},${y - 3 * s}`} fill="#5B4632" />
+      <Rect x={x - 8 * s} y={y - 24 * s} width={16 * s} height={21 * s} rx={2} fill="#3F3429" stroke="#5B4632" strokeWidth={1.4} />
+      <SvgText x={x} y={y - 16 * s} fontSize={5 * s} fontWeight="bold" fill="#FFE9A8" textAnchor="middle">{text}</SvgText>
+      <Line x1={x - 5 * s} y1={y - 12 * s} x2={x + 5 * s} y2={y - 12 * s} stroke="#FFFFFF" strokeWidth={0.6} opacity={0.6} />
+      <Line x1={x - 5 * s} y1={y - 9 * s} x2={x + 4 * s} y2={y - 9 * s} stroke="#FFFFFF" strokeWidth={0.6} opacity={0.6} />
+      <Line x1={x - 5 * s} y1={y - 6 * s} x2={x + 5 * s} y2={y - 6 * s} stroke="#FFFFFF" strokeWidth={0.6} opacity={0.6} />
+    </G>
+  );
+}
+
+function MiniSign({ x, y, s = 1, text, color = '#E0699A' }: { x: number; y: number; s?: number; text: string; color?: string }) {
+  const w = Math.max(26, text.length * 5) * s;
+  return (
+    <G>
+      <Rect x={x - 1 * s} y={y - 10 * s} width={2 * s} height={10 * s} fill="#8A6A45" />
+      <Rect x={x - w / 2} y={y - 20 * s} width={w} height={10 * s} rx={2} fill={color} stroke="#FFFFFF" strokeWidth={1} />
+      <SvgText x={x} y={y - 13 * s} fontSize={5.4 * s} fontWeight="bold" fill="#FFFFFF" textAnchor="middle">{text}</SvgText>
+    </G>
+  );
+}
+
+function Balloons({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  const cols = ['#E0699A', '#5BA6C9', '#FFD24C', '#7FB04F'];
+  return (
+    <G>
+      {cols.map((c, i) => (
+        <Line key={`l${i}`} x1={x + (i - 1.5) * 5 * s} y1={y - 14 * s} x2={x} y2={y} stroke="#C9A36B" strokeWidth={0.7} />
+      ))}
+      {cols.map((c, i) => (
+        <Circle key={i} cx={x + (i - 1.5) * 5 * s} cy={y - 18 * s} r={4 * s} fill={c} />
+      ))}
+    </G>
+  );
+}
+
+function Lantern({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G>
+      <Line x1={x} y1={y - 14 * s} x2={x} y2={y - 10 * s} stroke="#7E5736" strokeWidth={1} />
+      <Rect x={x - 3 * s} y={y - 10 * s} width={6 * s} height={8 * s} rx={2} fill="#FFD98A" stroke="#E0A05A" strokeWidth={1} />
+      <Circle cx={x} cy={y - 6 * s} r={2.4 * s} fill="#FFF1C2" />
+    </G>
+  );
+}
+
+export function Scooter({ x, y, s = 1, color = '#E0764B' }: { x: number; y: number; s?: number; color?: string }) {
+  return (
+    <G>
+      <Ellipse cx={x} cy={y + 3 * s} rx={16 * s} ry={3 * s} fill="#000" opacity={0.12} />
+      <Circle cx={x - 11 * s} cy={y} r={5 * s} fill="#3F3B37" />
+      <Circle cx={x - 11 * s} cy={y} r={2 * s} fill="#9AA6B0" />
+      <Circle cx={x + 11 * s} cy={y} r={5 * s} fill="#3F3B37" />
+      <Circle cx={x + 11 * s} cy={y} r={2 * s} fill="#9AA6B0" />
+      <Path d={`M ${x - 11 * s} ${y - 1 * s} q 6 -10 14 -2 l 4 0 q 3 0 3 3 l -2 0`} fill="none" stroke={color} strokeWidth={4 * s} strokeLinecap="round" />
+      <Rect x={x - 6 * s} y={y - 10 * s} width={14 * s} height={6 * s} rx={2} fill={color} />
+      <Rect x={x + 9 * s} y={y - 18 * s} width={2 * s} height={9 * s} fill="#6E7681" />
+      <Rect x={x + 6 * s} y={y - 19 * s} width={8 * s} height={2.4 * s} rx={1} fill="#5B5550" />
+    </G>
+  );
+}
+
+export function Cycle({ x, y, s = 1, color = '#5BA6C9' }: { x: number; y: number; s?: number; color?: string }) {
+  return (
+    <G>
+      <Ellipse cx={x} cy={y + 3 * s} rx={16 * s} ry={2.6 * s} fill="#000" opacity={0.1} />
+      <Circle cx={x - 10 * s} cy={y} r={7 * s} fill="none" stroke="#3F3B37" strokeWidth={1.6 * s} />
+      <Circle cx={x + 10 * s} cy={y} r={7 * s} fill="none" stroke="#3F3B37" strokeWidth={1.6 * s} />
+      <Path d={`M ${x - 10 * s} ${y} L ${x} ${y} L ${x + 10 * s} ${y} M ${x} ${y} L ${x - 3 * s} ${y - 10 * s} L ${x + 8 * s} ${y - 10 * s}`} stroke={color} strokeWidth={1.8 * s} fill="none" strokeLinecap="round" />
+      <Rect x={x - 6 * s} y={y - 13 * s} width={8 * s} height={2 * s} rx={1} fill="#5B5550" />
+      <Rect x={x + 7 * s} y={y - 14 * s} width={2 * s} height={5 * s} fill="#5B5550" />
+    </G>
+  );
+}
+
 /* ───────────────────────── 20 scenes ───────────────────────── */
 
 const T_STONE = '#E9DFC8';
@@ -630,6 +758,15 @@ function TownSquareScene() {
       <Tree x={GX + 92} base={GY + 4} s={0.85} />
       <Flower x={GX - 16} y={GY + 24} color="#FF9FC0" />
       <Flower x={GX + 12} y={GY + 26} color="#FFD24C" />
+      {/* circular plaza tiles */}
+      <Ellipse cx={GX} cy={GY + 4} rx={52} ry={22} fill="none" stroke={shade(T_STONE, 14)} strokeWidth={1} opacity={0.5} />
+      <NoticeBoard x={GX - 66} y={GY + 20} s={0.9} />
+      <FlowerPot x={GX - 40} y={GY + 26} color="#E0699A" />
+      <FlowerPot x={GX + 40} y={GY + 26} color="#7E6BD0" />
+      <Dustbin x={GX + 68} y={GY + 22} s={0.85} />
+      <Pigeon x={GX - 8} y={GY + 30} />
+      <Pigeon x={GX + 6} y={GY + 32} s={0.85} />
+      <Pigeon x={GX + 18} y={GY + 28} s={0.9} />
     </G>
   );
 }
@@ -650,6 +787,11 @@ function ParkScene() {
       <Flower x={GX - 40} y={GY + 22} color="#E0699A" />
       <Flower x={GX + 4} y={GY + 24} color="#FFD24C" />
       <Flower x={GX + 52} y={GY + 22} color="#7E6BD0" />
+      <Dustbin x={GX + 60} y={GY + 14} s={0.85} />
+      <Bush x={GX - 70} y={GY + 18} s={0.8} />
+      <FlowerPot x={GX + 30} y={GY + 18} color="#FFD24C" s={0.85} />
+      <Pigeon x={GX - 4} y={GY + 26} s={0.85} />
+      <Pigeon x={GX + 22} y={GY + 28} s={0.8} />
     </G>
   );
 }
@@ -667,6 +809,12 @@ function CafeCornerScene() {
       <Person x={GX - 18} base={GY + 17} shirt="#E0699A" dress />
       <Plant x={GX + 84} base={GY + 12} />
       <Bush x={GX - 78} y={GY + 14} s={0.85} />
+      {/* barista at the window + menu board + extra cup */}
+      <Rect x={GX + 22} y={GY - 34} width={20} height={12} rx={2} fill="#FFE6A0" stroke="#E0B85A" strokeWidth={1} />
+      <Person x={GX + 32} base={GY - 22} s={0.7} shirt="#FFFFFF" />
+      <MenuBoard x={GX - 2} y={GY + 16} s={0.9} text="CAFÉ" />
+      <FlowerPot x={GX - 64} y={GY + 16} color="#E0699A" s={0.85} />
+      <Pigeon x={GX - 30} y={GY + 22} s={0.8} />
     </G>
   );
 }
@@ -690,6 +838,13 @@ function GiftShopScene() {
       <Person x={GX - 22} base={GY + 16} shirt="#7FB04F" wave />
       <Person x={GX - 40} base={GY + 18} s={0.85} shirt="#E0A526" dress />
       <Plant x={GX + 80} base={GY + 12} />
+      {/* glass display + ribbon + thank-you sign + handing a gift bag */}
+      <Rect x={GX - 18} y={GY - 34} width={26} height={16} rx={2} fill="#CFE7F4" stroke="#FFFFFF" strokeWidth={1.4} opacity={0.85} />
+      <Glass x={GX - 18} y={GY - 34} w={26} h={16} />
+      <Rect x={GX - 26} y={GY + 4} width={8} height={9} rx={1} fill="#FFC0D2" />
+      <Rect x={GX - 23} y={GY - 1} width={2} height={5} fill="#E0699A" />
+      <MiniSign x={GX + 30} y={GY + 14} text="THANK YOU" color="#E0699A" s={0.85} />
+      <FlowerPot x={GX - 60} y={GY + 14} color="#7E6BD0" s={0.8} />
     </G>
   );
 }
@@ -719,6 +874,11 @@ function HomeRoutineScene() {
       <Ellipse cx={GX - 38} cy={GY + 5} rx={4} ry={1.8} fill="#7E6BD0" />
       <Plant x={GX + 50} base={GY + 4} s={0.85} />
       <Person x={GX - 2} base={GY + 6} shirt="#5BA6C9" />
+      {/* sunlight through window + toothbrush cup */}
+      <Polygon points={`${GX + 40},${GY - 60} ${GX + 56},${GY - 60} ${GX + 40},${GY - 30} ${GX + 24},${GY - 30}`} fill="#FFE9A8" opacity={0.25} />
+      <Rect x={GX + 44} y={GY - 64} width={18} height={14} rx={1.5} fill="#BFE0F2" stroke="#FFFFFF" strokeWidth={1.4} />
+      <Rect x={GX + 2} y={GY - 12} width={4} height={6} rx={1} fill="#5BA6C9" />
+      <Line x1={GX + 4} y1={GY - 12} x2={GX + 4} y2={GY - 17} stroke="#E0699A" strokeWidth={1} />
     </G>
   );
 }
@@ -759,6 +919,11 @@ function BusStopScene() {
       <Person x={GX + 36} base={GY + 10} s={0.85} shirt="#E0A526" dress />
       <Bush x={GX - 80} y={GY + 16} s={0.85} />
       <Lamp x={GX + 78} base={GY - 4} />
+      {/* a cycle + bench + 'excuse me' passer-by */}
+      <Cycle x={GX - 64} y={GY + 8} s={0.7} color="#5BA6C9" />
+      <Bench x={GX + 16} base={GY - 6} s={0.85} />
+      <Person x={GX + 60} base={GY + 12} s={0.9} shirt="#9168C9" wave />
+      <Dustbin x={GX - 90} y={GY + 8} s={0.8} />
     </G>
   );
 }
@@ -780,6 +945,14 @@ function TownGateScene() {
       <Person x={GX} base={GY + 18} shirt="#5BA6C9" wave />
       <Flower x={GX - 30} y={GY + 16} color="#E0699A" />
       <Flower x={GX + 30} y={GY + 16} color="#FFD24C" />
+      {/* flags on the arch + flower beds + signboard */}
+      <Polygon points={`${GX - 60},${GY - 98} ${GX - 60},${GY - 110} ${GX - 50},${GY - 104}`} fill="#E0764B" />
+      <Polygon points={`${GX + 60},${GY - 98} ${GX + 60},${GY - 110} ${GX + 50},${GY - 104}`} fill="#5BA6C9" />
+      <Line x1={GX - 60} y1={GY - 98} x2={GX - 60} y2={GY - 112} stroke="#7E5736" strokeWidth={1} />
+      <Line x1={GX + 60} y1={GY - 98} x2={GX + 60} y2={GY - 112} stroke="#7E5736" strokeWidth={1} />
+      <FlowerBed x={GX - 50} y={GY + 18} s={0.7} />
+      <FlowerBed x={GX + 50} y={GY + 18} s={0.7} />
+      <MiniSign x={GX - 84} y={GY + 22} text="EXIT" color="#5BA64E" s={0.8} />
     </G>
   );
 }
@@ -816,6 +989,10 @@ function LivingRoomScene() {
       <Rect x={GX - 74} y={GY - 26} width={2.4} height={26} fill="#9A764C" />
       <Path d={`M ${GX - 79} ${GY - 26} q 5 -8 10 0 z`} fill="#FFE49A" />
       <Plant x={GX - 8} base={GY + 6} s={0.85} />
+      {/* family photo on the wall */}
+      <Rect x={GX - 18} y={GY - 44} width={16} height={12} rx={1.5} fill="#FFF7EE" stroke="#B98E5A" strokeWidth={1.6} />
+      <Circle cx={GX - 13} cy={GY - 38} r={2} fill="#C68A5E" />
+      <Circle cx={GX - 7} cy={GY - 38} r={2} fill="#E0A05A" />
       <Person x={GX - 56} base={GY - 2} shirt="#7E6BD0" />
       <Person x={GX - 4} base={GY + 10} shirt="#5BA6C9" wave />
     </G>
@@ -852,6 +1029,10 @@ function KitchenScene() {
       <Glass x={GX - 18} y={GY - 48} w={16} h={14} />
       <Person x={GX - 40} base={GY + 2} shirt="#E0699A" dress />
       <Person x={GX + 6} base={GY + 8} shirt="#5BA6C9" wave />
+      {/* breakfast plates on the counter + kettle */}
+      <Circle cx={GX - 22} cy={GY - 13} r={3} fill="#FFFFFF" stroke="#D8C7A8" strokeWidth={0.8} />
+      <Circle cx={GX - 14} cy={GY - 13} r={2.4} fill="#E0A526" />
+      <Rect x={GX - 34} y={GY - 17} width={5} height={5} rx={1} fill="#5BA6C9" />
     </G>
   );
 }
@@ -877,6 +1058,13 @@ function BedroomTripScene() {
       {/* bedside lamp */}
       <Rect x={GX - 70} y={GY - 16} width={8} height={6} rx={1} fill="#C99A6B" />
       <Path d={`M ${GX - 69} ${GY - 16} l 6 0 l -1.5 -5 l -3 0 z`} fill="#FFE49A" />
+      {/* laptop on the bed + travel posters on the wall */}
+      <Rect x={GX - 16} y={GY - 8} width={12} height={8} rx={1} fill="#3C4A66" />
+      <Rect x={GX - 15} y={GY - 7} width={10} height={5} rx={0.5} fill="#9FD0EC" />
+      <Rect x={GX - 14} y={GY - 40} width={14} height={11} rx={1.5} fill="#BFE6F5" stroke="#FFFFFF" strokeWidth={1.4} />
+      <Path d={`M ${GX - 14} ${GY - 31} l 5 -6 l 4 3 l 5 -4 v 7 z`} fill="#7FB04F" />
+      <Rect x={GX + 4} y={GY - 38} width={12} height={10} rx={1.5} fill="#FFE08A" stroke="#FFFFFF" strokeWidth={1.4} />
+      <Circle cx={GX + 10} cy={GY - 34} r={2} fill="#E0764B" />
       <Person x={GX + 2} base={GY + 8} shirt="#7E6BD0" />
       <Person x={GX + 16} base={GY + 10} s={0.85} shirt="#E0A526" />
     </G>
@@ -899,6 +1087,13 @@ function DoorwaySorryScene() {
       <Person x={GX + 32} base={GY + 10} shirt="#5BA6C9" />
       <Person x={GX + 48} base={GY + 12} shirt="#E0699A" dress />
       <SvgText x={GX + 40} y={GY - 16} fontSize={11} fill="#E0699A">♥</SvgText>
+      {/* shoe rack + warm porch light + plant */}
+      <Rect x={GX - 30} y={GY - 4} width={18} height={6} rx={1} fill="#B98456" />
+      <Rect x={GX - 30} y={GY - 9} width={18} height={3} rx={1} fill="#A9764C" />
+      <Ellipse cx={GX - 26} cy={GY - 5} rx={3} ry={1.4} fill="#5B5550" />
+      <Ellipse cx={GX - 18} cy={GY - 5} rx={3} ry={1.4} fill="#7E6BD0" />
+      <Circle cx={GX + 14} cy={GY - 30} r={9} fill="#FFE49A" opacity={0.3} />
+      <FlowerPot x={GX + 60} y={GY + 8} color="#FFD24C" s={0.8} />
     </G>
   );
 }
@@ -920,6 +1115,10 @@ function DiningTableScene() {
       {/* sideboard with vase */}
       <Rect x={GX - 72} y={GY - 18} width={18} height={12} rx={2} fill="#B98456" />
       <Path d={`M ${GX - 65} ${GY - 18} q -2 -7 4 -7 q 6 0 4 7 z`} fill="#7FB04F" />
+      {/* water jug + extra bowls */}
+      <Path d={`M ${GX + 18} ${GY - 14} l 8 0 l 1 8 l -10 0 z`} fill="#BFE0F2" stroke="#9AC4D8" strokeWidth={1} />
+      <Rect x={GX + 26} y={GY - 12} width={3} height={4} rx={1} fill="#BFE0F2" />
+      <Circle cx={GX + 2} cy={GY - 6} r={2.4} fill="#E0A526" />
       {/* seated family */}
       <SeatedPerson x={GX - 40} base={GY + 8} shirt="#7E6BD0" />
       <SeatedPerson x={GX} base={GY + 14} shirt="#5BA6C9" />
@@ -950,6 +1149,11 @@ function NeighbourhoodParkScene() {
       <Person x={GX + 44} base={GY + 16} s={0.8} shirt="#E0A526" dress />
       <Flower x={GX - 30} y={GY + 18} color="#FFD24C" />
       <Flower x={GX + 60} y={GY + 18} color="#E0699A" />
+      {/* slide */}
+      <Rect x={GX + 30} y={GY - 26} width={3} height={26} fill="#9A764C" />
+      <Path d={`M ${GX + 31} ${GY - 24} q -18 6 -22 24`} stroke="#E0764B" strokeWidth={4} fill="none" strokeLinecap="round" />
+      <Rect x={GX + 26} y={GY - 28} width={10} height={4} rx={1} fill="#5C6BC0" />
+      <FlowerBed x={GX - 50} y={GY + 18} s={0.6} />
     </G>
   );
 }
@@ -971,6 +1175,11 @@ function BalconyScene() {
       <Plant x={GX - 58} base={GY - 4} s={1.1} />
       <Plant x={GX + 58} base={GY - 4} s={1.1} />
       <Flower x={GX + 40} y={GY - 6} color="#E0699A" />
+      {/* small table + tea cup + chair */}
+      <Rect x={GX + 24} y={GY - 2} width={14} height={3} rx={1} fill="#C99A6B" />
+      <Circle cx={GX + 31} cy={GY - 4} r={2} fill="#FFFFFF" stroke="#C99A6B" strokeWidth={0.8} />
+      <Path d={`M ${GX + 33} ${GY - 4} q 2 0 2 2`} stroke="#C99A6B" strokeWidth={0.8} fill="none" />
+      <Chair x={GX + 40} base={GY + 6} />
       <Person x={GX - 12} base={GY + 8} shirt="#E0A526" dress />
       <Person x={GX + 20} base={GY + 8} shirt="#5BA6C9" wave />
     </G>
@@ -989,8 +1198,13 @@ function RestaurantHostScene() {
       <Rect x={GX - 46} y={GY - 20} width={22} height={4} fill="#A9764C" />
       <Rect x={GX - 42} y={GY - 18} width={14} height={3} fill="#FFFFFF" />
       <Sign x={GX - 66} base={GY - 4} text="RESERVE" color="#9B6B4B" />
+      {/* booking register on the podium + reservation board */}
+      <Rect x={GX - 43} y={GY - 22} width={10} height={3} rx={1} fill="#FFFFFF" />
+      <Line x1={GX - 41} y1={GY - 20.5} x2={GX - 35} y2={GY - 20.5} stroke="#C2A87E" strokeWidth={0.5} />
       <Person x={GX - 35} base={GY + 4} shirt="#3C4A66" />
+      <Person x={GX - 60} base={GY + 14} s={0.85} shirt="#5BA6C9" />
       <Plant x={GX + 84} base={GY + 12} s={1.1} />
+      <Plant x={GX - 12} base={GY + 14} s={0.8} />
       <Lamp x={GX - 84} base={GY + 2} s={0.85} />
     </G>
   );
@@ -1011,6 +1225,10 @@ function RestaurantEntranceScene() {
       <Glass x={GX - 4} y={GY - 32} w={22} h={32} />
       <Ellipse cx={GX + 6} cy={GY + 2} rx={14} ry={3} fill="#C0533B" opacity={0.6} />
       <Lamp x={GX - 30} base={GY} s={0.85} />
+      {/* lantern lights + menu stand */}
+      <Lantern x={GX - 18} y={GY - 6} s={1} />
+      <Lantern x={GX + 22} y={GY - 6} s={1} />
+      <MenuBoard x={GX + 30} y={GY + 10} s={0.85} />
       <Person x={GX + 32} base={GY + 10} shirt="#3C4A66" />
       <Person x={GX + 48} base={GY + 12} shirt="#5BA6C9" wave />
       <Plant x={GX + 70} base={GY + 12} />
@@ -1035,6 +1253,10 @@ function RestaurantMenuScene() {
       <SeatedPerson x={GX + 30} base={GY + 8} shirt="#E0699A" dress />
       <Person x={GX + 54} base={GY + 8} shirt="#3C4A66" />
       <Rect x={GX + 46} y={GY - 8} width={8} height={6} rx={1} fill="#FFF7EE" stroke="#C9B393" strokeWidth={1} transform={`rotate(-12 ${GX + 50} ${GY - 5})`} />
+      {/* folded napkins + water glasses */}
+      <Polygon points={`${GX - 18},${GY - 5} ${GX - 12},${GY - 5} ${GX - 15},${GY - 10} z`} fill="#FFFFFF" stroke="#E0E0E0" strokeWidth={0.6} />
+      <Polygon points={`${GX + 12},${GY - 5} ${GX + 18},${GY - 5} ${GX + 15},${GY - 10} z`} fill="#FFFFFF" stroke="#E0E0E0" strokeWidth={0.6} />
+      <Rect x={GX - 6} y={GY - 11} width={3.4} height={6} rx={1} fill="#BFE0F2" />
     </G>
   );
 }
@@ -1057,6 +1279,11 @@ function RestaurantOrderingScene() {
       <Rect x={GX + 50} y={GY - 8} width={6} height={7} rx={1} fill="#FFFFFF" stroke="#C9B393" strokeWidth={1} />
       <Line x1={GX + 51} y1={GY - 6} x2={GX + 55} y2={GY - 6} stroke="#C2A87E" strokeWidth={0.6} />
       <Line x1={GX + 51} y1={GY - 4} x2={GX + 55} y2={GY - 4} stroke="#C2A87E" strokeWidth={0.6} />
+      {/* food + drinks on the table */}
+      <Ellipse cx={GX - 4} cy={GY - 9} rx={4} ry={2.4} fill="#FFFFFF" stroke="#D8C7A8" strokeWidth={0.8} />
+      <Circle cx={GX - 4} cy={GY - 10} r={2} fill="#E0764B" />
+      <Rect x={GX + 6} y={GY - 12} width={3.4} height={6} rx={1} fill="#FFD24C" />
+      <Rect x={GX - 16} y={GY - 12} width={3.4} height={6} rx={1} fill="#9FD0EC" />
     </G>
   );
 }
@@ -1073,6 +1300,14 @@ function RestaurantBillingScene() {
       <Rect x={GX + 10} y={GY - 27} width={10} height={13} rx={2} fill="#3C4A66" />
       <Rect x={GX + 11.5} y={GY - 25} width={7} height={4} fill="#9FD0EC" />
       <Circle cx={GX + 26} cy={GY - 22} r={2} fill="#FFD24C" />
+      {/* QR payment stand + dessert display */}
+      <Rect x={GX - 8} y={GY - 34} width={9} height={9} rx={1} fill="#FFFFFF" stroke="#3C4A66" strokeWidth={1} />
+      {[0, 1, 2].map((r) => [0, 1, 2].map((c) => (
+        <Rect key={`${r}-${c}`} x={GX - 6.5 + c * 2.4} y={GY - 32.5 + r * 2.4} width={1.4} height={1.4} fill={(r + c) % 2 ? '#3C4A66' : '#FFFFFF'} />
+      )))}
+      <Rect x={GX - 40} y={GY - 26} width={16} height={8} rx={1.5} fill="#CFE7F4" stroke="#FFFFFF" strokeWidth={1} opacity={0.85} />
+      <Circle cx={GX - 35} cy={GY - 22} r={1.6} fill="#E0699A" />
+      <Circle cx={GX - 29} cy={GY - 22} r={1.6} fill="#FFD24C" />
       <Person x={GX} base={GY - 18} shirt="#E0699A" dress />
       <Person x={GX + 36} base={GY + 6} shirt="#5BA6C9" />
     </G>
@@ -1091,6 +1326,10 @@ function RestaurantExitScene() {
       <Rect x={GX + 28} y={GY - 20} width={20} height={20} rx={2} fill="#FFFFFF" stroke="#C9B393" strokeWidth={1.4} />
       <SvgText x={GX + 38} y={GY - 7} fontSize={9} fill="#FFC53D" textAnchor="middle">★★★</SvgText>
       <Rect x={GX + 36} y={GY - 30} width={2} height={10} fill="#9A764C" />
+      {/* thank-you board + open door glow + lantern */}
+      <MiniSign x={GX + 64} y={GY + 12} text="VISIT AGAIN" color="#3BB273" s={0.78} />
+      <Polygon points={`${GX - 14},${GY} ${GX + 8},${GY} ${GX + 4},${GY + 8} ${GX - 10},${GY + 8}`} fill="#FFE49A" opacity={0.3} />
+      <Lantern x={GX - 22} y={GY - 8} s={1} />
       <Person x={GX + 8} base={GY + 10} shirt="#3C4A66" />
       <Person x={GX + 56} base={GY + 12} shirt="#5BA6C9" wave />
       <Plant x={GX - 4} base={GY + 2} s={0.85} />
