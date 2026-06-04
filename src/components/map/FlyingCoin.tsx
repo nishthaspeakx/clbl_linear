@@ -21,29 +21,31 @@ interface Props {
 export default function FlyingCoin({ startX, startY, targetX, targetY, value, delay = 0, onArrive }: Props) {
   const p = useSharedValue(0);
   useEffect(() => {
-    p.value = withDelay(delay, withTiming(1, { duration: 560, easing: Easing.inOut(Easing.cubic) }, (fin) => {
+    p.value = withDelay(delay, withTiming(1, { duration: 720, easing: Easing.bezier(0.22, 0.7, 0.25, 1) }, (fin) => {
       'worklet';
       if (fin) runOnJS(onArrive)();
     }));
   }, [p, delay, onArrive]);
 
-  // slight upward arc via a control point above the midpoint
+  // gentle upward arc via a control point above the midpoint
   const ctrlX = (startX + targetX) / 2;
-  const ctrlY = Math.min(startY, targetY) - 60;
+  const ctrlY = Math.min(startY, targetY) - 44;
 
   const coinStyle = useAnimatedStyle(() => {
     const t = p.value;
     const mt = 1 - t;
     const x = mt * mt * startX + 2 * mt * t * ctrlX + t * t * targetX;
     const y = mt * mt * startY + 2 * mt * t * ctrlY + t * t * targetY;
+    // smooth pop-in, gentle shrink toward the counter, fade only at the very end
+    const scale = 0.55 + Math.sin(Math.min(t, 0.5) * Math.PI) * 0.5 - Math.max(0, t - 0.7) * 0.5;
     return {
-      transform: [{ translateX: x - 12 }, { translateY: y - 12 }, { scale: 0.7 + (1 - Math.abs(t - 0.3)) * 0.5 }],
-      opacity: t > 0.85 ? (1 - t) / 0.15 : 1,
+      transform: [{ translateX: x - 12 }, { translateY: y - 12 }, { scale }],
+      opacity: t > 0.9 ? (1 - t) / 0.1 : 1,
     };
   });
   const tagStyle = useAnimatedStyle(() => ({
-    opacity: p.value < 0.35 ? 1 - p.value / 0.35 : 0,
-    transform: [{ translateX: startX - 6 }, { translateY: startY - 30 - p.value * 16 }],
+    opacity: p.value < 0.3 ? 1 - p.value / 0.3 : 0,
+    transform: [{ translateX: startX - 6 }, { translateY: startY - 28 - p.value * 18 }],
   }));
 
   return (

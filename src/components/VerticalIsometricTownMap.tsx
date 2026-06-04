@@ -201,29 +201,22 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
             <Path d={`M0 0 H ${WORLD_W} V ${WORLD_H} H 0 Z`} fill="url(#wash)" />
           </Svg>
 
-          {/* Glowing direction path on the CURRENT → NEXT segment, with chevrons */}
+          {/* Light direction chevrons on the CURRENT → NEXT segment (kept subtle
+              so the road stays as light as before — no heavy/dark overlay). */}
           {currentId < TOTAL_SUBTOPICS && (
             <Svg width={WORLD_W} height={WORLD_H} style={StyleSheet.absoluteFill} pointerEvents="none">
               {(() => {
                 const { pts } = samplePath(currentId, currentId + 1, 16);
-                const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-                const chevrons = [0.34, 0.55, 0.76].map((tt, k) => {
+                return [0.36, 0.58, 0.8].map((tt, k) => {
                   const i = Math.min(pts.length - 2, Math.floor(tt * (pts.length - 1)));
                   const p = pts[i];
                   const ang = (Math.atan2(pts[i + 1].y - p.y, pts[i + 1].x - p.x) * 180) / Math.PI + 90;
                   return (
-                    <Path key={k} d="M -6 4 L 0 -3 L 6 4" fill="none" stroke="#FF7A00" strokeWidth={3}
-                      strokeLinecap="round" strokeLinejoin="round" opacity={0.85}
+                    <Path key={k} d="M -5 3 L 0 -3 L 5 3" fill="none" stroke="#FF9A3D" strokeWidth={2.2}
+                      strokeLinecap="round" strokeLinejoin="round" opacity={0.45}
                       transform={`translate(${p.x} ${p.y}) rotate(${ang})`} />
                   );
                 });
-                return (
-                  <>
-                    <Path d={d} stroke="#FF9A3D" strokeWidth={15} fill="none" strokeLinecap="round" opacity={0.16} />
-                    <AnimatedPath d={d} stroke="#FF7A00" strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray="2 14" animatedProps={dotsProps} opacity={0.9} />
-                    {chevrons}
-                  </>
-                );
               })()}
             </Svg>
           )}

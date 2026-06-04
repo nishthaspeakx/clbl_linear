@@ -15,14 +15,13 @@ import {
   View,
 } from 'react-native';
 import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
-import { Easing, useAnimatedReaction, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 
 import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
 import { TOPIC_ZONES, topicZoneOf } from '../data/topicZones';
 import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
-import { samplePath, pointAt } from '../utils/pathInterpolation';
 import { generateCoinTrail, playCoinSound, triggerLightHaptic } from '../utils/rewardUtils';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import AppHeader, { HEADER_HEIGHT } from '../components/AppHeader';
@@ -93,25 +92,6 @@ export default function EnglishTownScreen() {
   const charX = useSharedValue(0);
   const charY = useSharedValue(0);
   const walking = useSharedValue(0);
-  // Walk-along-the-road: walkT drives charX/charY along the sampled path.
-  const walkT = useSharedValue(0);
-  const pathXs = useSharedValue<number[]>([]);
-  const pathYs = useSharedValue<number[]>([]);
-  useAnimatedReaction(
-    () => walkT.value,
-    (t) => {
-      'worklet';
-      const xs = pathXs.value;
-      const ys = pathYs.value;
-      const n = xs.length;
-      if (n < 2) return;
-      const f = t * (n - 1);
-      const i = Math.min(n - 2, Math.floor(f));
-      const frac = f - i;
-      charX.value = xs[i] + (xs[i + 1] - xs[i]) * frac;
-      charY.value = ys[i] + (ys[i + 1] - ys[i]) * frac;
-    },
-  );
 
   const focusLesson = useCallback(
     (id: number, animated = true) => {
@@ -199,25 +179,29 @@ export default function EnglishTownScreen() {
         return;
       }
 
-      // 3. coin trail + sampled walk path
-      const trail = generateCoinTrail(COINS_PER_LEVEL, 5);
-      const { xs, ys, pts } = samplePath(id, nextId, 24);
-      setCoinTrail(trail.map((tc) => { const p = pointAt(pts, tc.t); return { index: tc.index, x: p.x, y: p.y, value: tc.value }; }));
+      // 3. coin trail along the straight walk line (so coins sit on the path)
+      const from = lessonPos(id);
+      const to = lessonPos(nextId);
+      const trail = generateCoinTrail(COINS_PER_LEVEL, 7);
+      setCoinTrail(trail.map((tc) => ({
+        index: tc.index,
+        x: from.x + (to.x - from.x) * tc.t,
+        y: from.y + (to.y - from.y) * tc.t,
+        value: tc.value,
+      })));
       setCoinsCollected(0);
       setFlyingCoins([]);
 
-      // 4. walk along the path + camera follows
-      pathXs.value = xs;
-      pathYs.value = ys;
-      walkT.value = 0;
+      // 4. walk smoothly to the next pin (direct timing) + camera follows
       walking.value = 1;
       playSound('walk');
-      walkT.value = withTiming(1, { duration: WALK_MS, easing: Easing.inOut(Easing.ease) }, (fin) => {
+      charX.value = withTiming(to.x, { duration: WALK_MS });
+      charY.value = withTiming(to.y, { duration: WALK_MS }, (fin) => {
         'worklet';
         if (fin) walking.value = 0;
       });
-      const camTarget = clamp(CENTER_BIAS - lessonPos(nextId).y, MIN_Y, 0);
-      translateY.value = withTiming(camTarget, { duration: WALK_MS, easing: Easing.inOut(Easing.ease) });
+      const camTarget = clamp(CENTER_BIAS - to.y, MIN_Y, 0);
+      translateY.value = withTiming(camTarget, { duration: WALK_MS });
 
       // 5–6. collect coins one by one → fly to counter → increment
       trail.forEach((tc) => {
@@ -243,7 +227,7 @@ export default function EnglishTownScreen() {
         if (isTopicEnd(id)) setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
       }, WALK_MS + 260));
     },
-    [progress, townDone, busy, coins, charX, charY, walking, walkT, pathXs, pathYs, translateY, showToast]
+    [progress, townDone, busy, coins, charX, charY, walking, translateY, showToast]
   );
 
   const toggleNight = useCallback(() => {
@@ -265,9 +249,6 @@ export default function EnglishTownScreen() {
     seqTimers.current.forEach(clearTimeout);
     seqTimers.current = [];
     const start = lessonPos(1);
-    pathXs.value = [];
-    pathYs.value = [];
-    walkT.value = 0;
     walking.value = 0;
     charX.value = start.x;
     charY.value = start.y;
@@ -282,7 +263,7 @@ export default function EnglishTownScreen() {
     setTownDone(false);
     setCelebrateTopic(null);
     setOverlayLevelId(null);
-  }, [charX, charY, focusLesson, walkT, pathXs, pathYs, walking]);
+  }, [charX, charY, focusLesson, walking]);
 
   if (!loaded) {
     return (
