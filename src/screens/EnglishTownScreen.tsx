@@ -25,6 +25,7 @@ import { LAYOUT, lessonPos, WORLD_H } from '../utils/mapLayout';
 import { clamp } from '../utils/position';
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import TopProgressHeader from '../components/TopProgressHeader';
+import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import {
   loadProgress,
   saveProgress,
@@ -57,6 +58,8 @@ export default function EnglishTownScreen() {
   const [celebrateTopic, setCelebrateTopic] = useState<number | null>(null);
   const [night, setNight] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** Subtopic id whose exercise journey overlay is open (null = closed). */
+  const [overlayLevelId, setOverlayLevelId] = useState<number | null>(null);
 
   const translateY = useSharedValue(0);
   const charX = useSharedValue(0);
@@ -144,9 +147,9 @@ export default function EnglishTownScreen() {
     [progress, townDone, focusLesson, charX, charY, walking]
   );
 
-  /** ── FUTURE: open the actual lesson screen here. ── */
+  /** Start Lesson → open the gamified exercise-journey overlay for that level. */
   const handleStartLesson = useCallback((id: number) => {
-    console.log('[EnglishTownScreen] start/review lesson', id);
+    setOverlayLevelId(id);
   }, []);
 
   const handleReset = useCallback(async () => {
@@ -160,6 +163,7 @@ export default function EnglishTownScreen() {
     setTownDone(false);
     setCelebrateTopic(null);
     setSheetOpen(false); // start fresh with no bottom sheet — opens only on tap
+    setOverlayLevelId(null);
   }, [charX, charY, focusLesson]);
 
   if (!loaded) {
@@ -250,6 +254,24 @@ export default function EnglishTownScreen() {
             </Pressable>
           </View>
         </View>
+      )}
+
+      {/* Exercise journey overlay (opens on Start Lesson) */}
+      {overlayLevelId !== null && (
+        <ExerciseJourneyOverlay
+          levelId={overlayLevelId}
+          levelNumber={levelInTopic(overlayLevelId)}
+          title={SUBTOPICS[overlayLevelId - 1].title}
+          location={SUBTOPICS[overlayLevelId - 1].location}
+          accent={topicZoneOf(SUBTOPICS[overlayLevelId - 1].topicIndex).accent}
+          canComplete={overlayLevelId === progress.currentId && !townDone}
+          onClose={() => setOverlayLevelId(null)}
+          onCompleteLevel={(id) => {
+            handleComplete(id);
+            setOverlayLevelId(null);
+            setSheetOpen(false);
+          }}
+        />
       )}
     </GestureHandlerRootView>
   );
