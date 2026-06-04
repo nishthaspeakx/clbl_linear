@@ -189,8 +189,9 @@ function buildLayout() {
     }
   });
   // Two cars driving across short side-streets (masked by hedges at the ends).
+  // The gift-shop car drives along the LEFT verge so it never crosses the plaza.
   const cars = [
-    { x: WORLD_W * 0.66, y: lessons[3].py - 10, span: WORLD_W * 0.5, color: '#5BA6C9' },
+    { x: WORLD_W * 0.2, y: lessons[3].py + 14, span: WORLD_W * 0.34, color: '#5BA6C9' },
     { x: WORLD_W * 0.12, y: lessons[12].py - 6, span: WORLD_W * 0.5, color: '#E0764B' },
   ];
   // Two pedestrians pacing a sidewalk near a scene.
