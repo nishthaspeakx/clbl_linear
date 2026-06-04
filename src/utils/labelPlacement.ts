@@ -7,7 +7,7 @@
  * last tapped pin). Side defaults to the road gutter OPPOSITE the scene so the
  * card never covers the building; honours a manual `labelSide` override.
  */
-import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
+import { SUBTOPICS } from '../data/subtopics';
 import { locationScenes } from '../data/locationScenes';
 
 export type LabelStatus = 'completed' | 'current' | 'locked';
@@ -39,22 +39,15 @@ function statusOf(id: number, currentId: number, completed: number[]): LabelStat
 }
 
 /**
- * Focused label set: the previous level (collapsed/compact if completed), the
- * current level (full, prominent), and the next locked level. Everything else
- * is hidden to keep the screen clean.
+ * A label for EVERY subtopic (1..20) — each shows the subtopic name + 📍 the
+ * location, colour-coded by status (current orange, completed green, locked
+ * grey). Spread along the vertical journey so only a few show per screen.
  */
 export function visibleLabels(currentId: number, completed: number[]): LabelInfo[] {
-  const ids: number[] = [];
-  if (currentId - 1 >= 1) ids.push(currentId - 1);
-  ids.push(currentId);
-  if (currentId + 1 <= TOTAL_SUBTOPICS) ids.push(currentId + 1);
-  return ids.map((id) => {
-    const status = statusOf(id, currentId, completed);
-    return {
-      id,
-      status,
-      side: sideFor(id),
-      variant: status === 'completed' ? 'compact' : 'full',
-    } as LabelInfo;
-  });
+  return SUBTOPICS.map((s) => ({
+    id: s.id,
+    status: statusOf(s.id, currentId, completed),
+    side: sideFor(s.id),
+    variant: 'full',
+  }));
 }
