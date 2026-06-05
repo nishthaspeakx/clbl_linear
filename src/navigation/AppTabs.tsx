@@ -41,31 +41,54 @@ export default function AppTabs() {
     </GestureHandlerRootView>
   );
 
-  // On web, center the phone frame on a dark backdrop.
-  const tree = IS_WEB ? <View style={styles.backdrop}>{shell}</View> : shell;
+  // On web, present the app inside a premium phone mockup (dark bezel +
+  // dynamic island + soft shadow) centered on a backdrop.
+  const tree = IS_WEB ? (
+    <View style={styles.backdrop}>
+      <View style={styles.deviceBody}>
+        {shell}
+        <View pointerEvents="none" style={styles.islandWrap}>
+          <View style={styles.island} />
+        </View>
+      </View>
+    </View>
+  ) : shell;
   return <AvatarProvider>{tree}</AvatarProvider>;
 }
+
+const BEZEL = 14;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
   backdrop: {
     flex: 1,
-    backgroundColor: '#1A1B1E',
+    backgroundColor: '#15161A',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Dark phone body (bezel) around the screen.
+  deviceBody: {
+    padding: BEZEL,
+    backgroundColor: '#0B0C10',
+    borderRadius: 56,
+    shadowColor: '#000',
+    shadowOpacity: 0.55,
+    shadowRadius: 44,
+    shadowOffset: { width: 0, height: 22 },
+    borderWidth: 2,
+    borderColor: '#2A2C33',
+  },
+  // The actual app screen.
   frame: {
     width: VIEWPORT_W,
     height: VIEWPORT_H,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
-    // Subtle device shell on wide screens.
-    borderRadius: 28,
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    shadowOffset: { width: 0, height: 12 },
+    borderRadius: 44,
   },
+  // Dynamic-island pill overlaying the top of the screen.
+  islandWrap: { position: 'absolute', top: BEZEL + 12, left: 0, right: 0, alignItems: 'center' },
+  island: { width: 116, height: 32, borderRadius: 17, backgroundColor: '#08090C' },
   screen: { flex: 1 },
   fill: { ...StyleSheet.absoluteFillObject },
   hidden: { opacity: 0 },
