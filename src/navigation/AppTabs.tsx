@@ -22,6 +22,16 @@ import ProgressScreen from '../screens/ProgressScreen';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
 import { AvatarProvider } from '../components/avatar/AvatarContext';
 
+// Scale the whole device up to fill the browser so the demo always looks like a
+// big phone (not a small one floating in a wide desktop window).
+const DEVICE_W = VIEWPORT_W + 32;
+const DEVICE_H = VIEWPORT_H + 32;
+const DEVICE_SCALE = (() => {
+  if (!IS_WEB || typeof window === 'undefined') return 1;
+  const s = Math.min((window.innerHeight * 0.96) / DEVICE_H, (window.innerWidth * 0.96) / DEVICE_W);
+  return Math.max(0.7, Math.min(s, 2.2));
+})();
+
 export default function AppTabs() {
   const [tab, setTab] = useState<TabKey>('home');
 
@@ -45,7 +55,7 @@ export default function AppTabs() {
   // dynamic island + soft shadow) centered on a backdrop.
   const tree = IS_WEB ? (
     <View style={styles.backdrop}>
-      <View style={styles.deviceBody}>
+      <View style={[styles.deviceBody, { transform: [{ scale: DEVICE_SCALE }] }]}>
         {shell}
         <View pointerEvents="none" style={styles.islandWrap}>
           <View style={styles.island} />
