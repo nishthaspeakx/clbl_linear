@@ -7,7 +7,7 @@
  * parent via onMove). Wardrobe/Lifestyle wearables are NOT here — they dress the
  * avatar, who stands on the porch for context.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../../utils/viewport';
@@ -15,8 +15,11 @@ import { AvatarSelection } from '../../storage/avatarStorage';
 import { EquipKey } from '../../data/rewards';
 import { OutfitOverride } from '../../data/avatarOutfits';
 import { RewardItem } from '../../data/rewardCategories';
+import { activeEffects, lifeScore } from '../../utils/dreamHomeLifeScore';
 import UserAvatar from '../avatar/UserAvatar';
 import DraggableRewardObject from './DraggableRewardObject';
+import DreamHomeDayNightOverlay from './DreamHomeDayNightOverlay';
+import DreamHomeLifeEffects from './DreamHomeLifeEffects';
 
 const DREAM_HOME = require('../../assets/dream-home/dream_home_base.jpeg');
 const IMG_ASPECT = 2816 / 1536;
@@ -45,22 +48,33 @@ interface Props {
   equippedKeys: EquipKey[];
   outfit?: OutfitOverride;
   customUri: string | null;
+  completedCount: number;
+  unlockedItems: number;
+  totalItems: number;
 }
 
 export default function DreamHomeEditorModal({
   items, selectedId, onSelect, onMove, onRemove, onReset, onClose, selection, equippedKeys, outfit, customUri,
+  completedCount, unlockedItems, totalItems,
 }: Props) {
+  const [night, setNight] = useState(false);
+  const effects = activeEffects(completedCount);
+  const score = lifeScore(unlockedItems, totalItems);
   return (
     <Modal visible transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={styles.backdrop}>
         <View style={styles.frame}>
           {/* header */}
           <View style={styles.header}>
-            <View style={{ width: 60 }}>
+            <View style={{ width: 78 }}>
               <Text style={styles.editTag}>Edit Mode</Text>
+              <Text style={styles.lifeScore}>🏡 Life {score}%</Text>
             </View>
             <Text style={styles.title}>🏡  My Dream Home</Text>
-            <Pressable onPress={onClose} hitSlop={10} style={styles.close}><Text style={styles.closeX}>✕</Text></Pressable>
+            <View style={styles.headerRight}>
+              <Pressable onPress={() => setNight((n) => !n)} hitSlop={8} style={styles.nightToggle}><Text style={styles.toggleText}>{night ? '🌙' : '☀️'}</Text></Pressable>
+              <Pressable onPress={onClose} hitSlop={10} style={styles.close}><Text style={styles.closeX}>✕</Text></Pressable>
+            </View>
           </View>
 
           {/* canvas */}
@@ -69,6 +83,9 @@ export default function DreamHomeEditorModal({
               {/* tap empty area to deselect */}
               <Pressable style={StyleSheet.absoluteFill} onPress={() => onSelect(null)} />
               <Image source={DREAM_HOME} style={{ width: EIMG_W, height: EIMG_H }} resizeMode="cover" />
+
+              {/* day / night lighting (below the draggable objects) */}
+              <DreamHomeDayNightOverlay width={EIMG_W} height={EIMG_H} night={night} effects={effects} />
 
               {items.map((e) => (
                 <DraggableRewardObject
@@ -94,6 +111,9 @@ export default function DreamHomeEditorModal({
                   <UserAvatar userType={selection.userType} gender={selection.gender} age={selection.age} size={54} equipped={equippedKeys} outfit={outfit} shadow />
                 )}
               </View>
+
+              {/* ambient life: birds, entrance sparkle, full-house glow */}
+              <DreamHomeLifeEffects width={EIMG_W} height={EIMG_H} night={night} effects={effects} />
             </View>
 
             <Text style={styles.hint}>✋  Drag items to place them in your world</Text>
@@ -130,8 +150,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   editTag: { color: PRIMARY, fontWeight: '900', fontSize: 11 },
+  lifeScore: { color: '#FFD24A', fontWeight: '900', fontSize: 11, marginTop: 2 },
   title: { fontSize: 17, fontWeight: '900', color: '#FFFFFF' },
-  close: { width: 60, alignItems: 'flex-end' },
+  headerRight: { width: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
+  nightToggle: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  toggleText: { fontSize: 16 },
+  close: { alignItems: 'flex-end' },
   closeX: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
   canvasArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   canvas: {

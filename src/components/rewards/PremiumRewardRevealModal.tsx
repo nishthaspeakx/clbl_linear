@@ -12,7 +12,7 @@
  * Rarity drives the glow colour + a legendary full-screen golden burst.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing,
@@ -26,6 +26,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { RewardItem } from '../../data/rewardCategories';
 import { VIEWPORT_W, VIEWPORT_H } from '../../utils/viewport';
+import { getRarityStyle } from '../../utils/rarityStyles';
+import RarityIcon from './RarityIcon';
 import GiftBox from './reveal/GiftBox';
 import SparkleLayer from './reveal/SparkleLayer';
 import ParticleLayer from './reveal/ParticleLayer';
@@ -41,7 +43,7 @@ interface Props {
 
 type Phase = 'drop' | 'glow' | 'opening' | 'revealed' | 'claiming';
 
-const GLOW: Record<string, string> = { common: '#FFC074', rare: '#5BA6C9', epic: '#B57BFF', legendary: '#FFD24A' };
+const GLOW: Record<string, string> = { common: '#CFCFCF', rare: '#4A90E2', epic: '#9B59B6', legendary: '#F5B041' };
 const STAGE_W = Math.min(VIEWPORT_W - 36, 320);
 const STAGE_H = 250;
 const BOX = 148;
@@ -65,6 +67,7 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   const rewardOpacity = useSharedValue(0);
   const cardOpacity = useSharedValue(0);
   const claimPulse = useSharedValue(0);
+  const rarityPulse = useSharedValue(0);
   const flyX = useSharedValue(0);
   const flyY = useSharedValue(0);
   const flyScale = useSharedValue(1);
@@ -108,6 +111,10 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   const reveal = () => {
     setPhaseBoth('revealed');
     setShowConfetti(true);
+    // legendary experience: a celebratory vibration burst on mobile
+    if (Platform.OS !== 'web') Vibration.vibrate(legendary ? [0, 35, 55, 35, 70, 55] : 22);
+    // large rarity icon pulses in
+    rarityPulse.value = withDelay(220, withRepeat(withTiming(1, { duration: 880, easing: Easing.inOut(Easing.ease) }), -1, true));
     // 9. reward rises out: scale 0.5→1.2→1.0, rotate −15→15→0
     rewardOpacity.value = withTiming(1, { duration: 180 });
     rewardY.value = withTiming(-14, { duration: 420, easing: Easing.out(Easing.cubic) });
@@ -147,6 +154,7 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   }));
   const cardStyle = useAnimatedStyle(() => ({ opacity: cardOpacity.value, transform: [{ translateY: (1 - cardOpacity.value) * 14 }] }));
   const claimStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + claimPulse.value * 0.05 }] }));
+  const rarityBigStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + rarityPulse.value * 0.16 }], opacity: 0.9 + rarityPulse.value * 0.1 }));
 
   if (!reward) return null;
   const canTap = phase === 'glow' || phase === 'drop';
@@ -234,9 +242,16 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
 
           {/* copy + CTA */}
           <Animated.View style={[styles.copy, cardStyle]}>
+            {/* large animated rarity icon above the reward */}
+            <Animated.Text style={[styles.bigRarity, { textShadowColor: glowColor }, rarityBigStyle]}>
+              {getRarityStyle(reward.rarity).icon}
+            </Animated.Text>
             <Text style={styles.amazing}>🎉  Amazing!</Text>
             <Text style={styles.youUnlocked}>You unlocked:</Text>
-            <Text style={styles.name}>{reward.icon} {reward.name}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{reward.icon} {reward.name}</Text>
+              <RarityIcon rarity={reward.rarity} size={20} />
+            </View>
             <View style={styles.metaRow}>
               {!!reward.topic && <Text style={styles.meta}>From: <Text style={styles.metaB}>{reward.topic}</Text></Text>}
             </View>
@@ -278,7 +293,9 @@ const styles = StyleSheet.create({
   copy: { alignItems: 'center', marginTop: 6 },
   amazing: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.4)', textShadowRadius: 8 },
   youUnlocked: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '700', marginTop: 6 },
-  name: { fontSize: 24, fontWeight: '900', color: '#FFFFFF', marginTop: 4, textAlign: 'center' },
+  bigRarity: { fontSize: 42, textAlign: 'center', marginBottom: 2, textShadowRadius: 18, textShadowOffset: { width: 0, height: 0 } },
+  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 4 },
+  name: { fontSize: 24, fontWeight: '900', color: '#FFFFFF', textAlign: 'center' },
   metaRow: { flexDirection: 'row', marginTop: 8 },
   meta: { fontSize: 13, color: 'rgba(255,255,255,0.72)', fontWeight: '700', marginTop: 2 },
   metaB: { color: '#FFD24A', fontWeight: '900' },

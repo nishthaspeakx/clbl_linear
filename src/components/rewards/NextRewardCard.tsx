@@ -13,6 +13,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { RewardItem } from '../../data/rewardCategories';
+import { getRarityStyle } from '../../utils/rarityStyles';
+import RarityIcon from './RarityIcon';
 
 const PRIMARY = '#FF7A00';
 
@@ -40,9 +42,16 @@ export default function NextRewardCard({ reward, completedCount }: Props) {
   const remaining = Math.max(0, total - completedCount);
   const pct = Math.max(0, Math.min(1, completedCount / total)) * 100;
 
+  const rstyle = getRarityStyle(reward.rarity);
+
   return (
     <View style={styles.card}>
-      <View style={styles.iconTile}><Text style={styles.icon}>{reward.icon}</Text></View>
+      <View style={styles.iconTileWrap}>
+        <View style={styles.iconTile}><Text style={styles.icon}>{reward.icon}</Text></View>
+        <View style={[styles.rarityCorner, { borderColor: rstyle.borderColor }]}>
+          <RarityIcon rarity={reward.rarity} size={12} />
+        </View>
+      </View>
       <View style={styles.right}>
         <Text style={styles.kicker}>🎁  NEXT REWARD</Text>
         <Text style={styles.name}>{reward.name}</Text>
@@ -76,12 +85,17 @@ const styles = StyleSheet.create({
   cardDone: { borderColor: '#BFE6CC' },
   iconTile: {
     width: 64, height: 64, borderRadius: 16, backgroundColor: '#FFF1DE',
-    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+    alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: '#FFD8B0',
   },
   icon: { fontSize: 36 },
   right: { flex: 1 },
   kicker: { fontSize: 10.5, fontWeight: '900', color: PRIMARY, letterSpacing: 0.5 },
+  iconTileWrap: { position: 'relative', marginRight: 14 },
+  rarityCorner: {
+    position: 'absolute', top: -5, left: -5, borderRadius: 9, borderWidth: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.96)', paddingHorizontal: 3, paddingVertical: 1,
+  },
   name: { fontSize: 17, fontWeight: '900', color: '#21242B', marginTop: 2 },
   topic: { fontSize: 11, fontWeight: '800', color: '#2E9E63', marginTop: 1 },
   sub: { fontSize: 12.5, color: '#9AA0A6', fontWeight: '700', marginTop: 2 },

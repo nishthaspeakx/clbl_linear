@@ -8,10 +8,12 @@
  *   • equip  (Wardrobe + wearable Lifestyle) → "Claim Reward" / "✅ Claimed"
  *   • view   (non-wearable Lifestyle)        → "✓ Unlocked"
  */
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RewardItem } from '../../data/rewardCategories';
-import { rarityStyle } from '../../data/rewardRarity';
+import { getRarityStyle } from '../../utils/rarityStyles';
+import RarityIcon from './RarityIcon';
+import RarityCardFx from './RarityCardFx';
 import { ObjectVisual } from './placedObjects';
 
 const PRIMARY = '#FF7A00';
@@ -31,20 +33,22 @@ interface Props {
 
 export default function RewardItemCard({ item, unlocked, mode, placed, equipped, onAction }: Props) {
   const active = (mode === 'equip' && equipped) || (mode === 'place' && placed);
-  const rar = rarityStyle(item.rarity);
-  // Rarity glow (rare/epic/legendary). Common keeps the plain border.
-  const glow = rar.glow && unlocked
-    ? { borderColor: rar.color, shadowColor: rar.color, shadowOpacity: 0.55, shadowRadius: 11, shadowOffset: { width: 0, height: 0 }, elevation: 6 }
-    : null;
+  const r = getRarityStyle(item.rarity);
+  const [area, setArea] = useState({ w: 0, h: 0 });
+  const onArea = (e: LayoutChangeEvent) => setArea({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
+  // Rarity border + glow (rare/epic/legendary glow; common stays a clean grey border).
+  // Locked cards keep a muted neutral border so the rarity reads from the icon, not a glow.
   return (
-    <View style={[styles.card, active && styles.cardActive, glow]}>
-      <View style={[styles.imageArea, !unlocked && styles.imageAreaLocked]}>
+    <View style={[styles.card, active && styles.cardActive, unlocked && r.glowStyle]}>
+      <View style={[styles.imageArea, !unlocked && styles.imageAreaLocked]} onLayout={onArea}>
         <View style={[styles.visual, !unlocked && styles.visualLocked]}>
           <ObjectVisual item={item} size={62} />
         </View>
-        {/* rarity badge (top-left) */}
-        <View style={[styles.rarityBadge, { backgroundColor: rar.tint, borderColor: rar.color }]}>
-          <Text style={[styles.rarityText, { color: rar.color }]}>{rar.sparkle ? '✨ ' : ''}{rar.label}</Text>
+        {/* rarity shine/sparkle (unlocked only, clipped to the image area) */}
+        {unlocked && <RarityCardFx rarity={item.rarity} width={area.w} height={area.h} />}
+        {/* rarity icon — top-left corner (hover/long-press for the name) */}
+        <View style={[styles.rarityCorner, { borderColor: r.borderColor }]}>
+          <RarityIcon rarity={item.rarity} size={13} muted={!unlocked} />
         </View>
         {!unlocked && (
           <View style={styles.lockOverlay}><Text style={styles.lockIcon}>🔒</Text></View>
@@ -78,7 +82,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderWidth: 1.5, borderColor: '#EEF0F2',
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2,
   },
-  cardActive: { borderColor: PRIMARY, backgroundColor: '#FFF9F3' },
+  cardActive: { backgroundColor: '#FFF9F3' },
   imageArea: {
     width: '100%', height: 84, borderRadius: 14, backgroundColor: '#F6F7F9',
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
@@ -93,12 +97,12 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY, alignItems: 'center', justifyContent: 'center',
   },
   activeBadgeText: { color: '#FFFFFF', fontWeight: '900', fontSize: 11 },
-  rarityBadge: {
-    position: 'absolute', top: 6, left: 6, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2,
-    borderWidth: 1,
+  rarityCorner: {
+    position: 'absolute', top: 6, left: 6, borderRadius: 9, borderWidth: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.94)', paddingHorizontal: 4, paddingVertical: 1,
+    alignItems: 'center', justifyContent: 'center',
   },
-  rarityText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.2 },
-  name: { fontSize: 13, fontWeight: '800', color: '#21242B', marginTop: 9, textAlign: 'center' },
+  name: { fontSize: 13, fontWeight: '800', color: '#21242B', textAlign: 'center', marginTop: 9 },
   nameLocked: { color: '#9AA0A6' },
   topic: { fontSize: 9.5, fontWeight: '700', color: '#2E9E63', marginTop: 2, textAlign: 'center' },
   btn: { marginTop: 8, alignSelf: 'stretch', borderRadius: 11, paddingVertical: 8, alignItems: 'center' },

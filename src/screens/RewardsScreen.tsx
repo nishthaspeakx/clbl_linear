@@ -45,6 +45,16 @@ import {
 } from '../storage/dreamHomeLayoutStorage';
 import { COINS_PER_LEVEL, loadProgress } from '../storage/progressStorage';
 import { statusForLevel } from '../data/avatarMilestones';
+import { RewardRarity } from '../data/rewardRarity';
+
+type RarityFilter = RewardRarity | 'all';
+const RARITY_FILTERS: { key: RarityFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'common', label: '⭕' },
+  { key: 'rare', label: '🔷' },
+  { key: 'epic', label: '🌟' },
+  { key: 'legendary', label: '👑' },
+];
 
 const PLACEABLE: RewardCategoryKey[] = ['home', 'garden', 'vehicles'];
 
@@ -63,6 +73,7 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
   const [level, setLevel] = useState(1);
   const [coins, setCoins] = useState(0);
   const [category, setCategory] = useState<RewardCategoryKey>(initialCategory);
+  const [rarityFilter, setRarityFilter] = useState<RarityFilter>('all');
   const [showSetup, setShowSetup] = useState(false);
 
   // Dream Home manual layout (placements + removals)
@@ -195,6 +206,11 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     [category, selection.gender, selection.age, selection.userType]
   );
 
+  const shownItems = useMemo(
+    () => (rarityFilter === 'all' ? items : items.filter((i) => (i.rarity ?? 'common') === rarityFilter)),
+    [items, rarityFilter]
+  );
+
   return (
     <Modal visible transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={styles.backdrop}>
@@ -221,6 +237,7 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               customUri={activeCustomUri}
               unlockedItems={homeProgress.unlocked}
               totalItems={homeProgress.total}
+              completedCount={completedCount}
               onOpenEditor={() => { setEditorSelectedId(null); setEditorOpen(true); }}
             />
 
@@ -260,8 +277,24 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               <Text style={styles.filterNote}>Showing outfits that suit your avatar's profile.</Text>
             )}
 
+            {/* rarity filter chips: All | ⭕ | 🔷 | 🌟 | 👑 */}
+            <View style={styles.rarityChips}>
+              {RARITY_FILTERS.map((f) => {
+                const on = rarityFilter === f.key;
+                return (
+                  <Pressable
+                    key={f.key}
+                    onPress={() => setRarityFilter(f.key)}
+                    style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && { opacity: 0.85 }]}
+                  >
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{f.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <RewardGrid
-              items={items}
+              items={shownItems}
               completedCount={completedCount}
               isEquipped={isEquipped}
               onEquip={toggleEquip}
@@ -287,6 +320,9 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
           equippedKeys={equippedKeys}
           outfit={activeOutfit}
           customUri={activeCustomUri}
+          completedCount={completedCount}
+          unlockedItems={homeProgress.unlocked}
+          totalItems={homeProgress.total}
         />
       )}
     </Modal>
@@ -324,4 +360,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '900', color: '#21242B' },
   sectionCount: { fontSize: 12, fontWeight: '800', color: '#9AA0A6' },
   filterNote: { fontSize: 11.5, color: '#9AA0A6', fontWeight: '600', marginBottom: 12 },
+  rarityChips: { flexDirection: 'row', gap: 8, marginBottom: 14, marginTop: 2 },
+  chip: {
+    minWidth: 40, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 13,
+    backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#EEF0F2', alignItems: 'center',
+  },
+  chipOn: { backgroundColor: '#FFF1E4', borderColor: PRIMARY },
+  chipText: { fontSize: 14, fontWeight: '800', color: '#9AA0A6' },
+  chipTextOn: { color: PRIMARY },
 });

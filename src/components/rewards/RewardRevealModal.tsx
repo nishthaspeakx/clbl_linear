@@ -24,6 +24,7 @@ import Animated, {
 import { RewardItem } from '../../data/rewardCategories';
 import { rarityStyle } from '../../data/rewardRarity';
 import { VIEWPORT_H } from '../../utils/viewport';
+import RarityIcon from './RarityIcon';
 
 interface Props {
   reward: RewardItem | null;
@@ -120,11 +121,11 @@ export default function RewardRevealModal({ reward, levelId, levelTitle, onClaim
           {/* text + buttons (after reveal) */}
           <Animated.View style={[styles.info, textStyle]}>
             <Text style={styles.kicker}>🎉  REWARD UNLOCKED</Text>
-            <Text style={styles.name}>{reward.name}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{reward.name}</Text>
+              <RarityIcon rarity={reward.rarity} size={17} />
+            </View>
             <View style={styles.metaRow}>
-              <View style={[styles.rarityBadge, { backgroundColor: rar.tint, borderColor: rar.color }]}>
-                <Text style={[styles.rarityText, { color: rar.color }]}>{rar.sparkle ? '✨ ' : ''}{rar.label}</Text>
-              </View>
               {!!reward.topic && (
                 <View style={styles.topicBadge}><Text style={styles.topicText}>🗺️ {reward.topic}</Text></View>
               )}
@@ -188,8 +189,7 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 12.5, fontWeight: '900', color: '#FF7A00', letterSpacing: 0.6 },
   name: { fontSize: 24, fontWeight: '900', color: '#21242B', marginTop: 6, textAlign: 'center' },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 6 },
-  rarityBadge: { borderRadius: 9, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, marginHorizontal: 3 },
-  rarityText: { fontSize: 10.5, fontWeight: '900' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
   topicBadge: { backgroundColor: '#EAF7EE', borderRadius: 9, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: '#BFE6CC', marginHorizontal: 3 },
   topicText: { fontSize: 10.5, fontWeight: '800', color: '#1F8B50' },
   levelTitle: { fontSize: 12.5, color: '#9AA0A6', fontWeight: '700', marginTop: 8, textAlign: 'center' },
