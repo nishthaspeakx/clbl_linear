@@ -39,9 +39,10 @@ export default function RewardItemCard({ item, unlocked, active, onAction }: Pro
         <View style={[styles.visual, !unlocked && styles.visualLocked]}>
           <ObjectVisual item={item} size={44} />
         </View>
-        <View style={styles.rarityCorner}><RarityIcon rarity={item.rarity} size={12} muted={!unlocked} /></View>
         {!unlocked && <View style={styles.lockOverlay}><Text style={styles.lockIcon}>🔒</Text></View>}
       </View>
+      {/* rarity badge sits OUTSIDE the clipped image area so its hover tooltip isn't hidden */}
+      <View style={styles.rarityCorner}><RarityIcon rarity={item.rarity} size={12} muted={!unlocked} /></View>
 
       <Text style={[styles.name, !unlocked && styles.nameLocked]} numberOfLines={1}>{item.name}</Text>
 
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
   visualLocked: { opacity: 0.3 },
   lockOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
   lockIcon: { fontSize: 18 },
-  rarityCorner: { position: 'absolute', top: 5, left: 5 },
+  rarityCorner: { position: 'absolute', top: 10, left: 10, zIndex: 20 },
   name: { fontSize: 12.5, fontWeight: '800', color: '#21242B', textAlign: 'center', marginTop: 5 },
   nameLocked: { color: '#9AA0A6' },
   btn: { marginTop: 6, alignSelf: 'stretch', borderRadius: 10, paddingVertical: 6, alignItems: 'center' },

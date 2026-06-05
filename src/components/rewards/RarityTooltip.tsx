@@ -25,7 +25,7 @@ export default function RarityTooltip({ rarity }: { rarity?: RewardRarity }) {
 
 const styles = StyleSheet.create({
   tooltip: {
-    position: 'absolute', bottom: '100%', marginBottom: 5,
+    position: 'absolute', top: '100%', marginTop: 5, left: 0,
     backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1.5,
     paddingHorizontal: 9, paddingVertical: 5, minWidth: 62, alignItems: 'center',
     shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 7, shadowOffset: { width: 0, height: 2 }, elevation: 6,
