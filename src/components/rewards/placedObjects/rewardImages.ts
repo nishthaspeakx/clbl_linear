@@ -34,6 +34,23 @@ export const REWARD_IMAGES: Record<string, number> = {
   cap: require('../../../assets/rewards/cap.png'),
   backpack: require('../../../assets/rewards/backpack.png'),
   laptop_bag: require('../../../assets/rewards/laptop_bag.png'),
+  // ── Vehicles (first-5: Cycle, Bike, BMW, Mercedes, Audi) ──
+  cycle: require('../../../assets/rewards/cycle.png'),
+  motorbike: require('../../../assets/rewards/motorbike.png'),
+  bmw: require('../../../assets/rewards/bmw.png'),
+  mercedes: require('../../../assets/rewards/mercedes.png'),
+  audi: require('../../../assets/rewards/audi.png'),
+  // ── Wardrobe (female) ──
+  kurti: require('../../../assets/rewards/kurti.png'),
+  dress: require('../../../assets/rewards/dress.png'),
+  cardigan: require('../../../assets/rewards/cardigan.png'),
+  handbag_outfit: require('../../../assets/rewards/handbag_outfit.png'),
+  formal_blouse: require('../../../assets/rewards/formal_blouse.png'),
+  office_suit: require('../../../assets/rewards/office_suit.png'),
+  saree: require('../../../assets/rewards/saree.png'),
+  traditional_outfit: require('../../../assets/rewards/traditional_outfit.png'),
+  lehenga: require('../../../assets/rewards/lehenga.png'),
+  designer_outfit: require('../../../assets/rewards/designer_outfit.png'),
 };
 
 export function rewardImageFor(imageKey: string): number | undefined {
