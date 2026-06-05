@@ -46,7 +46,7 @@ export interface Reward {
 }
 
 /** Overlay keys the avatar can wear (Part 7 — Equip system). */
-export type EquipKey = 'shoes' | 'backpack' | 'sunglasses' | 'jacket';
+export type EquipKey = 'shoes' | 'backpack' | 'sunglasses' | 'jacket' | 'cap';
 
 export const REWARDS: Reward[] = [
   { id: 1, levelRequired: 1, name: 'New Shoes', category: 'outfit', icon: '👟', description: 'Fresh kicks for your avatar.', placementArea: 'wardrobe', equipKey: 'shoes' },

@@ -14,7 +14,7 @@ export const LIFESTYLE_REWARDS: RewardItem[] = [
   // First 5 are premium AI assets (spec sequence): Sunglasses, Shoes, Cap, Backpack, Laptop Bag.
   { id: 'lifestyle_01', category: 'lifestyle', name: 'Sunglasses', icon: '🕶️', imageKey: 'sunglasses', unlockLevel: 1, isEquippable: true, equipKey: 'sunglasses' },
   { id: 'lifestyle_04', category: 'lifestyle', name: 'Sneakers', icon: '👟', imageKey: 'sneakers', unlockLevel: 2, isEquippable: true, equipKey: 'shoes' },
-  { id: 'lifestyle_11', category: 'lifestyle', name: 'Cap', icon: '🧢', imageKey: 'cap', unlockLevel: 3, isEquippable: true },
+  { id: 'lifestyle_11', category: 'lifestyle', name: 'Cap', icon: '🧢', imageKey: 'cap', unlockLevel: 3, isEquippable: true, equipKey: 'cap' },
   { id: 'lifestyle_02', category: 'lifestyle', name: 'Backpack', icon: '🎒', imageKey: 'backpack', unlockLevel: 4, isEquippable: true, equipKey: 'backpack' },
   { id: 'lifestyle_07', category: 'lifestyle', name: 'Laptop Bag', icon: '💼', imageKey: 'laptop_bag', unlockLevel: 5, isEquippable: true },
   { id: 'lifestyle_03', category: 'lifestyle', name: 'Watch', icon: '⌚', imageKey: 'watch', unlockLevel: 6, isEquippable: true },

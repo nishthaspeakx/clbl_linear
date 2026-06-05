@@ -407,6 +407,21 @@ function Equip({ s, equipped }: { s: AvatarStyle; equipped: EquipKey[] }) {
           <Rect x={31} y={115} width={10.2} height={2} rx={1} fill="#C53B32" />
         </G>
       )}
+      {/* Baseball Cap — navy crown + brim, sits on top of the hair */}
+      {has('cap') && (
+        <G>
+          {/* crown */}
+          <Path d="M 20.4 16 Q 19 5.2 32 4.8 Q 45 5.2 43.6 16 Q 38 11.2 32 11.2 Q 26 11.2 20.4 16 Z" fill="#21386E" />
+          {/* right-side shading for volume */}
+          <Path d="M 32 4.8 Q 45 5.2 43.6 16 Q 38 11.4 32 11.2 Z" fill="#18294F" opacity={0.55} />
+          {/* white front panel accent */}
+          <Path d="M 26.6 12 Q 32 10.4 37.4 12 L 36.2 15.2 Q 32 13.8 27.8 15.2 Z" fill="#EDF1F7" opacity={0.92} />
+          {/* brim pointing forward */}
+          <Path d="M 20.6 15.4 Q 32 24 43.4 15.4 Q 37.6 18.8 32 19.2 Q 26.4 18.8 20.6 15.4 Z" fill="#16264A" />
+          {/* top button */}
+          <Circle cx={32} cy={5} r={1.1} fill="#16264A" />
+        </G>
+      )}
       {/* Sunglasses over the eyes */}
       {has('sunglasses') && (
         <G>

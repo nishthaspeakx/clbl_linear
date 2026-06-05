@@ -13,7 +13,7 @@ export const REWARD_IMAGES: Record<string, number> = {
   // ── Garden ──
   pet_dog: require('../../../assets/rewards/pet_dog.png'),
   pet_cat: require('../../../assets/rewards/pet_cat.png'),
-  fountain: require('../../../assets/rewards/fountain.png'),
+  // fountain intentionally uses the original code-drawn SVG (PlacedFountain)
   slide: require('../../../assets/rewards/slide.png'),
   flower_pots: require('../../../assets/rewards/flower_pots.png'),
   // ── Home ──
