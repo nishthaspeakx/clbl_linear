@@ -9,8 +9,9 @@
  */
 import { Dimensions, Platform } from 'react-native';
 
-const PHONE_W = 412;
-const PHONE_H = 915;
+// iPhone Pro Max-class logical size — a large flagship phone for a premium demo.
+const PHONE_W = 440;
+const PHONE_H = 956;
 
 const win = Dimensions.get('window');
 
