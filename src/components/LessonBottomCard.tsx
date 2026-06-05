@@ -17,6 +17,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Subtopic } from '../data/subtopics';
 import { PinStatus } from './LessonPin';
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
 
 interface Props {
   subtopic: Subtopic;
@@ -106,7 +108,7 @@ function LessonBottomCard({
         <View style={styles.actionsRow}>
           <Pressable
             style={({ pressed }) => [styles.actionBtn, styles.secondaryBtn, pressed && styles.pressed]}
-            onPress={() => onStartLesson?.(subtopic.id)}
+            onPress={() => { playSound('start_lesson'); triggerHaptic('light'); onStartLesson?.(subtopic.id); }}
           >
             <Text style={styles.secondaryText}>▶ Start Lesson</Text>
           </Pressable>
@@ -122,7 +124,7 @@ function LessonBottomCard({
       {status === 'completed' && (
         <Pressable
           style={({ pressed }) => [styles.actionBtn, styles.completedBtn, pressed && styles.pressed]}
-          onPress={() => onStartLesson?.(subtopic.id)}
+          onPress={() => { playSound('start_lesson'); triggerHaptic('light'); onStartLesson?.(subtopic.id); }}
         >
           <Text style={styles.completedText}>✓ Completed — Review Lesson</Text>
         </Pressable>

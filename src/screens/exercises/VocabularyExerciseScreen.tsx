@@ -13,7 +13,8 @@ import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 
 import { VOCAB_QUESTIONS, COINS_PER_CORRECT, VocabQuestion } from '../../data/vocabQuestions';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../../utils/viewport';
-import { playSound } from '../../utils/sound';
+import { playSound } from '../../services/soundService';
+import { triggerHaptic } from '../../services/hapticService';
 import ExerciseHeader from '../../components/exercises/ExerciseHeader';
 import AudioButton from '../../components/exercises/AudioButton';
 import OptionCard, { OptionState } from '../../components/exercises/OptionCard';
@@ -91,7 +92,8 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
 
   const advance = useCallback(() => {
     if (last) {
-      playSound('success');
+      playSound('exercise_complete');
+      triggerHaptic('success');
       setPhase('complete');
     } else {
       setQi((i) => i + 1);
@@ -104,7 +106,9 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
     if (phase !== 'answering') return;
     setPicked(i);
     if (q.options[i].correct) {
-      playSound('coin');
+      playSound('correct_answer');
+      playSound('coin_collect', { vary: true });
+      triggerHaptic('medium');
       setCoins((c) => c + COINS_PER_CORRECT);
       const ns = streak + 1;
       setStreak(ns);
@@ -118,7 +122,8 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
         }
       });
     } else {
-      playSound('tap');
+      playSound('wrong_answer');
+      triggerHaptic('warning');
       setStreak(0);
       setPhase('wrong');
       after(950, () => { setPhase('answering'); setPicked(null); });
@@ -157,7 +162,7 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
 
           {showAudio && (
             <View style={styles.audioWrap}>
-              <AudioButton onPlay={() => playSound('tap')} />
+              <AudioButton onPlay={() => playSound('button_tap')} />
             </View>
           )}
 

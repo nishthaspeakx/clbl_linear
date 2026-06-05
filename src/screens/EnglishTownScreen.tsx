@@ -36,6 +36,7 @@ import RewardsScreen from './RewardsScreen';
 import { RewardItem, RewardCategoryKey, featuredRewardForLevel } from '../data/rewardCategories';
 import { Milestone, milestoneAt } from '../data/avatarMilestones';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
+import { triggerHaptic } from '../services/hapticService';
 import {
   loadProgress,
   saveProgress,
@@ -180,6 +181,7 @@ export default function EnglishTownScreen() {
       if (id !== progress.currentId || townDone || busy) return;
       setBusy(true);
       playSound('levelup');
+      triggerHaptic('success');
 
       const isLast = id === TOTAL_SUBTOPICS;
       const nextId = isLast ? id : id + 1;

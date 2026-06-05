@@ -45,16 +45,9 @@ import {
 } from '../storage/dreamHomeLayoutStorage';
 import { COINS_PER_LEVEL, loadProgress } from '../storage/progressStorage';
 import { statusForLevel } from '../data/avatarMilestones';
-import { RewardRarity } from '../data/rewardRarity';
-
-type RarityFilter = RewardRarity | 'all';
-const RARITY_FILTERS: { key: RarityFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'common', label: '⭕' },
-  { key: 'rare', label: '🔷' },
-  { key: 'epic', label: '🌟' },
-  { key: 'legendary', label: '👑' },
-];
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
+import SoundToggle from '../components/settings/SoundToggle';
 
 const PLACEABLE: RewardCategoryKey[] = ['home', 'garden', 'vehicles'];
 
@@ -73,8 +66,9 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
   const [level, setLevel] = useState(1);
   const [coins, setCoins] = useState(0);
   const [category, setCategory] = useState<RewardCategoryKey>(initialCategory);
-  const [rarityFilter, setRarityFilter] = useState<RarityFilter>('all');
   const [showSetup, setShowSetup] = useState(false);
+  const [night, setNight] = useState(false); // shared by the header toggle + Dream Home image
+  const toggleNight = () => { playSound('day_night_toggle'); setNight((n) => !n); };
 
   // Dream Home manual layout (placements + removals)
   const [layout, setLayout] = useState<DreamHomeLayout>({ placements: {}, removed: [] });
@@ -192,43 +186,30 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimedIds, selection.gender, selection.age, selection.userType]);
 
-  const overall = useMemo<CategoryProgress>(
-    () => REWARD_CATEGORIES.reduce<CategoryProgress>(
-      (a, c) => ({ claimed: a.claimed + counts[c.key].claimed, total: a.total + counts[c.key].total }),
-      { claimed: 0, total: 0 },
-    ),
-    [counts]
-  );
-
   const items = useMemo(
     () => visibleItems(category, profile),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [category, selection.gender, selection.age, selection.userType]
   );
 
-  const shownItems = useMemo(
-    () => (rarityFilter === 'all' ? items : items.filter((i) => (i.rarity ?? 'common') === rarityFilter)),
-    [items, rarityFilter]
-  );
-
   return (
     <Modal visible transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.frame}>
-          {/* 1. Header */}
+          {/* 1. Header — minimal: close · small icon · mute. No repeated stats. */}
           <View style={styles.header}>
-            <Pressable onPress={onClose} hitSlop={10} style={styles.close}><Text style={styles.closeX}>✕</Text></Pressable>
-            <Text style={styles.title}>🎁  My World</Text>
-            <Pressable onPress={() => setShowSetup(true)} style={({ pressed }) => [styles.editPill, pressed && { opacity: 0.85 }]}>
-              <Text style={styles.editPillText}>✏️ Edit</Text>
-            </Pressable>
+            <Pressable onPress={onClose} hitSlop={10} style={styles.headerSide}><Text style={styles.closeX}>✕</Text></Pressable>
+            <Text style={styles.headerTitle} numberOfLines={1}>🏡  My Dream Home</Text>
+            <View style={styles.headerActions}>
+              <SoundToggle size={30} />
+              <Pressable onPress={toggleNight} hitSlop={8} style={styles.dayNight}>
+                <Text style={styles.dayNightIcon}>{night ? '🌙' : '☀️'}</Text>
+              </Pressable>
+            </View>
           </View>
-          <Text style={styles.subtitle}>
-            {overall.claimed}/{overall.total} rewards claimed  •  {coins} coins  •  Level {level}
-          </Text>
 
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            {/* 2. My Dream Home showcase */}
+            {/* 1. My Dream Home hero (title now lives in the header) */}
             <DreamHomePreview
               placed={placedEntries}
               selection={selection}
@@ -238,19 +219,12 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               unlockedItems={homeProgress.unlocked}
               totalItems={homeProgress.total}
               completedCount={completedCount}
+              night={night}
               onOpenEditor={() => { setEditorSelectedId(null); setEditorOpen(true); }}
             />
 
-            {/* 3. Next reward (always the next locked headline reward) */}
-            <NextRewardCard reward={featuredRewardForLevel(completedCount + 1) ?? null} completedCount={completedCount} />
-
-            {/* 4. Category tabs */}
-            <View style={styles.tabsWrap}>
-              <RewardCategoryTabs selected={category} counts={counts} onSelect={setCategory} />
-            </View>
-
-            {/* 3. Avatar preview */}
-            <View style={styles.previewWrap}>
+            {/* 2. Avatar identity */}
+            <View style={styles.avatarWrap}>
               <AvatarRewardPreview
                 selection={selection}
                 equippedKeys={equippedKeys}
@@ -265,6 +239,14 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               />
             </View>
 
+            {/* 3. Next reward (always the next locked headline reward) */}
+            <NextRewardCard reward={featuredRewardForLevel(completedCount + 1) ?? null} completedCount={completedCount} />
+
+            {/* 4. Category tabs */}
+            <View style={styles.tabsWrap}>
+              <RewardCategoryTabs selected={category} counts={counts} onSelect={setCategory} />
+            </View>
+
             {/* 4. Category content */}
             <View style={styles.sectionHead}>
               <Text style={styles.sectionTitle}>
@@ -277,29 +259,13 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               <Text style={styles.filterNote}>Showing outfits that suit your avatar's profile.</Text>
             )}
 
-            {/* rarity filter chips: All | ⭕ | 🔷 | 🌟 | 👑 */}
-            <View style={styles.rarityChips}>
-              {RARITY_FILTERS.map((f) => {
-                const on = rarityFilter === f.key;
-                return (
-                  <Pressable
-                    key={f.key}
-                    onPress={() => setRarityFilter(f.key)}
-                    style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && { opacity: 0.85 }]}
-                  >
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{f.label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
             <RewardGrid
-              items={shownItems}
+              items={items}
               completedCount={completedCount}
               isEquipped={isEquipped}
-              onEquip={toggleEquip}
+              onEquip={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleEquip(id); }}
               isPlaced={(id) => placedIds.has(id)}
-              onPlace={placeItem}
+              onPlace={(item) => { playSound('item_placed'); triggerHaptic('medium'); placeItem(item); }}
             />
           </ScrollView>
         </View>
@@ -340,32 +306,27 @@ const styles = StyleSheet.create({
     ? { width: VIEWPORT_W, height: VIEWPORT_H, backgroundColor: '#F6F7F9', overflow: 'hidden', borderRadius: 44, transform: [{ scale: WEB_SCALE }] }
     : { flex: 1, backgroundColor: '#F6F7F9' },
   header: {
-    paddingTop: 52, paddingHorizontal: 16, paddingBottom: 4, backgroundColor: '#FFFFFF',
+    paddingTop: 44, paddingHorizontal: 16, paddingBottom: 8, backgroundColor: '#FFFFFF',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  close: { width: 56, height: 30, justifyContent: 'center' },
+  headerSide: { width: 76, height: 30, justifyContent: 'center' },
   closeX: { fontSize: 18, fontWeight: '800', color: '#2A2E33' },
-  title: { fontSize: 18, fontWeight: '900', color: '#21242B' },
-  editPill: {
-    width: 56, alignItems: 'flex-end',
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '900', color: '#21242B' },
+  headerActions: { width: 76, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  dayNight: {
+    width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    borderWidth: 1, borderColor: '#EEF0F2',
   },
-  editPillText: { color: PRIMARY, fontWeight: '900', fontSize: 13 },
-  subtitle: { textAlign: 'center', fontSize: 12, color: '#9AA0A6', fontWeight: '700', backgroundColor: '#FFFFFF', paddingBottom: 12 },
+  dayNightIcon: { fontSize: 15 },
 
   body: { padding: 14, paddingBottom: 40 },
   tabsWrap: { marginTop: 20 },
-  previewWrap: { marginTop: 14 },
+  avatarWrap: { marginTop: 14 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 4 },
   sectionTitle: { fontSize: 16, fontWeight: '900', color: '#21242B' },
   sectionCount: { fontSize: 12, fontWeight: '800', color: '#9AA0A6' },
   filterNote: { fontSize: 11.5, color: '#9AA0A6', fontWeight: '600', marginBottom: 12 },
-  rarityChips: { flexDirection: 'row', gap: 8, marginBottom: 14, marginTop: 2 },
-  chip: {
-    minWidth: 40, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 13,
-    backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#EEF0F2', alignItems: 'center',
-  },
-  chipOn: { backgroundColor: '#FFF1E4', borderColor: PRIMARY },
-  chipText: { fontSize: 14, fontWeight: '800', color: '#9AA0A6' },
-  chipTextOn: { color: PRIMARY },
 });

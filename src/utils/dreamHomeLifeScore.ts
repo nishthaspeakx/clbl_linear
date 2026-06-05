@@ -9,10 +9,10 @@ export function lifeScore(unlocked: number, total: number): number {
 }
 
 export function lifeStatusText(score: number): string {
-  if (score < 10) return 'Your dream home has just begun.';
-  if (score < 30) return 'Your home is starting to come alive.';
-  if (score < 60) return 'Your world is growing beautifully.';
-  if (score < 90) return 'Your dream lifestyle is taking shape.';
+  if (score <= 10) return 'Your dream world has just begun.';
+  if (score <= 30) return 'Your home is starting to come alive.';
+  if (score <= 60) return 'Your world is growing beautifully.';
+  if (score <= 85) return 'Your dream lifestyle is taking shape.';
   return 'Your world is complete and thriving.';
 }
 

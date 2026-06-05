@@ -16,6 +16,8 @@ import { ageToGroup, getAvatarForUser } from '../utils/avatarResolver';
 import { useAvatar } from '../components/avatar/AvatarContext';
 import { useRewards } from '../components/avatar/RewardContext';
 import { AvatarSelection } from '../storage/avatarStorage';
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
 import AvatarPreview from '../components/avatar/AvatarPreview';
 import PhotoAvatarCreator from '../components/avatar/PhotoAvatarCreator';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
@@ -40,6 +42,8 @@ export default function AvatarSetupScreen({ onClose }: { onClose: () => void }) 
   const profile = getAvatarForUser(draft);
 
   const saveChoose = () => {
+    playSound('avatar_changed'); // sparkle / makeover
+    triggerHaptic('success');
     setSelection(draft);
     useCustomAvatar(false); // a chosen persona is not the custom avatar
     onClose();
@@ -107,6 +111,8 @@ export default function AvatarSetupScreen({ onClose }: { onClose: () => void }) 
                 <PhotoAvatarCreator
                   profile={draft}
                   onUseAvatar={(gen) => {
+                    playSound('avatar_changed');
+                    triggerHaptic('success');
                     setSelection(gen.profile);
                     setCustomAvatar(gen.imageUri ?? gen.sourceUri); // store the caricature
                     onClose();

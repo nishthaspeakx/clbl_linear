@@ -28,6 +28,8 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
 
 export type PinStatus = 'locked' | 'current' | 'completed';
 
@@ -100,7 +102,7 @@ function LessonPin({ id, cx, cy, status, onPress, approximate, debugLabel }: Pro
 
   return (
     <Pressable
-      onPress={() => onPress(id)}
+      onPress={() => { playSound('pin_tap'); triggerHaptic('light'); onPress(id); }}
       style={[styles.wrapper, { left: cx - CENTER, top: cy - CENTER }]}
       hitSlop={8}
     >

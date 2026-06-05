@@ -27,6 +27,8 @@ import Animated, {
 import { RewardItem } from '../../data/rewardCategories';
 import { VIEWPORT_W, VIEWPORT_H } from '../../utils/viewport';
 import { getRarityStyle } from '../../utils/rarityStyles';
+import { playSound } from '../../services/soundService';
+import { triggerHaptic } from '../../services/hapticService';
 import RarityIcon from './RarityIcon';
 import GiftBox from './reveal/GiftBox';
 import SparkleLayer from './reveal/SparkleLayer';
@@ -80,10 +82,13 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   useEffect(() => {
     if (!reward) return;
     // 5–7. drop with bounce, glow pulse, shake, particles
+    playSound('reward_box_appear'); // magical whoosh as the box drops in
     dropY.value = withSpring(0, { damping: 7, stiffness: 130, mass: 0.9 });
     glow.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.ease) }), -1, true);
     after(680, () => {
       setPhaseBoth('glow');
+      playSound('reward_box_shake'); // small rattle as it shakes
+      triggerHaptic('light');
       shake.value = withRepeat(
         withSequence(
           withTiming(1, { duration: 80 }), withTiming(-1, { duration: 80 }),
@@ -100,6 +105,7 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   const openBox = () => {
     if (phaseRef.current !== 'glow' && phaseRef.current !== 'drop') return;
     setPhaseBoth('opening');
+    playSound('reward_box_open'); // sparkle burst as the lid lifts
     // 6–7. lid opens, light beam, flash
     shake.value = withTiming(0, { duration: 100 });
     open.value = withTiming(1, { duration: 440, easing: Easing.out(Easing.cubic) });
@@ -111,6 +117,13 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
   const reveal = () => {
     setPhaseBoth('revealed');
     setShowConfetti(true);
+    // achievement fanfare + a rarity-specific flourish
+    playSound('reward_unlocked');
+    const rarity = reward?.rarity;
+    if (rarity === 'legendary') { playSound('reward_legendary'); triggerHaptic('heavy'); }
+    else if (rarity === 'epic') { playSound('reward_epic'); triggerHaptic('success'); }
+    else if (rarity === 'rare') { playSound('reward_rare'); triggerHaptic('success'); }
+    else triggerHaptic('success');
     // legendary experience: a celebratory vibration burst on mobile
     if (Platform.OS !== 'web') Vibration.vibrate(legendary ? [0, 35, 55, 35, 70, 55] : 22);
     // large rarity icon pulses in
@@ -128,6 +141,8 @@ export default function PremiumRewardRevealModal({ reward, levelId, levelTitle, 
     if (phaseRef.current === 'claiming') return;
     setPhaseBoth('claiming');
     setShowSuccess(true);
+    playSound('claim_reward'); // satisfying collect
+    triggerHaptic('medium');
     // reward flies to the collection (toward top-right) + shrinks
     flyX.value = withTiming(VIEWPORT_W * 0.32, { duration: 520, easing: Easing.in(Easing.cubic) });
     flyY.value = withTiming(-VIEWPORT_H * 0.34, { duration: 520, easing: Easing.in(Easing.cubic) });

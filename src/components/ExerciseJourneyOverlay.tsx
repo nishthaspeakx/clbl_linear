@@ -24,7 +24,8 @@ import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop }
 import { exerciseTypes, TOTAL_EXERCISES } from '../data/exercises';
 import { loadLevelExercises, saveLevelExercises } from '../storage/exerciseProgressStorage';
 import { buildCurvedPath } from '../utils/position';
-import { playSound } from '../utils/sound';
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
 import ExerciseNode, { ExStatus } from './ExerciseNode';
 import ExerciseActivityModal from './ExerciseActivityModal';
 import VocabularyExerciseScreen from '../screens/exercises/VocabularyExerciseScreen';
@@ -216,7 +217,7 @@ function ExerciseJourneyOverlay({
     setActiveId(null);
     await saveLevelExercises(levelId, { completedExerciseIds: nextCompleted, currentExerciseId: nextCur });
     setReward((r) => r + 1);
-    if (nextCompleted.length >= TOTAL_EXERCISES) playSound('success');
+    if (nextCompleted.length >= TOTAL_EXERCISES) { playSound('exercise_complete'); triggerHaptic('success'); }
   };
 
   const activeEx = activeId != null ? exerciseTypes[activeId - 1] : null;
@@ -311,7 +312,8 @@ function ExerciseJourneyOverlay({
                 status={statusOf(ex.id)}
                 accent={accent}
                 onPress={() => {
-                  playSound('tap');
+                  playSound('start_lesson');
+                  triggerHaptic('light');
                   setActiveId(ex.id);
                 }}
               />

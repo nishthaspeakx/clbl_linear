@@ -16,6 +16,8 @@ import { EquipKey } from '../../data/rewards';
 import { OutfitOverride } from '../../data/avatarOutfits';
 import { RewardItem } from '../../data/rewardCategories';
 import { activeEffects, lifeScore } from '../../utils/dreamHomeLifeScore';
+import { playSound } from '../../services/soundService';
+import { triggerHaptic } from '../../services/hapticService';
 import UserAvatar from '../avatar/UserAvatar';
 import DraggableRewardObject from './DraggableRewardObject';
 import DreamHomeDayNightOverlay from './DreamHomeDayNightOverlay';
@@ -60,6 +62,12 @@ export default function DreamHomeEditorModal({
   const [night, setNight] = useState(false);
   const effects = activeEffects(completedCount);
   const score = lifeScore(unlockedItems, totalItems);
+  const handleMove = (id: string, xPercent: number, yPercent: number) => {
+    playSound('item_placed'); // soft placement sound on drop
+    triggerHaptic('light');
+    onMove(id, xPercent, yPercent);
+  };
+  const toggleNight = () => { playSound('day_night_toggle'); setNight((n) => !n); };
   return (
     <Modal visible transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={styles.backdrop}>
@@ -72,7 +80,7 @@ export default function DreamHomeEditorModal({
             </View>
             <Text style={styles.title}>🏡  My Dream Home</Text>
             <View style={styles.headerRight}>
-              <Pressable onPress={() => setNight((n) => !n)} hitSlop={8} style={styles.nightToggle}><Text style={styles.toggleText}>{night ? '🌙' : '☀️'}</Text></Pressable>
+              <Pressable onPress={toggleNight} hitSlop={8} style={styles.nightToggle}><Text style={styles.toggleText}>{night ? '🌙' : '☀️'}</Text></Pressable>
               <Pressable onPress={onClose} hitSlop={10} style={styles.close}><Text style={styles.closeX}>✕</Text></Pressable>
             </View>
           </View>
@@ -98,7 +106,7 @@ export default function DreamHomeEditorModal({
                   imgH={EIMG_H}
                   selected={selectedId === e.item.id}
                   onSelect={onSelect}
-                  onMove={onMove}
+                  onMove={handleMove}
                   onRemove={onRemove}
                 />
               ))}

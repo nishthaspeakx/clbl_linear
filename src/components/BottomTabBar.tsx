@@ -6,6 +6,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Polygon, Rect } from 'react-native-svg';
+import { playSound } from '../services/soundService';
+import { triggerHaptic } from '../services/hapticService';
 
 export type TabKey = 'home' | 'membership' | 'aicall' | 'progress';
 
@@ -73,7 +75,12 @@ function BottomTabBar({ active, onChange }: Props) {
         const on = active === t.key;
         const color = on ? PRIMARY : GREY;
         return (
-          <Pressable key={t.key} style={styles.item} onPress={() => onChange(t.key)} hitSlop={6}>
+          <Pressable
+            key={t.key}
+            style={styles.item}
+            onPress={() => { if (!on) { playSound('tab_switch'); triggerHaptic('light'); } onChange(t.key); }}
+            hitSlop={6}
+          >
             {on && t.key !== 'aicall' && <View style={styles.glow} />}
             <View style={styles.iconWrap}>
               {t.key === 'home' && <HomeIcon color={color} />}
