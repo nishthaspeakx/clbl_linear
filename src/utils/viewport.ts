@@ -23,3 +23,16 @@ export const IS_WEB = Platform.OS === 'web';
 // instead of producing a short/stubby phone on a short browser window.
 export const VIEWPORT_W = IS_WEB ? PHONE_W : win.width;
 export const VIEWPORT_H = IS_WEB ? PHONE_H : win.height;
+
+/**
+ * Scale factor to fit the full phone (incl. ~16px bezel) into the browser
+ * window — used by the device mockup AND by full-screen Modals so nothing
+ * overflows a short desktop window. 1 on native.
+ */
+export const WEB_SCALE = (() => {
+  if (!IS_WEB || typeof window === 'undefined') return 1;
+  const DEV_W = PHONE_W + 32;
+  const DEV_H = PHONE_H + 32;
+  const s = Math.min((window.innerHeight * 0.95) / DEV_H, (window.innerWidth * 0.95) / DEV_W);
+  return Math.max(0.4, Math.min(s, 2.2));
+})();

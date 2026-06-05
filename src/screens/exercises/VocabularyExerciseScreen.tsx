@@ -12,7 +12,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 
 import { VOCAB_QUESTIONS, COINS_PER_CORRECT, VocabQuestion } from '../../data/vocabQuestions';
-import { IS_WEB, VIEWPORT_W, VIEWPORT_H } from '../../utils/viewport';
+import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../../utils/viewport';
 import { playSound } from '../../utils/sound';
 import ExerciseHeader from '../../components/exercises/ExerciseHeader';
 import AudioButton from '../../components/exercises/AudioButton';
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     justifyContent: IS_WEB ? 'center' : 'flex-start',
   },
   frame: IS_WEB
-    ? { width: VIEWPORT_W, height: VIEWPORT_H, backgroundColor: '#FFFFFF', overflow: 'hidden', borderRadius: 28 }
+    ? { width: VIEWPORT_W, height: VIEWPORT_H, backgroundColor: '#FFFFFF', overflow: 'hidden', borderRadius: 44, transform: [{ scale: WEB_SCALE }] }
     : { flex: 1, backgroundColor: '#FFFFFF' },
   scroll: { flex: 1, alignSelf: 'stretch' },
   watermark: { position: 'absolute', left: -8, top: 96, opacity: 0.12 },

@@ -99,31 +99,43 @@ function Head({ s }: { s: AvatarStyle }) {
         <Path d={`M 21 16 Q 16 30 19 48 L 26 48 Q 23 30 25 16 Z M 43 16 Q 48 30 45 48 L 38 48 Q 41 30 39 16 Z`} fill={s.grey ? '#5A5048' : shade(s.hair, 10)} />
       )}
       {/* bun behind */}
-      {s.hairStyle === 'bun' && <Circle cx={CX} cy={11} r={5.2} fill={s.grey ? '#6A625A' : s.hair} />}
+      {s.hairStyle === 'bun' && <Circle cx={CX} cy={10} r={5.6} fill={s.grey ? '#6A625A' : s.hair} />}
       {/* neck */}
-      <Rect x={29} y={28} width={6} height={8} rx={2} fill={shade(skin, 12)} />
-      {/* head */}
-      <Circle cx={CX} cy={20} r={11} fill={skin} />
-      <Circle cx={27} cy={16} r={4} fill={tint(skin, 14)} opacity={0.45} />
+      <Rect x={28.5} y={28} width={7} height={8} rx={2.5} fill={shade(skin, 12)} />
       {/* ears + earrings (female) */}
-      <Circle cx={21.4} cy={21} r={2.2} fill={skin} />
-      <Circle cx={42.6} cy={21} r={2.2} fill={skin} />
+      <Circle cx={20.6} cy={21} r={2.4} fill={skin} />
+      <Circle cx={43.4} cy={21} r={2.4} fill={skin} />
       {s.hairStyle !== 'short' && (
         <>
-          <Circle cx={21.4} cy={24} r={1} fill="#F4D58A" />
-          <Circle cx={42.6} cy={24} r={1} fill="#F4D58A" />
+          <Circle cx={20.6} cy={24.4} r={1.1} fill="#F4D58A" />
+          <Circle cx={43.4} cy={24.4} r={1.1} fill="#F4D58A" />
         </>
       )}
-      {/* hair cap */}
-      <Path d={`M 21 21 Q 19 6 32 6 Q 45 6 43 21 Q 39 13 32 13 Q 25 13 21 21 Z`} fill={s.hair} />
-      {s.grey && <Path d={`M 21 21 Q 22 12 27 10 M 43 21 Q 42 12 37 10`} stroke="#9A938A" strokeWidth={1.4} fill="none" strokeLinecap="round" />}
-      {/* face */}
-      <Circle cx={28} cy={20.5} r={1.3} fill="#2A2018" />
-      <Circle cx={36} cy={20.5} r={1.3} fill="#2A2018" />
-      <Path d="M 25.4 17 Q 28 15.6 30.4 17" stroke="#3A2A1E" strokeWidth={1} fill="none" strokeLinecap="round" />
-      <Path d="M 33.6 17 Q 36 15.6 38.6 17" stroke="#3A2A1E" strokeWidth={1} fill="none" strokeLinecap="round" />
-      <Path d="M 28 25 Q 32 28.5 36 25" stroke="#8A5A3A" strokeWidth={1.4} fill="none" strokeLinecap="round" />
-      {s.bindi && <Circle cx={CX} cy={14} r={1.1} fill="#C0392B" />}
+      {/* head (rounder, friendlier) */}
+      <Circle cx={CX} cy={19.5} r={12.5} fill={skin} />
+      <Ellipse cx={27.5} cy={14.5} rx={5} ry={4} fill={tint(skin, 16)} opacity={0.4} />
+      {/* hair cap — fuller, soft */}
+      <Path d={`M 19.5 21 Q 18 5.5 32 5 Q 46 5.5 44.5 21 Q 43 16 40 13.5 Q 36 11.5 32 11.5 Q 28 11.5 24 13.5 Q 21 16 19.5 21 Z`} fill={s.hair} />
+      {!s.grey && <Path d={`M 24 13.5 Q 28 11.5 33 12`} stroke={tint(s.hair, 30)} strokeWidth={1} fill="none" opacity={0.5} strokeLinecap="round" />}
+      {s.grey && <Path d={`M 20 20 Q 21.5 11 27 9 M 44 20 Q 42.5 11 37 9`} stroke="#A7A099" strokeWidth={1.6} fill="none" strokeLinecap="round" />}
+      {/* eyes — bigger, with highlights */}
+      <Ellipse cx={27.4} cy={20.5} rx={1.9} ry={2.4} fill="#FFFFFF" />
+      <Ellipse cx={36.6} cy={20.5} rx={1.9} ry={2.4} fill="#FFFFFF" />
+      <Circle cx={27.6} cy={20.9} r={1.4} fill="#2A2018" />
+      <Circle cx={36.4} cy={20.9} r={1.4} fill="#2A2018" />
+      <Circle cx={28.1} cy={20.3} r={0.5} fill="#FFFFFF" />
+      <Circle cx={36.9} cy={20.3} r={0.5} fill="#FFFFFF" />
+      {/* eyebrows — soft */}
+      <Path d="M 25 16.6 Q 27.4 15.2 29.6 16.4" stroke={shade(s.hair, 6)} strokeWidth={1.2} fill="none" strokeLinecap="round" />
+      <Path d="M 34.4 16.4 Q 36.6 15.2 39 16.6" stroke={shade(s.hair, 6)} strokeWidth={1.2} fill="none" strokeLinecap="round" />
+      {/* nose */}
+      <Path d="M 32 21.5 q 0.9 1.4 -0.6 2" stroke={shade(skin, 28)} strokeWidth={0.8} fill="none" strokeLinecap="round" />
+      {/* rosy cheeks */}
+      <Circle cx={25} cy={24} r={2} fill="#F7A8A0" opacity={0.45} />
+      <Circle cx={39} cy={24} r={2} fill="#F7A8A0" opacity={0.45} />
+      {/* warm smile */}
+      <Path d="M 28 25.4 Q 32 29 36 25.4" stroke="#9A5238" strokeWidth={1.5} fill="none" strokeLinecap="round" />
+      {s.bindi && <Circle cx={CX} cy={13.5} r={1.2} fill="#C0392B" />}
     </G>
   );
 }

@@ -19,18 +19,10 @@ import HomeScreen from '../screens/HomeScreen';
 import MembershipScreen from '../screens/MembershipScreen';
 import AICallScreen from '../screens/AICallScreen';
 import ProgressScreen from '../screens/ProgressScreen';
-import { IS_WEB, VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
+import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
 import { AvatarProvider } from '../components/avatar/AvatarContext';
 
-// Scale the whole device up to fill the browser so the demo always looks like a
-// big phone (not a small one floating in a wide desktop window).
-const DEVICE_W = VIEWPORT_W + 32;
-const DEVICE_H = VIEWPORT_H + 32;
-const DEVICE_SCALE = (() => {
-  if (!IS_WEB || typeof window === 'undefined') return 1;
-  const s = Math.min((window.innerHeight * 0.95) / DEVICE_H, (window.innerWidth * 0.95) / DEVICE_W);
-  return Math.max(0.4, Math.min(s, 2.2));
-})();
+const DEVICE_SCALE = WEB_SCALE;
 
 export default function AppTabs() {
   const [tab, setTab] = useState<TabKey>('home');

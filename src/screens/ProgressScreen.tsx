@@ -3,14 +3,14 @@
  * Dark hero with avatar + level badge + name, then a white "Sentences Learnt"
  * card with a dotted progress curve toward the next goal. Static/mock only.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 import { resetApp } from '../utils/resetApp';
 import { useAvatar } from '../components/avatar/AvatarContext';
 import UserAvatar from '../components/avatar/UserAvatar';
-import AvatarSelector from '../components/avatar/AvatarSelector';
+import AvatarCreatorScreen from './avatar/AvatarCreatorScreen';
 
 const PRIMARY = '#FF7A00';
 const TOP = 44;
@@ -34,6 +34,7 @@ function SentenceChart() {
 
 export default function ProgressScreen() {
   const { selection } = useAvatar();
+  const [showCreator, setShowCreator] = useState(false);
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -52,7 +53,7 @@ export default function ProgressScreen() {
         <Pressable style={styles.gear} onPress={resetApp} hitSlop={10}>
           <Text style={{ fontSize: 18 }}>⚙️</Text>
         </Pressable>
-        <View style={styles.avatarWrap}>
+        <Pressable style={styles.avatarWrap} onPress={() => setShowCreator(true)}>
           <View style={styles.avatar}>
             <View style={styles.avatarInner}>
               <UserAvatar userType={selection.userType} gender={selection.gender} age={selection.age} size={150} shadow={false} />
@@ -61,8 +62,11 @@ export default function ProgressScreen() {
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>Level 1</Text>
           </View>
-        </View>
+        </Pressable>
         <Text style={styles.name}>Jia</Text>
+        <Pressable style={({ pressed }) => [styles.createBtn, pressed && { opacity: 0.9 }]} onPress={() => setShowCreator(true)}>
+          <Text style={styles.createText}>✨  Create your avatar</Text>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -88,15 +92,14 @@ export default function ProgressScreen() {
           </View>
         </View>
 
-        {/* Dynamic avatar picker (profession × gender × age) */}
-        <AvatarSelector />
-
         {/* Reset the whole app back to Level 1 (clears all saved progress). */}
         <Pressable style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]} onPress={resetApp}>
           <Text style={styles.resetText}>↺  Reset progress (start from scratch)</Text>
         </Pressable>
         <Text style={styles.resetHint}>Returns to Level 1 with Vocabulary playable from the start.</Text>
       </ScrollView>
+
+      {showCreator && <AvatarCreatorScreen onClose={() => setShowCreator(false)} />}
     </View>
   );
 }
@@ -104,7 +107,7 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F6F7F9' },
   hero: {
-    height: 240,
+    height: 272,
     paddingTop: TOP + 8,
     alignItems: 'center',
     borderBottomLeftRadius: 28,
@@ -136,7 +139,13 @@ const styles = StyleSheet.create({
     borderColor: '#1E1A18',
   },
   levelText: { color: '#FFFFFF', fontWeight: '800', fontSize: 12 },
-  name: { color: '#FFFFFF', fontSize: 22, fontWeight: '900', marginTop: 22 },
+  name: { color: '#FFFFFF', fontSize: 22, fontWeight: '900', marginTop: 18 },
+  createBtn: {
+    marginTop: 10, backgroundColor: '#FF7A00', borderRadius: 18,
+    paddingHorizontal: 18, paddingVertical: 9,
+    shadowColor: '#FF7A00', shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+  },
+  createText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13.5 },
   content: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 110 },
   card: {
     backgroundColor: '#FFFFFF',
