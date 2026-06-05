@@ -10,6 +10,7 @@
 import React from 'react';
 import { Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { AgeGroup, Gender, UserType } from '../../data/avatarProfiles';
+import { EquipKey } from '../../data/rewards';
 
 function shade(hex: string, a = 24): string {
   const m = hex.replace('#', '');
@@ -367,10 +368,66 @@ function BackpackStraps({ s }: { s: AvatarStyle }) {
   );
 }
 
+/* ── equippable reward overlays (Part 7 — Equip system) ──
+ * Each unlocked outfit/accessory reward draws a lightweight overlay on top of
+ * the base figure so "equipping" visibly changes the avatar everywhere. */
+const JACKET = '#46566B';
+function Equip({ s, equipped }: { s: AvatarStyle; equipped: EquipKey[] }) {
+  if (!equipped.length) return null;
+  const has = (k: EquipKey) => equipped.includes(k);
+  const saree = s.bottomKind === 'sareeSkirt';
+  return (
+    <G>
+      {/* Casual Jacket — open denim jacket over the torso + sleeves */}
+      {has('jacket') && (
+        <G>
+          <Path d="M 19.5 36 L 30 39 L 30 78 L 19.5 78 Z" fill={JACKET} />
+          <Path d="M 44.5 36 L 34 39 L 34 78 L 44.5 78 Z" fill={shade(JACKET, 12)} />
+          <Path d="M 25.5 35 L 31 45 L 30.5 38 Z" fill={shade(JACKET, 20)} />
+          <Path d="M 38.5 35 L 33 45 L 33.5 38 Z" fill={shade(JACKET, 20)} />
+          <Rect x={13.2} y={37} width={6.6} height={22} rx={3} fill={JACKET} />
+          <Rect x={44.2} y={37} width={6.6} height={22} rx={3} fill={shade(JACKET, 12)} />
+          {[50, 58, 66].map((y) => <Circle key={y} cx={32} cy={y} r={0.8} fill={tint(JACKET, 30)} />)}
+        </G>
+      )}
+      {/* Backpack straps over the shoulders */}
+      {has('backpack') && (
+        <G>
+          <Path d="M 24 37 Q 22 52 24 66" stroke="#C2410C" strokeWidth={2.6} fill="none" strokeLinecap="round" />
+          <Path d="M 40 37 Q 42 52 40 66" stroke="#C2410C" strokeWidth={2.6} fill="none" strokeLinecap="round" />
+          <Rect x={28} y={49} width={8} height={2.6} rx={1.2} fill="#9A330A" />
+        </G>
+      )}
+      {/* New Shoes — bright sneakers (skip for saree) */}
+      {has('shoes') && !saree && (
+        <G>
+          <Rect x={22.6} y={111} width={10.2} height={6} rx={3} fill="#FFFFFF" stroke="#E1473D" strokeWidth={1} />
+          <Rect x={31} y={111} width={10.2} height={6} rx={3} fill="#F1F1F1" stroke="#C53B32" strokeWidth={1} />
+          <Rect x={22.6} y={115} width={10.2} height={2} rx={1} fill="#E1473D" />
+          <Rect x={31} y={115} width={10.2} height={2} rx={1} fill="#C53B32" />
+        </G>
+      )}
+      {/* Sunglasses over the eyes */}
+      {has('sunglasses') && (
+        <G>
+          <Rect x={23.4} y={18.4} width={7.4} height={4.4} rx={2.2} fill="#23262B" />
+          <Rect x={33.2} y={18.4} width={7.4} height={4.4} rx={2.2} fill="#23262B" />
+          <Rect x={30.6} y={19.2} width={2.8} height={1.4} rx={0.7} fill="#23262B" />
+          <Line x1={23.4} y1={19.2} x2={20.4} y2={18.8} stroke="#23262B" strokeWidth={1.2} strokeLinecap="round" />
+          <Line x1={40.6} y1={19.2} x2={43.6} y2={18.8} stroke="#23262B" strokeWidth={1.2} strokeLinecap="round" />
+          <Line x1={25} y1={19.4} x2={27} y2={21.4} stroke="#6FB0D6" strokeWidth={0.8} opacity={0.7} strokeLinecap="round" />
+          <Line x1={34.8} y1={19.4} x2={36.8} y2={21.4} stroke="#6FB0D6" strokeWidth={0.8} opacity={0.7} strokeLinecap="round" />
+        </G>
+      )}
+    </G>
+  );
+}
+
 export function AvatarFigure({
-  style, pose = 'standing', shadow = true,
-}: { style: AvatarStyle; pose?: AvatarPose; shadow?: boolean }) {
-  const s = style;
+  style, pose = 'standing', shadow = true, equipped = [], outfit,
+}: { style: AvatarStyle; pose?: AvatarPose; shadow?: boolean; equipped?: EquipKey[]; outfit?: Partial<AvatarStyle> }) {
+  // Layered render: base persona style + equipped outfit override (FIX 4).
+  const s: AvatarStyle = outfit ? { ...style, ...outfit } : style;
   return (
     <G>
       {shadow && <Ellipse cx={CX} cy={117} rx={16} ry={3.6} fill="#000" opacity={0.12} />}
@@ -381,6 +438,7 @@ export function AvatarFigure({
       <BackpackStraps s={s} />
       <Head s={s} />
       <HeldAccessory s={s} />
+      <Equip s={s} equipped={equipped} />
     </G>
   );
 }

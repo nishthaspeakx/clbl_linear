@@ -21,6 +21,7 @@ import AICallScreen from '../screens/AICallScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
 import { AvatarProvider } from '../components/avatar/AvatarContext';
+import { RewardProvider } from '../components/avatar/RewardContext';
 
 const DEVICE_SCALE = WEB_SCALE;
 
@@ -55,7 +56,11 @@ export default function AppTabs() {
       </View>
     </View>
   ) : shell;
-  return <AvatarProvider>{tree}</AvatarProvider>;
+  return (
+    <AvatarProvider>
+      <RewardProvider>{tree}</RewardProvider>
+    </AvatarProvider>
+  );
 }
 
 const BEZEL = 14;

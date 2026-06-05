@@ -52,6 +52,10 @@ interface Props {
   charY: SharedValue<number>;
   walking: SharedValue<number>;
   avatar: { userType: import('../data/avatarProfiles').UserType; gender: import('../data/avatarProfiles').Gender; age: number };
+  /** Equipped outfit/accessory overlays for the walking character. */
+  equipped?: import('../data/rewards').EquipKey[];
+  /** Equipped wardrobe outfit override for the walking character. */
+  outfit?: Partial<import('./avatar/AvatarFigure').AvatarStyle>;
   currentId: number;
   completedIds: number[];
   /** Coins laid along the road during a level-completion walk. */
@@ -63,7 +67,7 @@ interface Props {
 // Draw nearer scenes (larger oy) on top of farther ones.
 const SCENES = [...LAYOUT.scenes].sort((a, b) => a.oy - b.oy);
 
-function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, currentId, completedIds, coinTrail, coinsCollected = 0 }: Props) {
+function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, charX, charY, walking, avatar, equipped = [], outfit, currentId, completedIds, coinTrail, coinsCollected = 0 }: Props) {
   const press = onPinPress;
   const savedY = useSharedValue(translateY.value);
   const pan = Gesture.Pan()
@@ -263,7 +267,7 @@ function VerticalIsometricTownMap({ statusOf, onPinPress, night, translateY, cha
           })}
 
           {/* Character */}
-          <CharacterAvatar x={charX} y={charY} walking={walking} userType={avatar.userType} gender={avatar.gender} age={avatar.age} />
+          <CharacterAvatar x={charX} y={charY} walking={walking} userType={avatar.userType} gender={avatar.gender} age={avatar.age} equipped={equipped} outfit={outfit} />
         </Animated.View>
       </View>
     </GestureDetector>

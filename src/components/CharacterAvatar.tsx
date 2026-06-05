@@ -18,7 +18,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gender, UserType } from '../data/avatarProfiles';
 import { ageToGroup } from '../utils/avatarResolver';
-import { AvatarFigure, styleFor } from './avatar/AvatarFigure';
+import { EquipKey } from '../data/rewards';
+import { AvatarFigure, AvatarStyle, styleFor } from './avatar/AvatarFigure';
 
 const AVATAR_H = 80;
 const AVATAR_W = Math.round((AVATAR_H * 64) / 120); // figure ratio
@@ -30,9 +31,11 @@ interface Props {
   userType: UserType;
   gender: Gender;
   age: number;
+  equipped?: EquipKey[];
+  outfit?: Partial<AvatarStyle>;
 }
 
-function CharacterAvatar({ x, y, walking, userType, gender, age }: Props) {
+function CharacterAvatar({ x, y, walking, userType, gender, age, equipped = [], outfit }: Props) {
   // A single continuously-advancing phase drives a smooth sine gait (no yoyo
   // easing artefacts), and `walk` smoothly ramps the gait in/out so the start
   // and stop of the walk never pop.
@@ -78,7 +81,7 @@ function CharacterAvatar({ x, y, walking, userType, gender, age }: Props) {
     <Animated.View pointerEvents="none" style={[styles.container, containerStyle]}>
       <Animated.View style={[styles.shadow, shadowStyle]} />
       <Svg width={AVATAR_W} height={AVATAR_H} viewBox="0 0 64 120">
-        <AvatarFigure style={style} pose="walking" shadow={false} />
+        <AvatarFigure style={style} pose="walking" shadow={false} equipped={equipped} outfit={outfit} />
       </Svg>
     </Animated.View>
   );

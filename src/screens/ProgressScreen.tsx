@@ -4,13 +4,14 @@
  * card with a dotted progress curve toward the next goal. Static/mock only.
  */
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 import { resetApp } from '../utils/resetApp';
 import { useAvatar } from '../components/avatar/AvatarContext';
+import { useRewards } from '../components/avatar/RewardContext';
 import UserAvatar from '../components/avatar/UserAvatar';
-import AvatarCreatorScreen from './avatar/AvatarCreatorScreen';
+import AvatarSetupScreen from './AvatarSetupScreen';
 
 const PRIMARY = '#FF7A00';
 const TOP = 44;
@@ -34,6 +35,7 @@ function SentenceChart() {
 
 export default function ProgressScreen() {
   const { selection } = useAvatar();
+  const { equippedKeys, activeOutfit, activeCustomUri } = useRewards();
   const [showCreator, setShowCreator] = useState(false);
   return (
     <View style={styles.root}>
@@ -55,9 +57,13 @@ export default function ProgressScreen() {
         </Pressable>
         <Pressable style={styles.avatarWrap} onPress={() => setShowCreator(true)}>
           <View style={styles.avatar}>
-            <View style={styles.avatarInner}>
-              <UserAvatar userType={selection.userType} gender={selection.gender} age={selection.age} size={150} shadow={false} />
-            </View>
+            {activeCustomUri ? (
+              <Image source={{ uri: activeCustomUri }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.avatarInner}>
+                <UserAvatar userType={selection.userType} gender={selection.gender} age={selection.age} size={150} shadow={false} equipped={equippedKeys} outfit={activeOutfit} />
+              </View>
+            )}
           </View>
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>Level 1</Text>
@@ -99,7 +105,7 @@ export default function ProgressScreen() {
         <Text style={styles.resetHint}>Returns to Level 1 with Vocabulary playable from the start.</Text>
       </ScrollView>
 
-      {showCreator && <AvatarCreatorScreen onClose={() => setShowCreator(false)} />}
+      {showCreator && <AvatarSetupScreen onClose={() => setShowCreator(false)} />}
     </View>
   );
 }
@@ -128,6 +134,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarInner: { position: 'absolute', top: 14, alignItems: 'center' },
+  avatarImage: { width: 92, height: 92 },
   levelBadge: {
     position: 'absolute',
     bottom: -10,

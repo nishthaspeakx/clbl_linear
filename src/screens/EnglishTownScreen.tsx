@@ -26,9 +26,13 @@ import { generateCoinTrail, playCoinSound, triggerLightHaptic } from '../utils/r
 import { topicProgress, levelInTopic } from '../utils/progressUtils';
 import AppHeader, { HEADER_HEIGHT } from '../components/AppHeader';
 import { useAvatar } from '../components/avatar/AvatarContext';
+import { useRewards } from '../components/avatar/RewardContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import FlyingCoin from '../components/map/FlyingCoin';
 import ProgressionReward from '../components/map/ProgressionReward';
+import RewardUnlockPopup from '../components/map/RewardUnlockPopup';
+import RewardsScreen from './RewardsScreen';
+import { RewardItem, RewardCategoryKey, featuredRewardForLevel } from '../data/rewardCategories';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
   loadProgress,
@@ -57,7 +61,22 @@ function isTopicEnd(id: number): boolean {
 
 export default function EnglishTownScreen() {
   const { selection: avatar } = useAvatar();
+  const { equippedKeys, activeOutfit, toggleEquip, isEquipped } = useRewards();
   const [loaded, setLoaded] = useState(false);
+  // Reward world: unlock popup + My World page
+  const [pendingReward, setPendingReward] = useState<RewardItem | null>(null);
+  const [pendingLevel, setPendingLevel] = useState(1);
+  const [showWorld, setShowWorld] = useState(false);
+  const [worldCategory, setWorldCategory] = useState<RewardCategoryKey>('wardrobe');
+
+  /** Surface the level's headline reward, auto-equipping it (FIX 2 & 3). */
+  const surfaceReward = useCallback((levelId: number) => {
+    const reward = featuredRewardForLevel(levelId);
+    if (!reward) return;
+    if (reward.isEquippable && !isEquipped(reward.id)) toggleEquip(reward.id); // auto-equip
+    setPendingLevel(levelId);
+    setPendingReward(reward);
+  }, [isEquipped, toggleEquip]);
   const [progress, setProgress] = useState<Progress>(DEFAULT_PROGRESS);
   const [selectedId, setSelectedId] = useState(1);
   const [rewardTrigger, setRewardTrigger] = useState(0);
@@ -175,6 +194,7 @@ export default function EnglishTownScreen() {
         setTownDone(true);
         setRewardCoins(COINS_PER_LEVEL);
         setRewardNonce((n) => n + 1);
+        surfaceReward(id); // final reward (auto-equip + popup)
         setBusy(false);
         return;
       }
@@ -220,14 +240,15 @@ export default function EnglishTownScreen() {
         saveProgress({ ...next, coins: startCoins + COINS_PER_LEVEL });
         setRewardCoins(COINS_PER_LEVEL);
         setRewardNonce((n) => n + 1);
-        showToast(`🎉 Level ${nextId} unlocked!`);
         setCoinTrail([]);
         setCoinsCollected(0);
         setBusy(false);
+        // Surface the headline reward for this level (auto-equip + popup).
+        surfaceReward(id);
         if (isTopicEnd(id)) setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
       }, WALK_MS + 260));
     },
-    [progress, townDone, busy, coins, charX, charY, walking, translateY, showToast]
+    [progress, townDone, busy, coins, charX, charY, walking, translateY, showToast, surfaceReward]
   );
 
   const toggleNight = useCallback(() => {
@@ -263,6 +284,9 @@ export default function EnglishTownScreen() {
     setTownDone(false);
     setCelebrateTopic(null);
     setOverlayLevelId(null);
+    setPendingReward(null);
+    setShowWorld(false);
+    setWorldCategory('wardrobe');
   }, [charX, charY, focusLesson, walking]);
 
   if (!loaded) {
@@ -291,6 +315,8 @@ export default function EnglishTownScreen() {
         charY={charY}
         walking={walking}
         avatar={avatar}
+        equipped={equippedKeys}
+        outfit={activeOutfit}
         currentId={progress.currentId}
         completedIds={progress.completedIds}
         coinTrail={coinTrail}
@@ -323,6 +349,15 @@ export default function EnglishTownScreen() {
           <Text style={styles.toggleText}>{night ? '🌙' : '☀️'}</Text>
         </Pressable>
       </View>
+
+      {/* Floating "My World" / Rewards button (Part 5) */}
+      <Pressable
+        style={({ pressed }) => [styles.rewardsFab, pressed && { opacity: 0.9 }]}
+        onPress={() => { playSound('tap'); setWorldCategory('wardrobe'); setShowWorld(true); }}
+      >
+        <Text style={styles.rewardsFabEmoji}>🎁</Text>
+        <Text style={styles.rewardsFabText}>Rewards</Text>
+      </Pressable>
 
       <RewardAnimation trigger={rewardTrigger} />
 
@@ -402,6 +437,26 @@ export default function EnglishTownScreen() {
         />
       )}
 
+      {/* Reward unlock popup (Part 4) — appears after the completion walk */}
+      <RewardUnlockPopup
+        reward={pendingReward}
+        levelId={pendingLevel}
+        levelTitle={pendingReward ? (SUBTOPICS[pendingLevel - 1]?.title ?? '') : ''}
+        onEquip={() => {
+          if (pendingReward && pendingReward.isEquippable && !isEquipped(pendingReward.id)) toggleEquip(pendingReward.id);
+          setPendingReward(null);
+        }}
+        onContinue={() => setPendingReward(null)}
+      />
+
+      {/* My World / Rewards page */}
+      {showWorld && (
+        <RewardsScreen
+          initialCategory={worldCategory}
+          onClose={() => setShowWorld(false)}
+        />
+      )}
+
       {/* Toast (locked level / level unlocked) */}
       {toast && (
         <View style={styles.toast} pointerEvents="none">
@@ -463,6 +518,28 @@ const styles = StyleSheet.create({
   },
   toggleBtnNight: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
   toggleText: { fontSize: 17 },
+
+  // Floating "Rewards" / My World button (bottom-right, above the tab bar)
+  rewardsFab: {
+    position: 'absolute',
+    right: 14,
+    bottom: 104,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF7A00',
+    borderRadius: 22,
+    paddingLeft: 12,
+    paddingRight: 16,
+    paddingVertical: 10,
+    zIndex: 40,
+    shadowColor: '#FF7A00',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  rewardsFabEmoji: { fontSize: 18, marginRight: 7 },
+  rewardsFabText: { color: '#FFFFFF', fontWeight: '900', fontSize: 14.5 },
 
   toast: {
     position: 'absolute',
