@@ -198,10 +198,20 @@ export default function EnglishTownScreen() {
       setSelectedId(nextId);
 
       if (isLast) {
+        // Final level: no walk, so award coins + persist directly, fire the
+        // last milestone (English Champion), and surface the reward.
+        const finalCoins = startCoins + COINS_PER_LEVEL;
+        setCoins((c) => c + COINS_PER_LEVEL);
+        const fin: Progress = { ...next, coins: finalCoins };
+        setProgress(fin);
+        saveProgress(fin);
         setTownDone(true);
         setRewardCoins(COINS_PER_LEVEL);
         setRewardNonce((n) => n + 1);
-        surfaceReward(id); // final reward (auto-equip + popup)
+        surfaceReward(id);
+        const crossed = milestoneAt(id);
+        if (crossed) setCrossedMilestone(crossed);
+        if (isTopicEnd(id)) setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
         setBusy(false);
         return;
       }
@@ -244,7 +254,9 @@ export default function EnglishTownScreen() {
 
       // 7–8. arrival: unlock + reward + persist final coins + cleanup
       seqTimers.current.push(setTimeout(() => {
-        saveProgress({ ...next, coins: startCoins + COINS_PER_LEVEL });
+        const finalCoins = startCoins + COINS_PER_LEVEL;
+        setProgress((p) => ({ ...p, coins: finalCoins })); // keep state == persisted
+        saveProgress({ ...next, coins: finalCoins });
         setRewardCoins(COINS_PER_LEVEL);
         setRewardNonce((n) => n + 1);
         setCoinTrail([]);

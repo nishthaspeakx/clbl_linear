@@ -30,13 +30,32 @@ export interface DreamHomeLayout {
 
 export const DEFAULT_LAYOUT: DreamHomeLayout = { placements: {}, removed: [] };
 
+function normalizePlacements(raw: unknown): Record<string, PlacedItem> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, PlacedItem> = {};
+  for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
+    const p = v as Partial<PlacedItem> | undefined;
+    // Drop malformed entries (missing/non-numeric coords) so the UI never gets
+    // undefined positions after a schema change or a corrupt blob.
+    if (!p || typeof p.xPercent !== 'number' || typeof p.yPercent !== 'number') continue;
+    out[id] = {
+      xPercent: p.xPercent,
+      yPercent: p.yPercent,
+      scale: typeof p.scale === 'number' ? p.scale : 0.8,
+      rotation: typeof p.rotation === 'number' ? p.rotation : 0,
+      placedAt: typeof p.placedAt === 'number' ? p.placedAt : 0,
+    };
+  }
+  return out;
+}
+
 export async function getDreamHomeLayout(): Promise<DreamHomeLayout> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return { placements: {}, removed: [] };
     const p = JSON.parse(raw);
     return {
-      placements: p && typeof p.placements === 'object' && p.placements ? p.placements : {},
+      placements: normalizePlacements(p?.placements),
       removed: Array.isArray(p?.removed) ? p.removed.filter((x: unknown) => typeof x === 'string') : [],
     };
   } catch {

@@ -33,7 +33,8 @@ function SentenceChart() {
   );
 }
 
-export default function ProgressScreen() {
+export default function ProgressScreen({ onReset }: { onReset?: () => void } = {}) {
+  const doReset = onReset ?? resetApp;
   const { selection } = useAvatar();
   const { equippedKeys, activeOutfit, activeCustomUri } = useRewards();
   const [showCreator, setShowCreator] = useState(false);
@@ -52,7 +53,7 @@ export default function ProgressScreen() {
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#ph)" />
         </Svg>
-        <Pressable style={styles.gear} onPress={resetApp} hitSlop={10}>
+        <Pressable style={styles.gear} onPress={doReset} hitSlop={10}>
           <Text style={{ fontSize: 18 }}>⚙️</Text>
         </Pressable>
         <Pressable style={styles.avatarWrap} onPress={() => setShowCreator(true)}>
@@ -99,7 +100,7 @@ export default function ProgressScreen() {
         </View>
 
         {/* Reset the whole app back to Level 1 (clears all saved progress). */}
-        <Pressable style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]} onPress={resetApp}>
+        <Pressable style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.85 }]} onPress={doReset}>
           <Text style={styles.resetText}>↺  Reset progress (start from scratch)</Text>
         </Pressable>
         <Text style={styles.resetHint}>Returns to Level 1 with Vocabulary playable from the start.</Text>

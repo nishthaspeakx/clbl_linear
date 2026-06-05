@@ -137,19 +137,6 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     return { total: items.length, unlocked: items.filter((i) => isItemUnlocked(i, completedCount)).length };
   }, [completedCount]);
 
-  const defaultScaleFor = (id: string) => {
-    const item = rewardItemById(id);
-    return (item && placementFor(item.imageKey)?.scale) ?? 0.8;
-  };
-
-  const moveItem = (id: string, xPercent: number, yPercent: number) => {
-    setLayout((prev) => {
-      const scale = prev.placements[id]?.scale ?? defaultScaleFor(id);
-      const next = updateRewardPlacement(prev, id, { xPercent, yPercent, scale, placedAt: Date.now() });
-      saveDreamHomeLayout(next);
-      return next;
-    });
-  };
   // Editor: update any subset of a placement (x/y/scale/rotation), keeping the
   // rest from the current override or the category default.
   const updatePlacement = (id: string, partial: { xPercent?: number; yPercent?: number; scale?: number; rotation?: number }) => {
@@ -190,27 +177,6 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     setEditorSelectedId((s) => (s === id ? null : s));
   };
   const resetLayout = () => { commitLayout(resetDreamHomeLayout()); setEditorSelectedId(null); };
-
-  // "Place" from a grid card: ensure it's on the canvas (un-remove + give it an
-  // explicit placement if it had none), then open the editor focused on it.
-  const placeItem = (item: RewardItem) => {
-    setLayout((prev) => {
-      let next = restorePlacedReward(prev, item.id);
-      if (!next.placements[item.id]) {
-        const def = placementFor(item.imageKey);
-        next = updateRewardPlacement(next, item.id, {
-          xPercent: def?.xPercent ?? 50,
-          yPercent: def?.yPercent ?? 50,
-          scale: def?.scale ?? 0.8,
-          placedAt: Date.now(),
-        });
-      }
-      saveDreamHomeLayout(next);
-      return next;
-    });
-    setEditorSelectedId(item.id);
-    setEditorOpen(true);
-  };
 
   const profile = { gender: selection.gender, age: selection.age, userType: selection.userType };
 

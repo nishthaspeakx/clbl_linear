@@ -10,7 +10,7 @@
  * Home = the English Town map. Membership / AI Call / Progress are visual
  * prototypes recreated from the app screenshots.
  */
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -22,11 +22,20 @@ import ProgressScreen from '../screens/ProgressScreen';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
 import { AvatarProvider } from '../components/avatar/AvatarContext';
 import { RewardProvider } from '../components/avatar/RewardContext';
+import { resetApp } from '../utils/resetApp';
 
 const DEVICE_SCALE = WEB_SCALE;
 
 export default function AppTabs() {
   const [tab, setTab] = useState<TabKey>('home');
+  // Bumping resetKey remounts the providers + every screen after a reset, so all
+  // of them re-read the (now cleared) storage. On web resetApp also hard-reloads.
+  const [resetKey, setResetKey] = useState(0);
+  const handleReset = useCallback(async () => {
+    await resetApp();
+    setTab('home');
+    setResetKey((k) => k + 1);
+  }, []);
 
   const shell = (
     <GestureHandlerRootView style={IS_WEB ? styles.frame : styles.root}>
@@ -37,7 +46,7 @@ export default function AppTabs() {
         </View>
         {tab === 'membership' && <MembershipScreen />}
         {tab === 'aicall' && <AICallScreen />}
-        {tab === 'progress' && <ProgressScreen />}
+        {tab === 'progress' && <ProgressScreen onReset={handleReset} />}
       </View>
 
       <BottomTabBar active={tab} onChange={setTab} />
@@ -57,7 +66,7 @@ export default function AppTabs() {
     </View>
   ) : shell;
   return (
-    <AvatarProvider>
+    <AvatarProvider key={resetKey}>
       <RewardProvider>{tree}</RewardProvider>
     </AvatarProvider>
   );

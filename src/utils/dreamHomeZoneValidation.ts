@@ -12,7 +12,3 @@ export function clampToCanvas(xPercent: number, yPercent: number): { xPercent: n
     yPercent: Math.min(100, Math.max(0, yPercent)),
   };
 }
-
-export function isWithinCanvas(xPercent: number, yPercent: number): boolean {
-  return xPercent >= 0 && xPercent <= 100 && yPercent >= 0 && yPercent <= 100;
-}
