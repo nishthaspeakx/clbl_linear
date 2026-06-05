@@ -1,17 +1,17 @@
 /**
- * rewardStorage — persists the learner's reward-world state:
- *  - equippedIds: which outfit/accessory rewards the avatar is wearing
- *  - customAvatarUri: a photo/selfie the learner used to "generate" a custom
- *    avatar (prototype: stored but not yet sent to an AI service)
- *  - customAvatarActive: whether the learner chose the custom avatar over a preset
+ * rewardStorage — persists the learner's reward-world state.
  *
- * NOTE: `unlockedRewardIds` and `currentLevel` are intentionally NOT stored here
- * — they are derived from progressStorage (single source of truth for level
- * progress). See data/rewards.ts → isRewardUnlocked.
+ * Reward lifecycle: LOCKED → Claim → CLAIMED → (Wear | Place) → ACTIVE.
+ *  - claimedRewardIds   : every reward the learner has claimed (owns)
+ *  - wearingWardrobeId  : the SINGLE wardrobe item currently worn (outfit)
+ *  - wearingLifestyleIds: lifestyle accessories worn (MANY at once)
+ * Dream Home placements (home/garden/vehicles — many at once) live separately in
+ * dreamHomeLayoutStorage (placements map); an item is "placed" iff it has an entry.
+ *
+ * customAvatarUri/Active = an optional caricature the learner generated.
  *
  * ── FUTURE API INTEGRATION ──────────────────────────────────────────────────
- * Swap the AsyncStorage bodies for backend calls (GET/PUT /user/world) keeping
- * the same RewardState shape so the UI stays unchanged.
+ * Swap the AsyncStorage bodies for backend calls keeping the same shape.
  * ────────────────────────────────────────────────────────────────────────────
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,21 +19,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const KEY = '@english_town_map/reward_world_v1';
 
 export interface RewardState {
-  /** Ids of equipped reward items (string ids from the reward registry). */
-  equippedItemIds: string[];
-  /** Ids the learner has CLAIMED (owns) — a superset of active items; an item
-   *  can be claimed (owned) but not currently worn/placed/active. */
-  ownedItemIds: string[];
+  /** Every claimed (owned) reward id. */
+  claimedRewardIds: string[];
+  /** The one wardrobe item currently worn (outfit), or null. */
+  wearingWardrobeId: string | null;
+  /** Lifestyle accessories currently worn (multiple allowed). */
+  wearingLifestyleIds: string[];
   customAvatarUri: string | null;
   customAvatarActive: boolean;
 }
 
 export const DEFAULT_REWARD_STATE: RewardState = {
-  equippedItemIds: [],
-  ownedItemIds: [],
+  claimedRewardIds: [],
+  wearingWardrobeId: null,
+  wearingLifestyleIds: [],
   customAvatarUri: null,
   customAvatarActive: false,
 };
+
+const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
 
 export async function loadRewardState(): Promise<RewardState> {
   try {
@@ -41,12 +45,9 @@ export async function loadRewardState(): Promise<RewardState> {
     if (!raw) return { ...DEFAULT_REWARD_STATE };
     const p = JSON.parse(raw);
     return {
-      equippedItemIds: Array.isArray(p?.equippedItemIds)
-        ? p.equippedItemIds.filter((x: unknown) => typeof x === 'string')
-        : [],
-      ownedItemIds: Array.isArray(p?.ownedItemIds)
-        ? p.ownedItemIds.filter((x: unknown) => typeof x === 'string')
-        : [],
+      claimedRewardIds: strArr(p?.claimedRewardIds),
+      wearingWardrobeId: typeof p?.wearingWardrobeId === 'string' ? p.wearingWardrobeId : null,
+      wearingLifestyleIds: strArr(p?.wearingLifestyleIds),
       customAvatarUri: typeof p?.customAvatarUri === 'string' ? p.customAvatarUri : null,
       customAvatarActive: !!p?.customAvatarActive,
     };

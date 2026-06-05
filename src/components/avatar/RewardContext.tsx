@@ -20,22 +20,25 @@ import { OutfitOverride, outfitForImageKey } from '../../data/avatarOutfits';
 interface RewardCtx {
   state: RewardState;
   loaded: boolean;
-  /** Avatar-overlay keys for currently-equipped items that drive overlays. */
+  /** Avatar-overlay keys for the worn wardrobe + lifestyle items. */
   equippedKeys: EquipKey[];
-  /** Equipped wardrobe outfit override (clothes change), or undefined. */
+  /** The worn wardrobe item's outfit override (clothes change), or undefined. */
   activeOutfit: OutfitOverride | undefined;
   /** The custom caricature image to show, or null if a preset persona is active. */
   activeCustomUri: string | null;
-  /** Toggle an equippable reward item on/off the avatar (by string id). */
-  toggleEquip: (itemId: string) => void;
-  isEquipped: (itemId: string) => boolean;
-  /** How many items are currently equipped. */
-  equippedCount: number;
-  /** Claimed/owned items (a superset of active items). */
-  isOwned: (itemId: string) => boolean;
-  markOwned: (itemId: string) => void;
-  /** Toggle owned for "collect"-style rewards (non-wearable lifestyle). */
-  toggleOwned: (itemId: string) => void;
+  /** How many rewards are claimed. */
+  claimedCount: number;
+
+  // ── lifecycle ──────────────────────────────────────────────────────────
+  isClaimed: (itemId: string) => boolean;
+  claim: (itemId: string) => void;
+  /** Wardrobe: wear this item (only ONE wardrobe item at a time). */
+  isWearingWardrobe: (itemId: string) => boolean;
+  wearWardrobe: (itemId: string) => void;
+  /** Lifestyle: toggle this accessory on/off (MANY at a time). */
+  isWearingLifestyle: (itemId: string) => boolean;
+  toggleLifestyle: (itemId: string) => void;
+
   /** Save a custom avatar photo + activate it. */
   setCustomAvatar: (uri: string) => void;
   /** Switch back to a preset (persona) avatar. */
@@ -48,12 +51,13 @@ const Ctx = createContext<RewardCtx>({
   equippedKeys: [],
   activeOutfit: undefined,
   activeCustomUri: null,
-  toggleEquip: () => {},
-  isEquipped: () => false,
-  equippedCount: 0,
-  isOwned: () => false,
-  markOwned: () => {},
-  toggleOwned: () => {},
+  claimedCount: 0,
+  isClaimed: () => false,
+  claim: () => {},
+  isWearingWardrobe: () => false,
+  wearWardrobe: () => {},
+  isWearingLifestyle: () => false,
+  toggleLifestyle: () => {},
   setCustomAvatar: () => {},
   useCustomAvatar: () => {},
 });
@@ -74,65 +78,56 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     saveRewardState(next);
   };
 
-  const toggleEquip = (itemId: string) => {
+  const claim = (itemId: string) => {
     setState((prev) => {
-      const has = prev.equippedItemIds.includes(itemId);
-      const owned = prev.ownedItemIds.includes(itemId);
+      if (prev.claimedRewardIds.includes(itemId)) return prev;
+      const next: RewardState = { ...prev, claimedRewardIds: [...prev.claimedRewardIds, itemId] };
+      saveRewardState(next);
+      return next;
+    });
+  };
+
+  // Wardrobe: exactly one item worn at a time — wearing a new one replaces it.
+  const wearWardrobe = (itemId: string) => {
+    setState((prev) => {
       const next: RewardState = {
         ...prev,
-        equippedItemIds: has
-          ? prev.equippedItemIds.filter((id) => id !== itemId)
-          : [...prev.equippedItemIds, itemId],
-        // equipping implies owning (claimed); unequipping keeps it owned
-        ownedItemIds: !has && !owned ? [...prev.ownedItemIds, itemId] : prev.ownedItemIds,
+        wearingWardrobeId: itemId,
+        claimedRewardIds: prev.claimedRewardIds.includes(itemId) ? prev.claimedRewardIds : [...prev.claimedRewardIds, itemId],
       };
       saveRewardState(next);
       return next;
     });
   };
 
-  const markOwned = (itemId: string) => {
+  // Lifestyle: many at once — toggle this accessory on/off.
+  const toggleLifestyle = (itemId: string) => {
     setState((prev) => {
-      if (prev.ownedItemIds.includes(itemId)) return prev;
-      const next: RewardState = { ...prev, ownedItemIds: [...prev.ownedItemIds, itemId] };
-      saveRewardState(next);
-      return next;
-    });
-  };
-
-  const toggleOwned = (itemId: string) => {
-    setState((prev) => {
-      const has = prev.ownedItemIds.includes(itemId);
+      const has = prev.wearingLifestyleIds.includes(itemId);
       const next: RewardState = {
         ...prev,
-        ownedItemIds: has ? prev.ownedItemIds.filter((id) => id !== itemId) : [...prev.ownedItemIds, itemId],
+        wearingLifestyleIds: has
+          ? prev.wearingLifestyleIds.filter((id) => id !== itemId)
+          : [...prev.wearingLifestyleIds, itemId],
+        claimedRewardIds: prev.claimedRewardIds.includes(itemId) ? prev.claimedRewardIds : [...prev.claimedRewardIds, itemId],
       };
       saveRewardState(next);
       return next;
     });
   };
 
-  const equippedKeys = useMemo(
-    () =>
-      state.equippedItemIds
-        .map((id) => rewardItemById(id)?.equipKey)
-        .filter((k): k is EquipKey => !!k),
-    [state.equippedItemIds]
-  );
+  // Avatar overlay keys = the worn wardrobe item + all worn lifestyle items.
+  const equippedKeys = useMemo(() => {
+    const ids = [state.wearingWardrobeId, ...state.wearingLifestyleIds].filter((x): x is string => !!x);
+    return ids.map((id) => rewardItemById(id)?.equipKey).filter((k): k is EquipKey => !!k);
+  }, [state.wearingWardrobeId, state.wearingLifestyleIds]);
 
-  // Active outfit = the most recently equipped wardrobe item that maps to an
-  // outfit override (clothes change). Single outfit at a time (last wins).
+  // Active outfit = the single worn wardrobe item's clothes override.
   const activeOutfit = useMemo<OutfitOverride | undefined>(() => {
-    let out: OutfitOverride | undefined;
-    for (const id of state.equippedItemIds) {
-      const item = rewardItemById(id);
-      if (item && item.category === 'wardrobe') {
-        const o = outfitForImageKey(item.imageKey);
-        if (o) out = o;
-      }
-    }
-    return out;
-  }, [state.equippedItemIds]);
+    if (!state.wearingWardrobeId) return undefined;
+    const item = rewardItemById(state.wearingWardrobeId);
+    return item ? outfitForImageKey(item.imageKey) : undefined;
+  }, [state.wearingWardrobeId]);
 
   const value: RewardCtx = {
     state,
@@ -140,12 +135,13 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     equippedKeys,
     activeOutfit,
     activeCustomUri: state.customAvatarActive ? state.customAvatarUri : null,
-    toggleEquip,
-    isEquipped: (id) => state.equippedItemIds.includes(id),
-    equippedCount: state.equippedItemIds.length,
-    isOwned: (id) => state.ownedItemIds.includes(id),
-    markOwned,
-    toggleOwned,
+    claimedCount: state.claimedRewardIds.length,
+    isClaimed: (id) => state.claimedRewardIds.includes(id),
+    claim,
+    isWearingWardrobe: (id) => state.wearingWardrobeId === id,
+    wearWardrobe,
+    isWearingLifestyle: (id) => state.wearingLifestyleIds.includes(id),
+    toggleLifestyle,
     setCustomAvatar: (uri) => update({ ...state, customAvatarUri: uri, customAvatarActive: true }),
     useCustomAvatar: (active) => update({ ...state, customAvatarActive: active }),
   };

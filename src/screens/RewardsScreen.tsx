@@ -11,7 +11,7 @@
  * preview buttons. Wardrobe is filtered to the avatar's profile; the other
  * categories show everything. Unlock state is derived from completed levels.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
 import { useAvatar } from '../components/avatar/AvatarContext';
@@ -60,7 +60,10 @@ interface Props {
 
 export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }: Props) {
   const { selection } = useAvatar();
-  const { state, equippedKeys, activeOutfit, activeCustomUri, isEquipped, toggleEquip, isOwned, markOwned, toggleOwned } = useRewards();
+  const {
+    state, equippedKeys, activeOutfit, activeCustomUri, claimedCount,
+    isClaimed, claim, isWearingWardrobe, wearWardrobe, isWearingLifestyle, toggleLifestyle,
+  } = useRewards();
 
   const [completedCount, setCompletedCount] = useState(0);
   const [level, setLevel] = useState(1);
@@ -68,6 +71,13 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
   const [category, setCategory] = useState<RewardCategoryKey>(initialCategory);
   const [showSetup, setShowSetup] = useState(false);
   const [night, setNight] = useState(false); // shared by the header toggle + Dream Home image
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (m: string) => {
+    setToast(m);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 1900);
+  };
   const toggleNight = () => { playSound('day_night_toggle'); setNight((n) => !n); };
 
   // Dream Home manual layout (placements + removals)
@@ -87,38 +97,19 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const commitLayout = (next: DreamHomeLayout) => { setLayout(next); saveDreamHomeLayout(next); };
 
-  // Effective placed items = unlocked placeable items (minus removed), positioned
-  // by the user's override or the category default.
+  // Placed items = ONLY the ones the learner explicitly placed (an entry in
+  // layout.placements). Nothing auto-shows — the Dream Home fills as you place.
   const placedEntries = useMemo<PreviewEntry[]>(() => {
-    const removed = new Set(layout.removed);
-    const unlocked = ALL_REWARD_ITEMS.filter(
-      (i) => PLACEABLE.includes(i.category) && isItemUnlocked(i, completedCount) && placementFor(i.imageKey)
-    );
-    // Home & Garden auto-show at defaults; Vehicles show only the BEST by default
-    // (others appear once the user explicitly places them).
-    const bestVehicleId = unlocked
-      .filter((i) => i.category === 'vehicles')
-      .sort((a, b) => b.unlockLevel - a.unlockLevel)[0]?.id;
-    return unlocked
-      .filter((i) => {
-        if (removed.has(i.id)) return false;
-        if (i.category === 'vehicles') return i.id === bestVehicleId || !!layout.placements[i.id];
-        return true;
+    return Object.entries(layout.placements)
+      .map(([id, p]) => {
+        const item = rewardItemById(id);
+        if (!item) return null;
+        return { item, xPercent: p.xPercent, yPercent: p.yPercent, scale: p.scale };
       })
-      .map((i) => {
-        const def = placementFor(i.imageKey)!;
-        const ov = layout.placements[i.id];
-        return {
-          item: i,
-          xPercent: ov?.xPercent ?? def.xPercent,
-          yPercent: ov?.yPercent ?? def.yPercent,
-          scale: ov?.scale ?? def.scale,
-          isNew: i.unlockLevel === completedCount,
-        };
-      });
-  }, [layout, completedCount]);
+      .filter((e): e is PreviewEntry => !!e);
+  }, [layout]);
 
-  const placedIds = useMemo(() => new Set(placedEntries.map((e) => e.item.id)), [placedEntries]);
+  const placedIds = useMemo(() => new Set(Object.keys(layout.placements)), [layout]);
 
   // Editor entries carry rotation too (decoration mode).
   const editorEntries = useMemo(
@@ -178,8 +169,10 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     });
   };
 
-  // Editor: add an unlocked item to the canvas at its default spot.
+  // Place an item on the Dream Home at its default spot (claims it too). Used by
+  // the grid "Place" button and the editor's Add-Item drawer.
   const addItemToCanvas = (item: RewardItem) => {
+    claim(item.id);
     setLayout((prev) => {
       let next = restorePlacedReward(prev, item.id);
       const def = placementFor(item.imageKey);
@@ -221,11 +214,16 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const profile = { gender: selection.gender, age: selection.age, userType: selection.userType };
 
-  // A reward is CLAIMED when the user equips it (wardrobe/lifestyle) or places it
-  // in the Dream Home (home/garden/vehicles). Locked-but-unclaimed never counts.
+  // A reward is CLAIMED once the learner claims it (and stays claimed when worn,
+  // placed, or set aside). Locked-but-unclaimed never counts.
   const claimedIds = useMemo(
-    () => new Set<string>([...(state.equippedItemIds || []), ...(state.ownedItemIds || []), ...Object.keys(layout.placements)]),
-    [state.equippedItemIds, state.ownedItemIds, layout.placements]
+    () => new Set<string>([
+      ...state.claimedRewardIds,
+      ...(state.wearingWardrobeId ? [state.wearingWardrobeId] : []),
+      ...state.wearingLifestyleIds,
+      ...Object.keys(layout.placements),
+    ]),
+    [state.claimedRewardIds, state.wearingWardrobeId, state.wearingLifestyleIds, layout.placements]
   );
 
   // Per-category collection progress (claimed / total, after profile filtering).
@@ -315,13 +313,15 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
             <RewardGrid
               items={items}
               completedCount={completedCount}
-              isEquipped={isEquipped}
+              isClaimed={isClaimed}
+              isWearingWardrobe={isWearingWardrobe}
+              isWearingLifestyle={isWearingLifestyle}
               isPlaced={(id) => placedIds.has(id)}
-              isOwned={isOwned}
-              onEquipToggle={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleEquip(id); }}
-              onPlace={(item) => { playSound('item_placed'); triggerHaptic('medium'); placeItem(item); }}
-              markOwned={markOwned}
-              onCollectToggle={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleOwned(id); }}
+              onClaim={(item) => { playSound('claim_reward'); triggerHaptic('medium'); claim(item.id); }}
+              onWearWardrobe={(id) => { playSound('avatar_changed'); triggerHaptic('light'); wearWardrobe(id); }}
+              onToggleLifestyle={(id) => { playSound('avatar_changed'); triggerHaptic('light'); toggleLifestyle(id); }}
+              onPlace={(item) => { playSound('item_placed'); triggerHaptic('medium'); addItemToCanvas(item); }}
+              onLockedTap={(item) => showToast(`Complete Level ${item.unlockLevel} to unlock`)}
             />
           </ScrollView>
         </View>
@@ -344,6 +344,12 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
           onClose={() => setEditorOpen(false)}
           initialSelectedId={editorSelectedId}
         />
+      )}
+
+      {!!toast && !editorOpen && (
+        <View pointerEvents="none" style={styles.toastWrap}>
+          <Text style={styles.toastText}>{toast}</Text>
+        </View>
       )}
     </Modal>
   );
@@ -383,4 +389,9 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '900', color: '#21242B' },
   sectionCount: { fontSize: 12, fontWeight: '800', color: '#9AA0A6' },
   filterNote: { fontSize: 11.5, color: '#9AA0A6', fontWeight: '600', marginBottom: 12 },
+  toastWrap: { position: 'absolute', left: 0, right: 0, bottom: 70, alignItems: 'center' },
+  toastText: {
+    backgroundColor: 'rgba(33,36,43,0.95)', color: '#FFFFFF', fontWeight: '800', fontSize: 13,
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, overflow: 'hidden',
+  },
 });

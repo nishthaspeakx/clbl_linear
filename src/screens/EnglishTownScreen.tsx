@@ -64,7 +64,7 @@ function isTopicEnd(id: number): boolean {
 
 export default function EnglishTownScreen() {
   const { selection: avatar } = useAvatar();
-  const { equippedKeys, activeOutfit, toggleEquip, isEquipped } = useRewards();
+  const { equippedKeys, activeOutfit, claim } = useRewards();
   const [loaded, setLoaded] = useState(false);
   // Reward world: unlock popup + My World page
   const [pendingReward, setPendingReward] = useState<RewardItem | null>(null);
@@ -456,7 +456,7 @@ export default function EnglishTownScreen() {
         levelId={pendingLevel}
         levelTitle={pendingReward ? (SUBTOPICS[pendingLevel - 1]?.title ?? '') : ''}
         onClaim={() => {
-          if (pendingReward && !isEquipped(pendingReward.id)) toggleEquip(pendingReward.id); // add to claimedRewardIds
+          if (pendingReward) claim(pendingReward.id); // add to claimedRewardIds
           setPendingReward(null);
           if (crossedMilestone) setShowStatus(true);
         }}
@@ -544,27 +544,27 @@ const styles = StyleSheet.create({
   toggleBtnNight: { backgroundColor: '#2A3360', borderColor: '#3E4A78' },
   toggleText: { fontSize: 17 },
 
-  // Floating "Rewards" / My World button (bottom-right, above the tab bar)
+  // Floating "Rewards" / My World button (bottom-left, above the Home tab)
   rewardsFab: {
     position: 'absolute',
-    right: 14,
-    bottom: 104,
+    left: 14,
+    bottom: 80,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FF7A00',
-    borderRadius: 22,
-    paddingLeft: 12,
-    paddingRight: 16,
-    paddingVertical: 10,
+    borderRadius: 19,
+    paddingLeft: 11,
+    paddingRight: 15,
+    paddingVertical: 6.5,
     zIndex: 40,
-    shadowColor: '#FF7A00',
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
   },
-  rewardsFabEmoji: { fontSize: 18, marginRight: 7 },
-  rewardsFabText: { color: '#FFFFFF', fontWeight: '900', fontSize: 14.5 },
+  rewardsFabEmoji: { fontSize: 16, marginRight: 6 },
+  rewardsFabText: { color: '#FFFFFF', fontWeight: '900', fontSize: 13.5 },
 
   toast: {
     position: 'absolute',

@@ -1,17 +1,16 @@
 /**
- * RewardItemCard — a clean SpeakX-style reward card (2-column grid).
+ * RewardItemCard — clean SpeakX-style reward card (2-column grid).
  *
  *   [ image ]
  *   Name
  *   [ action button ]
  *
- * No badges / sparkles / glow borders / corner checks. Rarity shows only as a
- * small corner icon. Button label is standardised by kind + state:
- *   wear    → Claim · Wear · Wearing ✓
- *   place   → Claim · Place · Placed ✓
- *   use     → Claim · Use · Active ✓
- *   collect → Claim · Claimed ✓
- *   locked  → 🔒 Level N
+ * Lifecycle button label:
+ *   LOCKED   → Level N
+ *   UNLOCKED → Claim
+ *   CLAIMED  → Wear (wardrobe/lifestyle) · Place (home/garden/vehicles)
+ *   ACTIVE   → Wearing ✓ · Placed ✓
+ * Rarity is only a small corner icon. No badges / sparkles / glow borders.
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -20,27 +19,27 @@ import RarityIcon from './RarityIcon';
 import { ObjectVisual } from './placedObjects';
 
 const PRIMARY = '#FF7A00';
-export type CardKind = 'wear' | 'place' | 'use' | 'collect';
+const PLACEABLE = ['home', 'garden', 'vehicles'];
 
 interface Props {
   item: RewardItem;
   unlocked: boolean;
-  kind: CardKind;
-  owned: boolean;
+  claimed: boolean;
+  /** wearing (wardrobe/lifestyle) or placed (home/garden/vehicles) */
   active: boolean;
   onAction?: () => void;
 }
 
-const LABELS: Record<CardKind, { active: string; owned: string }> = {
-  wear: { active: 'Wearing ✓', owned: 'Wear' },
-  place: { active: 'Placed ✓', owned: 'Place' },
-  use: { active: 'Active ✓', owned: 'Use' },
-  collect: { active: 'Claimed ✓', owned: 'Claimed ✓' },
-};
-
-export default function RewardItemCard({ item, unlocked, kind, owned, active, onAction }: Props) {
-  const phase = active ? 'active' : owned ? 'owned' : 'claim';
-  const label = active ? LABELS[kind].active : owned ? LABELS[kind].owned : 'Claim';
+export default function RewardItemCard({ item, unlocked, claimed, active, onAction }: Props) {
+  const placeable = PLACEABLE.includes(item.category);
+  const phase = !unlocked ? 'locked' : !claimed ? 'claim' : active ? 'active' : 'idle';
+  const label = !unlocked
+    ? `🔒 Level ${item.unlockLevel}`
+    : !claimed
+      ? 'Claim'
+      : active
+        ? (placeable ? 'Placed ✓' : 'Wearing ✓')
+        : (placeable ? 'Place' : 'Wear');
 
   return (
     <View style={styles.card}>
@@ -54,9 +53,9 @@ export default function RewardItemCard({ item, unlocked, kind, owned, active, on
 
       <Text style={[styles.name, !unlocked && styles.nameLocked]} numberOfLines={1}>{item.name}</Text>
 
-      {!unlocked ? (
+      {phase === 'locked' ? (
         <View style={[styles.btn, styles.btnLocked]}>
-          <Text style={styles.btnLockedText}>🔒 Level {item.unlockLevel}</Text>
+          <Text style={styles.btnLockedText}>Level {item.unlockLevel}</Text>
         </View>
       ) : (
         <Pressable onPress={onAction} style={({ pressed }) => [styles.btn, BTN[phase], pressed && { opacity: 0.85 }]}>
@@ -69,12 +68,12 @@ export default function RewardItemCard({ item, unlocked, kind, owned, active, on
 
 const BTN: Record<string, object> = {
   claim: { backgroundColor: PRIMARY },
-  owned: { backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: PRIMARY },
+  idle: { backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: PRIMARY },
   active: { backgroundColor: '#EAF7EE' },
 };
 const BTN_TEXT: Record<string, object> = {
   claim: { color: '#FFFFFF' },
-  owned: { color: PRIMARY },
+  idle: { color: PRIMARY },
   active: { color: '#1F8B50' },
 };
 
