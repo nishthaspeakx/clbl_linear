@@ -26,12 +26,8 @@ interface RewardCtx {
   activeOutfit: OutfitOverride | undefined;
   /** The custom caricature image to show, or null if a preset persona is active. */
   activeCustomUri: string | null;
-  /** How many rewards are claimed. */
-  claimedCount: number;
 
-  // ── lifecycle ──────────────────────────────────────────────────────────
-  isClaimed: (itemId: string) => boolean;
-  claim: (itemId: string) => void;
+  // ── lifecycle (Wear / Wearing ✓) ─────────────────────────────────────────
   /** Wardrobe: wear this item (only ONE wardrobe item at a time). */
   isWearingWardrobe: (itemId: string) => boolean;
   wearWardrobe: (itemId: string) => void;
@@ -51,9 +47,6 @@ const Ctx = createContext<RewardCtx>({
   equippedKeys: [],
   activeOutfit: undefined,
   activeCustomUri: null,
-  claimedCount: 0,
-  isClaimed: () => false,
-  claim: () => {},
   isWearingWardrobe: () => false,
   wearWardrobe: () => {},
   isWearingLifestyle: () => false,
@@ -78,29 +71,16 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     saveRewardState(next);
   };
 
-  const claim = (itemId: string) => {
-    setState((prev) => {
-      if (prev.claimedRewardIds.includes(itemId)) return prev;
-      const next: RewardState = { ...prev, claimedRewardIds: [...prev.claimedRewardIds, itemId] };
-      saveRewardState(next);
-      return next;
-    });
-  };
-
   // Wardrobe: exactly one item worn at a time — wearing a new one replaces it.
   const wearWardrobe = (itemId: string) => {
     setState((prev) => {
-      const next: RewardState = {
-        ...prev,
-        wearingWardrobeId: itemId,
-        claimedRewardIds: prev.claimedRewardIds.includes(itemId) ? prev.claimedRewardIds : [...prev.claimedRewardIds, itemId],
-      };
+      const next: RewardState = { ...prev, wearingWardrobeId: itemId };
       saveRewardState(next);
       return next;
     });
   };
 
-  // Lifestyle: many at once — toggle this accessory on/off.
+  // Lifestyle: many at once — Wear toggles the accessory on/off the avatar.
   const toggleLifestyle = (itemId: string) => {
     setState((prev) => {
       const has = prev.wearingLifestyleIds.includes(itemId);
@@ -109,7 +89,6 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
         wearingLifestyleIds: has
           ? prev.wearingLifestyleIds.filter((id) => id !== itemId)
           : [...prev.wearingLifestyleIds, itemId],
-        claimedRewardIds: prev.claimedRewardIds.includes(itemId) ? prev.claimedRewardIds : [...prev.claimedRewardIds, itemId],
       };
       saveRewardState(next);
       return next;
@@ -135,9 +114,6 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     equippedKeys,
     activeOutfit,
     activeCustomUri: state.customAvatarActive ? state.customAvatarUri : null,
-    claimedCount: state.claimedRewardIds.length,
-    isClaimed: (id) => state.claimedRewardIds.includes(id),
-    claim,
     isWearingWardrobe: (id) => state.wearingWardrobeId === id,
     wearWardrobe,
     isWearingLifestyle: (id) => state.wearingLifestyleIds.includes(id),

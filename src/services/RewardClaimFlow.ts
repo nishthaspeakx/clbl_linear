@@ -16,11 +16,11 @@ export function isPlaceable(item: RewardItem): boolean {
 }
 
 export function primaryActionLabel(item: RewardItem): string {
-  return isPlaceable(item) ? 'Place Now' : 'Wear Now';
+  return isPlaceable(item) ? 'Claim Now' : 'Wear Now';
 }
 
 export function appliedToast(item: RewardItem): string {
-  return isPlaceable(item) ? `✨ ${item.name} Placed` : `✨ ${item.name} Applied`;
+  return isPlaceable(item) ? `✨ ${item.name} Claimed` : `✨ ${item.name} Applied`;
 }
 
 /** Place a placeable reward on the Dream Home at its default spot (persisted). */

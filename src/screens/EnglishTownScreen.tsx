@@ -65,12 +65,11 @@ function isTopicEnd(id: number): boolean {
 
 export default function EnglishTownScreen() {
   const { selection: avatar } = useAvatar();
-  const { equippedKeys, activeOutfit, claim, wearWardrobe, toggleLifestyle } = useRewards();
+  const { equippedKeys, activeOutfit, wearWardrobe, toggleLifestyle } = useRewards();
 
-  // Apply a just-unlocked reward: claim + wear (wardrobe/lifestyle) or place
+  // Apply a just-unlocked reward: wear (wardrobe/lifestyle) or place
   // (home/garden/vehicles). The map avatar updates live via context.
   const applyReward = useCallback((item: RewardItem) => {
-    claim(item.id);
     if (isPlaceable(item)) void placeRewardInDreamHome(item);
     else if (item.category === 'wardrobe') wearWardrobe(item.id);
     else toggleLifestyle(item.id);
@@ -78,7 +77,7 @@ export default function EnglishTownScreen() {
     triggerHaptic('success');
     showToast(appliedToast(item));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claim, wearWardrobe, toggleLifestyle]);
+  }, [wearWardrobe, toggleLifestyle]);
   const [loaded, setLoaded] = useState(false);
   // Reward world: unlock popup + My World page
   const [pendingReward, setPendingReward] = useState<RewardItem | null>(null);
@@ -481,7 +480,7 @@ export default function EnglishTownScreen() {
         reward={pendingReward}
         coins={COINS_PER_LEVEL}
         onWearNow={applyReward}
-        onLater={(item) => claim(item.id)}
+        onLater={() => { /* leave it unlocked — shows Wear/Claim in My World */ }}
         onClose={() => {
           setPendingReward(null);
           if (crossedMilestone) setShowStatus(true);

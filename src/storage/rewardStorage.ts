@@ -1,12 +1,13 @@
 /**
  * rewardStorage — persists the learner's reward-world state.
  *
- * Reward lifecycle: LOCKED → Claim → CLAIMED → (Wear | Place) → ACTIVE.
- *  - claimedRewardIds   : every reward the learner has claimed (owns)
+ * Reward lifecycle (one tap, no intermediate "claim" step):
+ *  - Wardrobe / Lifestyle → Wear → Wearing ✓
+ *  - Home / Garden / Vehicles → Claim → Claimed ✓ (Claim places it instantly)
+ *
  *  - wearingWardrobeId  : the SINGLE wardrobe item currently worn (outfit)
  *  - wearingLifestyleIds: lifestyle accessories worn (MANY at once)
- * Dream Home placements (home/garden/vehicles — many at once) live separately in
- * dreamHomeLayoutStorage (placements map); an item is "placed" iff it has an entry.
+ * Placeable "claimed" = it has a Dream Home placement (dreamHomeLayoutStorage).
  *
  * customAvatarUri/Active = an optional caricature the learner generated.
  *
@@ -19,8 +20,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const KEY = '@english_town_map/reward_world_v1';
 
 export interface RewardState {
-  /** Every claimed (owned) reward id. */
-  claimedRewardIds: string[];
   /** The one wardrobe item currently worn (outfit), or null. */
   wearingWardrobeId: string | null;
   /** Lifestyle accessories currently worn (multiple allowed). */
@@ -30,7 +29,6 @@ export interface RewardState {
 }
 
 export const DEFAULT_REWARD_STATE: RewardState = {
-  claimedRewardIds: [],
   wearingWardrobeId: null,
   wearingLifestyleIds: [],
   customAvatarUri: null,
@@ -45,7 +43,6 @@ export async function loadRewardState(): Promise<RewardState> {
     if (!raw) return { ...DEFAULT_REWARD_STATE };
     const p = JSON.parse(raw);
     return {
-      claimedRewardIds: strArr(p?.claimedRewardIds),
       wearingWardrobeId: typeof p?.wearingWardrobeId === 'string' ? p.wearingWardrobeId : null,
       wearingLifestyleIds: strArr(p?.wearingLifestyleIds),
       customAvatarUri: typeof p?.customAvatarUri === 'string' ? p.customAvatarUri : null,

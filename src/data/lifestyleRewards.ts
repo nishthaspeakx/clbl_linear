@@ -14,7 +14,7 @@ export const LIFESTYLE_REWARDS: RewardItem[] = [
   { id: 'lifestyle_01', category: 'lifestyle', name: 'Sunglasses', icon: '🕶️', imageKey: 'sunglasses', unlockLevel: 1, isEquippable: true, equipKey: 'sunglasses' },
   { id: 'lifestyle_02', category: 'lifestyle', name: 'Backpack', icon: '🎒', imageKey: 'backpack', unlockLevel: 2, isEquippable: true, equipKey: 'backpack' },
   { id: 'lifestyle_03', category: 'lifestyle', name: 'Watch', icon: '⌚', imageKey: 'watch', unlockLevel: 3, isEquippable: true },
-  { id: 'lifestyle_04', category: 'lifestyle', name: 'Shoes', icon: '👟', imageKey: 'shoes', unlockLevel: 4, isEquippable: true, equipKey: 'shoes' },
+  { id: 'lifestyle_04', category: 'lifestyle', name: 'Sneakers', icon: '👟', imageKey: 'sneakers', unlockLevel: 4, isEquippable: true, equipKey: 'shoes' },
   { id: 'lifestyle_05', category: 'lifestyle', name: 'Earbuds', icon: '🎵', imageKey: 'earbuds', unlockLevel: 5, isEquippable: true },
   { id: 'lifestyle_06', category: 'lifestyle', name: 'Smartphone', icon: '📱', imageKey: 'smartphone', unlockLevel: 6, isEquippable: false },
   { id: 'lifestyle_07', category: 'lifestyle', name: 'Laptop Bag', icon: '💼', imageKey: 'laptop_bag', unlockLevel: 7, isEquippable: true },

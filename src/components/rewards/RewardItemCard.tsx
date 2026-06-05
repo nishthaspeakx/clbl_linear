@@ -5,11 +5,10 @@
  *   Name
  *   [ action button ]
  *
- * Lifecycle button label:
+ * One-tap lifecycle button label:
  *   LOCKED   → Level N
- *   UNLOCKED → Claim
- *   CLAIMED  → Wear (wardrobe/lifestyle) · Place (home/garden/vehicles)
- *   ACTIVE   → Wearing ✓ · Placed ✓
+ *   Wardrobe/Lifestyle → Wear → Wearing ✓
+ *   Home/Garden/Vehicles → Claim → Claimed ✓
  * Rarity is only a small corner icon. No badges / sparkles / glow borders.
  */
 import React from 'react';
@@ -24,22 +23,19 @@ const PLACEABLE = ['home', 'garden', 'vehicles'];
 interface Props {
   item: RewardItem;
   unlocked: boolean;
-  claimed: boolean;
-  /** wearing (wardrobe/lifestyle) or placed (home/garden/vehicles) */
+  /** wearing (wardrobe/lifestyle) or placed/claimed (home/garden/vehicles) */
   active: boolean;
   onAction?: () => void;
 }
 
-export default function RewardItemCard({ item, unlocked, claimed, active, onAction }: Props) {
+export default function RewardItemCard({ item, unlocked, active, onAction }: Props) {
   const placeable = PLACEABLE.includes(item.category);
-  const phase = !unlocked ? 'locked' : !claimed ? 'claim' : active ? 'active' : 'idle';
+  const phase = !unlocked ? 'locked' : active ? 'active' : 'idle';
   const label = !unlocked
     ? `🔒 Level ${item.unlockLevel}`
-    : !claimed
-      ? 'Claim'
-      : active
-        ? (placeable ? 'Placed ✓' : 'Wearing ✓')
-        : (placeable ? 'Place' : 'Wear');
+    : active
+      ? (placeable ? 'Claimed ✓' : 'Wearing ✓')
+      : (placeable ? 'Claim' : 'Wear');
 
   return (
     <View style={styles.card}>
@@ -67,13 +63,12 @@ export default function RewardItemCard({ item, unlocked, claimed, active, onActi
 }
 
 const BTN: Record<string, object> = {
-  claim: { backgroundColor: PRIMARY },
-  idle: { backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: PRIMARY },
+  // not active → solid orange CTA (Wear / Claim); active → soft green done state
+  idle: { backgroundColor: PRIMARY },
   active: { backgroundColor: '#EAF7EE' },
 };
 const BTN_TEXT: Record<string, object> = {
-  claim: { color: '#FFFFFF' },
-  idle: { color: PRIMARY },
+  idle: { color: '#FFFFFF' },
   active: { color: '#1F8B50' },
 };
 

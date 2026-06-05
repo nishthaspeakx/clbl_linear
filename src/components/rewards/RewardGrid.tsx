@@ -1,11 +1,10 @@
 /**
  * RewardGrid — 2-column grid of reward cards for the selected category.
- * Maps each card to the reward lifecycle (Claim → Wear/Place → Wearing ✓/Placed ✓)
- * and a single tap action:
- *   • not claimed     → claim
- *   • wardrobe        → wear (single — replaces the previous wardrobe item)
- *   • lifestyle       → toggle worn (many at once)
- *   • home/garden/veh → place (if not placed; removal happens in the editor)
+ * One-tap lifecycle (no intermediate Claim/Place step):
+ *   • wardrobe        → Wear (single — replaces the previous wardrobe item)
+ *   • lifestyle       → Wear toggles worn on/off (many at once)
+ *   • home/garden/veh → Claim (instantly places it in the Dream Home;
+ *                       removal happens in the editor)
  *   • locked          → "Complete Level N to unlock" toast
  */
 import React from 'react';
@@ -18,26 +17,23 @@ const PLACEABLE = ['home', 'garden', 'vehicles'];
 interface Props {
   items: RewardItem[];
   completedCount: number;
-  isClaimed: (id: string) => boolean;
   isWearingWardrobe: (id: string) => boolean;
   isWearingLifestyle: (id: string) => boolean;
   isPlaced: (id: string) => boolean;
-  onClaim: (item: RewardItem) => void;
   onWearWardrobe: (id: string) => void;
   onToggleLifestyle: (id: string) => void;
-  onPlace: (item: RewardItem) => void;
+  onClaimPlaceable: (item: RewardItem) => void;
   onLockedTap: (item: RewardItem) => void;
 }
 
 export default function RewardGrid({
-  items, completedCount, isClaimed, isWearingWardrobe, isWearingLifestyle, isPlaced,
-  onClaim, onWearWardrobe, onToggleLifestyle, onPlace, onLockedTap,
+  items, completedCount, isWearingWardrobe, isWearingLifestyle, isPlaced,
+  onWearWardrobe, onToggleLifestyle, onClaimPlaceable, onLockedTap,
 }: Props) {
   return (
     <View style={styles.grid}>
       {items.map((item) => {
         const unlocked = isItemUnlocked(item, completedCount);
-        const claimed = isClaimed(item.id);
         const placeable = PLACEABLE.includes(item.category);
         const active = placeable
           ? isPlaced(item.id)
@@ -47,22 +43,14 @@ export default function RewardGrid({
 
         const onAction = () => {
           if (!unlocked) return onLockedTap(item);
-          if (!claimed) return onClaim(item);
-          if (item.category === 'wardrobe') return onWearWardrobe(item.id);
-          if (item.category === 'lifestyle') return onToggleLifestyle(item.id);
-          if (!isPlaced(item.id)) return onPlace(item); // place once; remove via editor
-          // already placed → stays Placed ✓ (no-op)
+          if (item.category === 'wardrobe') return onWearWardrobe(item.id);   // Wear (single)
+          if (item.category === 'lifestyle') return onToggleLifestyle(item.id); // Wear toggle
+          if (!isPlaced(item.id)) return onClaimPlaceable(item);              // Claim → place
+          // already placed (Claimed ✓) — removal happens in the editor only
         };
 
         return (
-          <RewardItemCard
-            key={item.id}
-            item={item}
-            unlocked={unlocked}
-            claimed={claimed}
-            active={active}
-            onAction={onAction}
-          />
+          <RewardItemCard key={item.id} item={item} unlocked={unlocked} active={active} onAction={onAction} />
         );
       })}
       {items.length % 2 === 1 && <View style={styles.filler} />}

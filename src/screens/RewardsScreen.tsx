@@ -61,8 +61,8 @@ interface Props {
 export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }: Props) {
   const { selection } = useAvatar();
   const {
-    state, equippedKeys, activeOutfit, activeCustomUri, claimedCount,
-    isClaimed, claim, isWearingWardrobe, wearWardrobe, isWearingLifestyle, toggleLifestyle,
+    state, equippedKeys, activeOutfit, activeCustomUri,
+    isWearingWardrobe, wearWardrobe, isWearingLifestyle, toggleLifestyle,
   } = useRewards();
 
   const [completedCount, setCompletedCount] = useState(0);
@@ -156,10 +156,9 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
     });
   };
 
-  // Place an item on the Dream Home at its default spot (claims it too). Used by
-  // the grid "Place" button and the editor's Add-Item drawer.
+  // "Claim" a placeable → instantly place it on the Dream Home at its default
+  // spot. Also used by the editor's Add-Item drawer.
   const addItemToCanvas = (item: RewardItem) => {
-    claim(item.id);
     setLayout((prev) => {
       let next = restorePlacedReward(prev, item.id);
       const def = placementFor(item.imageKey);
@@ -180,16 +179,15 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const profile = { gender: selection.gender, age: selection.age, userType: selection.userType };
 
-  // A reward is CLAIMED once the learner claims it (and stays claimed when worn,
-  // placed, or set aside). Locked-but-unclaimed never counts.
+  // "Collected" = currently worn (wardrobe + lifestyle) or placed in the Dream
+  // Home (home/garden/vehicles). Drives the per-category progress counts.
   const claimedIds = useMemo(
     () => new Set<string>([
-      ...state.claimedRewardIds,
       ...(state.wearingWardrobeId ? [state.wearingWardrobeId] : []),
       ...state.wearingLifestyleIds,
       ...Object.keys(layout.placements),
     ]),
-    [state.claimedRewardIds, state.wearingWardrobeId, state.wearingLifestyleIds, layout.placements]
+    [state.wearingWardrobeId, state.wearingLifestyleIds, layout.placements]
   );
 
   // Per-category collection progress (claimed / total, after profile filtering).
@@ -279,14 +277,12 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
             <RewardGrid
               items={items}
               completedCount={completedCount}
-              isClaimed={isClaimed}
               isWearingWardrobe={isWearingWardrobe}
               isWearingLifestyle={isWearingLifestyle}
               isPlaced={(id) => placedIds.has(id)}
-              onClaim={(item) => { playSound('claim_reward'); triggerHaptic('medium'); claim(item.id); }}
               onWearWardrobe={(id) => { playSound('avatar_changed'); triggerHaptic('light'); wearWardrobe(id); }}
               onToggleLifestyle={(id) => { playSound('avatar_changed'); triggerHaptic('light'); toggleLifestyle(id); }}
-              onPlace={(item) => { playSound('item_placed'); triggerHaptic('medium'); addItemToCanvas(item); }}
+              onClaimPlaceable={(item) => { playSound('item_placed'); triggerHaptic('medium'); addItemToCanvas(item); }}
               onLockedTap={(item) => showToast(`Complete Level ${item.unlockLevel} to unlock`)}
             />
           </ScrollView>

@@ -20,8 +20,6 @@ export const WARDROBE_REWARDS: RewardItem[] = [
   // ── Male (10) ────────────────────────────────────────────────────────────
   { id: 'wardrobe_m01', category: 'wardrobe', name: 'Casual T-Shirt', icon: '👕', imageKey: 'casual_tshirt', unlockLevel: 1, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: ALL } },
-  { id: 'wardrobe_m02', category: 'wardrobe', name: 'Sneakers', icon: '👟', imageKey: 'sneakers', unlockLevel: 2, isEquippable: true, equipKey: 'shoes',
-    suitableFor: { gender: ['male'], ageGroup: YOUNG } },
   { id: 'wardrobe_m03', category: 'wardrobe', name: 'Hoodie', icon: '🧥', imageKey: 'hoodie', unlockLevel: 3, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: YOUNG } },
   { id: 'wardrobe_m04', category: 'wardrobe', name: 'Casual Jacket', icon: '🧥', imageKey: 'casual_jacket', unlockLevel: 4, isEquippable: true, equipKey: 'jacket',
