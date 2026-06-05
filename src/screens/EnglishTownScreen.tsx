@@ -30,7 +30,8 @@ import { useRewards } from '../components/avatar/RewardContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import FlyingCoin from '../components/map/FlyingCoin';
 import ProgressionReward from '../components/map/ProgressionReward';
-import PremiumRewardRevealModal from '../components/rewards/PremiumRewardRevealModal';
+import RewardUnlockModal from '../components/rewards/RewardUnlockModal';
+import { isPlaceable, appliedToast, placeRewardInDreamHome } from '../services/RewardClaimFlow';
 import StatusUnlockedModal from '../components/map/StatusUnlockedModal';
 import RewardsScreen from './RewardsScreen';
 import { RewardItem, RewardCategoryKey, featuredRewardForLevel } from '../data/rewardCategories';
@@ -64,7 +65,20 @@ function isTopicEnd(id: number): boolean {
 
 export default function EnglishTownScreen() {
   const { selection: avatar } = useAvatar();
-  const { equippedKeys, activeOutfit, claim } = useRewards();
+  const { equippedKeys, activeOutfit, claim, wearWardrobe, toggleLifestyle } = useRewards();
+
+  // Apply a just-unlocked reward: claim + wear (wardrobe/lifestyle) or place
+  // (home/garden/vehicles). The map avatar updates live via context.
+  const applyReward = useCallback((item: RewardItem) => {
+    claim(item.id);
+    if (isPlaceable(item)) void placeRewardInDreamHome(item);
+    else if (item.category === 'wardrobe') wearWardrobe(item.id);
+    else toggleLifestyle(item.id);
+    playSound('tap');
+    triggerHaptic('success');
+    showToast(appliedToast(item));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claim, wearWardrobe, toggleLifestyle]);
   const [loaded, setLoaded] = useState(false);
   // Reward world: unlock popup + My World page
   const [pendingReward, setPendingReward] = useState<RewardItem | null>(null);
@@ -461,18 +475,14 @@ export default function EnglishTownScreen() {
         />
       )}
 
-      {/* Reward unlock popup (Part 4) — appears after the completion walk */}
-      <PremiumRewardRevealModal
+      {/* Reward unlock reveal — clean card (Level Complete → reward → Wear Now/Later) */}
+      <RewardUnlockModal
         key={pendingReward?.id ?? 'none'}
         reward={pendingReward}
-        levelId={pendingLevel}
-        levelTitle={pendingReward ? (SUBTOPICS[pendingLevel - 1]?.title ?? '') : ''}
-        onClaim={() => {
-          if (pendingReward) claim(pendingReward.id); // add to claimedRewardIds
-          setPendingReward(null);
-          if (crossedMilestone) setShowStatus(true);
-        }}
-        onContinue={() => {
+        coins={COINS_PER_LEVEL}
+        onWearNow={applyReward}
+        onLater={(item) => claim(item.id)}
+        onClose={() => {
           setPendingReward(null);
           if (crossedMilestone) setShowStatus(true);
         }}
