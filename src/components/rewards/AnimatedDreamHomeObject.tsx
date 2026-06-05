@@ -14,7 +14,7 @@ import { ObjectVisual } from './placedObjects';
 
 const FLOWERS = ['flower_pots', 'rose_garden'];
 const PETS = ['pet_dog', 'pet_cat'];
-const VEHICLES = ['small_car', 'hatchback', 'sedan', 'suv', 'premium_car', 'dream_car', 'auto_ride', 'scooter', 'electric_scooter', 'bike', 'premium_bike', 'bicycle'];
+const VEHICLES = ['small_car', 'hatchback', 'sedan', 'suv', 'audi', 'bmw', 'mercedes', 'sports_car', 'auto', 'scooter', 'motorbike', 'cycle'];
 
 type Kind = 'sway' | 'pet' | 'shimmer' | 'vehicle' | 'idle';
 

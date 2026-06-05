@@ -171,6 +171,92 @@ export const PlacedBicycle = ({ size = 50 }: P) => (
   </Svg>
 );
 
+/* ── VEHICLES (each imageKey renders a distinct, recognisable ride) ── */
+const GLASS = '#CFE8F4';
+
+/** A 4-wheel car parameterised by colours + silhouette (compact / suv / sport). */
+function makeCar(body: string, roof: string, opts: { suv?: boolean; sport?: boolean; chrome?: string; accent?: string } = {}) {
+  const { suv, sport, chrome, accent = '#FFE08A' } = opts;
+  return ({ size = 50 }: P) => {
+    if (sport) {
+      return (
+        <Svg width={size} height={size} viewBox={VB}>
+          <Ground rx={42} />
+          <Path d="M 30 54 L 44 45 L 62 45 L 72 54 Z" fill={roof} />
+          <Polygon points="45,47 61,47 69,54 37,54" fill={GLASS} />
+          <Path d="M 10 66 L 14 56 Q 50 50 86 56 L 90 66 Q 50 73 10 66 Z" fill={body} />
+          <Rect x={70} y={49} width={18} height={3.5} rx={1.5} fill={body} />
+          <Rect x={70} y={49} width={3} height={6} fill={body} />
+          <Rect x={85} y={49} width={3} height={6} fill={body} />
+          <Circle cx={30} cy={70} r={9} fill="#1B1B1B" /><Circle cx={30} cy={70} r={3.6} fill={accent} />
+          <Circle cx={70} cy={70} r={9} fill="#1B1B1B" /><Circle cx={70} cy={70} r={3.6} fill={accent} />
+          <Circle cx={88} cy={59} r={2.4} fill={accent} />
+        </Svg>
+      );
+    }
+    const roofTop = suv ? 36 : 41;
+    const bodyTop = suv ? 50 : 49;
+    const bodyH = suv ? 22 : 19;
+    const wheelY = suv ? 74 : 72;
+    const wheelR = suv ? 10 : 9;
+    return (
+      <Svg width={size} height={size} viewBox={VB}>
+        <Ground rx={40} />
+        <Path
+          d={suv
+            ? `M 30 ${bodyTop} L 31 ${roofTop} L 71 ${roofTop} L 72 ${bodyTop} Z`
+            : `M 32 ${bodyTop} L 42 ${roofTop} L 60 ${roofTop} L 70 ${bodyTop} Z`}
+          fill={roof}
+        />
+        <Polygon points={`43,${roofTop + 2} 50,${roofTop + 2} 50,${bodyTop} 36,${bodyTop}`} fill={GLASS} />
+        <Polygon points={`52,${roofTop + 2} 59,${roofTop + 2} 66,${bodyTop} 52,${bodyTop}`} fill={GLASS} />
+        <Rect x={14} y={bodyTop - 1} width={72} height={bodyH} rx={suv ? 7 : 9} fill={body} />
+        <Rect x={16} y={bodyTop + 7} width={68} height={4} fill="#000" opacity={0.12} />
+        {!!chrome && <Rect x={16} y={bodyTop + bodyH - 5} width={68} height={3} rx={1.5} fill={chrome} />}
+        {!!chrome && <Rect x={18} y={bodyTop + 1} width={9} height={6} rx={2} fill={chrome} opacity={0.85} />}
+        <Circle cx={32} cy={wheelY} r={wheelR} fill="#1B1B1B" /><Circle cx={32} cy={wheelY} r={wheelR * 0.4} fill="#C7CDD3" />
+        <Circle cx={68} cy={wheelY} r={wheelR} fill="#1B1B1B" /><Circle cx={68} cy={wheelY} r={wheelR * 0.4} fill="#C7CDD3" />
+        <Circle cx={84} cy={bodyTop + 6} r={2.4} fill={accent} />
+      </Svg>
+    );
+  };
+}
+
+export const PlacedSmallCar = makeCar('#E0544A', '#C44239');
+export const PlacedHatchback = makeCar('#2E9E8F', '#247E72');
+export const PlacedSedan = makeCar('#3E66B0', '#31528C', { chrome: '#C7CDD3' });
+export const PlacedSUV = makeCar('#3A4750', '#2C363D', { suv: true, chrome: '#9AA0A6' });
+export const PlacedAudi = makeCar('#C9CDD2', '#AEB3B8', { chrome: '#7E858C' });
+export const PlacedBMW = makeCar('#2E5FA3', '#244C84', { chrome: '#D7DCE0' });
+export const PlacedMercedes = makeCar('#2B2E33', '#1E2024', { chrome: '#CFD3D8' });
+export const PlacedSportsCar = makeCar('#E0392B', '#B72B20', { sport: true, accent: '#FFD24A' });
+
+export const PlacedMotorbike = ({ size = 50 }: P) => (
+  <Svg width={size} height={size} viewBox={VB}>
+    <Ground rx={28} />
+    <Circle cx={28} cy={72} r={13} fill="#1B1B1B" /><Circle cx={28} cy={72} r={5} fill="#9AA0A6" />
+    <Circle cx={74} cy={72} r={13} fill="#1B1B1B" /><Circle cx={74} cy={72} r={5} fill="#9AA0A6" />
+    <Path d="M 28 72 L 46 58 L 64 58 L 74 72" fill="none" stroke="#2A2E33" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M 40 60 Q 52 49 67 55 L 64 63 L 46 64 Z" fill="#C4302A" />
+    <Path d="M 60 57 L 80 53" stroke="#2A2E33" strokeWidth={3} strokeLinecap="round" />
+    <Path d="M 20 60 Q 30 56 38 61" stroke="#444B52" strokeWidth={3} fill="none" strokeLinecap="round" />
+    <Circle cx={52} cy={62} r={3} fill="#2A2E33" />
+  </Svg>
+);
+
+export const PlacedAuto = ({ size = 50 }: P) => (
+  <Svg width={size} height={size} viewBox={VB}>
+    <Ground rx={34} />
+    <Path d="M 26 50 Q 40 30 60 36 L 70 56 L 24 56 Z" fill="#0E7C4A" />
+    <Path d="M 18 70 L 22 56 L 72 56 L 76 70 Q 48 76 18 70 Z" fill="#F4C518" />
+    <Rect x={30} y={42} width={20} height={12} rx={3} fill={GLASS} />
+    <Rect x={20} y={60} width={54} height={4} fill="#000" opacity={0.12} />
+    <Circle cx={26} cy={72} r={9} fill="#1B1B1B" /><Circle cx={26} cy={72} r={3.5} fill="#C7CDD3" />
+    <Circle cx={68} cy={72} r={9} fill="#1B1B1B" /><Circle cx={68} cy={72} r={3.5} fill="#C7CDD3" />
+    <Circle cx={71} cy={51} r={2.4} fill="#FFE08A" />
+  </Svg>
+);
+
 /* ── PETS ── */
 export const PlacedDog = ({ size = 50 }: P) => (
   <Svg width={size} height={size} viewBox={VB}>
@@ -412,19 +498,19 @@ const REGISTRY: Record<string, React.FC<P>> = {
   rug: PlacedRug,
   kitchen_set: PlacedKitchen,
   balcony_plants: PlacedPlant,
-  // vehicles
-  small_car: PlacedCar,
-  hatchback: PlacedCar,
-  sedan: PlacedCar,
-  suv: PlacedCar,
-  premium_car: PlacedCar,
-  dream_car: PlacedCar,
-  auto_ride: PlacedCar,
+  // vehicles — each a distinct ride
+  cycle: PlacedBicycle,
   scooter: PlacedScooter,
-  electric_scooter: PlacedScooter,
-  bike: PlacedScooter,
-  premium_bike: PlacedScooter,
-  bicycle: PlacedBicycle,
+  motorbike: PlacedMotorbike,
+  auto: PlacedAuto,
+  small_car: PlacedSmallCar,
+  hatchback: PlacedHatchback,
+  sedan: PlacedSedan,
+  suv: PlacedSUV,
+  audi: PlacedAudi,
+  bmw: PlacedBMW,
+  mercedes: PlacedMercedes,
+  sports_car: PlacedSportsCar,
   // pets
   pet_dog: PlacedDog,
   pet_cat: PlacedCat,

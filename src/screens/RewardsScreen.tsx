@@ -22,7 +22,7 @@ import RewardGrid from '../components/rewards/RewardGrid';
 import AvatarRewardPreview from '../components/rewards/AvatarRewardPreview';
 import NextRewardCard from '../components/rewards/NextRewardCard';
 import DreamHomePreview, { PreviewEntry } from '../components/rewards/DreamHomePreview';
-import DreamHomeEditorModal from '../components/rewards/DreamHomeEditorModal';
+import DreamHomeEditorScreen from './DreamHomeEditorScreen';
 import {
   REWARD_CATEGORIES,
   RewardCategoryKey,
@@ -60,7 +60,7 @@ interface Props {
 
 export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }: Props) {
   const { selection } = useAvatar();
-  const { state, equippedKeys, activeOutfit, activeCustomUri, isEquipped, toggleEquip } = useRewards();
+  const { state, equippedKeys, activeOutfit, activeCustomUri, isEquipped, toggleEquip, isOwned, markOwned, toggleOwned } = useRewards();
 
   const [completedCount, setCompletedCount] = useState(0);
   const [level, setLevel] = useState(1);
@@ -120,6 +120,26 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const placedIds = useMemo(() => new Set(placedEntries.map((e) => e.item.id)), [placedEntries]);
 
+  // Editor entries carry rotation too (decoration mode).
+  const editorEntries = useMemo(
+    () => placedEntries.map((e) => ({
+      item: e.item,
+      xPercent: e.xPercent,
+      yPercent: e.yPercent,
+      scale: e.scale,
+      rotation: layout.placements[e.item.id]?.rotation ?? placementFor(e.item.imageKey)?.rotate ?? 0,
+    })),
+    [placedEntries, layout]
+  );
+
+  // Unlocked placeable rewards NOT currently on the canvas → the "Add Item" drawer.
+  const availableItems = useMemo(
+    () => ALL_REWARD_ITEMS.filter(
+      (i) => PLACEABLE.includes(i.category) && isItemUnlocked(i, completedCount) && placementFor(i.imageKey) && !placedIds.has(i.id)
+    ),
+    [completedCount, placedIds]
+  );
+
   // Dream Home progress = placeable rewards (home/garden/vehicles) unlocked / total.
   const homeProgress = useMemo(() => {
     const items = ALL_REWARD_ITEMS.filter((i) => PLACEABLE.includes(i.category));
@@ -139,6 +159,39 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
       return next;
     });
   };
+  // Editor: update any subset of a placement (x/y/scale/rotation), keeping the
+  // rest from the current override or the category default.
+  const updatePlacement = (id: string, partial: { xPercent?: number; yPercent?: number; scale?: number; rotation?: number }) => {
+    setLayout((prev) => {
+      const cur = prev.placements[id];
+      const item = rewardItemById(id);
+      const def = item ? placementFor(item.imageKey) : undefined;
+      const base = {
+        xPercent: cur?.xPercent ?? def?.xPercent ?? 50,
+        yPercent: cur?.yPercent ?? def?.yPercent ?? 50,
+        scale: cur?.scale ?? def?.scale ?? 0.8,
+        rotation: cur?.rotation ?? def?.rotate ?? 0,
+      };
+      const next = updateRewardPlacement(prev, id, { ...base, ...partial, placedAt: cur?.placedAt ?? Date.now() });
+      saveDreamHomeLayout(next);
+      return next;
+    });
+  };
+
+  // Editor: add an unlocked item to the canvas at its default spot.
+  const addItemToCanvas = (item: RewardItem) => {
+    setLayout((prev) => {
+      let next = restorePlacedReward(prev, item.id);
+      const def = placementFor(item.imageKey);
+      next = updateRewardPlacement(next, item.id, {
+        xPercent: def?.xPercent ?? 50, yPercent: def?.yPercent ?? 50,
+        scale: def?.scale ?? 0.8, rotation: def?.rotate ?? 0, placedAt: Date.now(),
+      });
+      saveDreamHomeLayout(next);
+      return next;
+    });
+  };
+
   const removeItem = (id: string) => {
     setLayout((prev) => { const next = removePlacedReward(prev, id); saveDreamHomeLayout(next); return next; });
     setEditorSelectedId((s) => (s === id ? null : s));
@@ -171,8 +224,8 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
   // A reward is CLAIMED when the user equips it (wardrobe/lifestyle) or places it
   // in the Dream Home (home/garden/vehicles). Locked-but-unclaimed never counts.
   const claimedIds = useMemo(
-    () => new Set<string>([...(state.equippedItemIds || []), ...Object.keys(layout.placements)]),
-    [state.equippedItemIds, layout.placements]
+    () => new Set<string>([...(state.equippedItemIds || []), ...(state.ownedItemIds || []), ...Object.keys(layout.placements)]),
+    [state.equippedItemIds, state.ownedItemIds, layout.placements]
   );
 
   // Per-category collection progress (claimed / total, after profile filtering).
@@ -263,9 +316,12 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               items={items}
               completedCount={completedCount}
               isEquipped={isEquipped}
-              onEquip={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleEquip(id); }}
               isPlaced={(id) => placedIds.has(id)}
+              isOwned={isOwned}
+              onEquipToggle={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleEquip(id); }}
               onPlace={(item) => { playSound('item_placed'); triggerHaptic('medium'); placeItem(item); }}
+              markOwned={markOwned}
+              onCollectToggle={(id) => { playSound('claim_reward'); triggerHaptic('medium'); toggleOwned(id); }}
             />
           </ScrollView>
         </View>
@@ -274,21 +330,19 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
       {showSetup && <AvatarSetupScreen onClose={() => setShowSetup(false)} />}
 
       {editorOpen && (
-        <DreamHomeEditorModal
-          items={placedEntries}
-          selectedId={editorSelectedId}
-          onSelect={setEditorSelectedId}
-          onMove={moveItem}
-          onRemove={removeItem}
-          onReset={resetLayout}
-          onClose={() => setEditorOpen(false)}
+        <DreamHomeEditorScreen
+          placed={editorEntries}
+          available={availableItems}
           selection={selection}
           equippedKeys={equippedKeys}
           outfit={activeOutfit}
           customUri={activeCustomUri}
-          completedCount={completedCount}
-          unlockedItems={homeProgress.unlocked}
-          totalItems={homeProgress.total}
+          onUpdate={updatePlacement}
+          onAdd={addItemToCanvas}
+          onRemove={removeItem}
+          onReset={resetLayout}
+          onClose={() => setEditorOpen(false)}
+          initialSelectedId={editorSelectedId}
         />
       )}
     </Modal>

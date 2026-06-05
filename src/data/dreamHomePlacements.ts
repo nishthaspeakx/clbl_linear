@@ -30,19 +30,19 @@ export interface DreamPlacement {
 }
 
 export const dreamHomePlacements: Record<string, DreamPlacement> = {
-  // ── Vehicles — driveway/patio (cars) / front path (two-wheelers) ─────────
-  bicycle: { xPercent: 38, yPercent: 73, scale: 0.8, area: 'front_porch', zone: 'porch' },
+  // ── Vehicles — driveway (cars) / front path (two-wheelers) ───────────────
+  cycle: { xPercent: 38, yPercent: 73, scale: 0.8, area: 'front_porch', zone: 'porch' },
   scooter: { xPercent: 37, yPercent: 73, scale: 0.85, area: 'front_porch', zone: 'porch' },
-  bike: { xPercent: 36, yPercent: 73, scale: 0.9, area: 'front_porch', zone: 'porch' },
-  electric_scooter: { xPercent: 37, yPercent: 73, scale: 0.85, area: 'front_porch', zone: 'porch' },
-  premium_bike: { xPercent: 36, yPercent: 73, scale: 0.95, area: 'front_porch', zone: 'porch' },
-  auto_ride: { xPercent: 27, yPercent: 60, scale: 1.0, area: 'driveway', zone: 'driveway' },
+  motorbike: { xPercent: 36, yPercent: 73, scale: 0.9, area: 'front_porch', zone: 'porch' },
+  auto: { xPercent: 27, yPercent: 60, scale: 1.0, area: 'driveway', zone: 'driveway' },
   small_car: { xPercent: 27, yPercent: 60, scale: 1.0, area: 'driveway', zone: 'driveway' },
   hatchback: { xPercent: 27, yPercent: 60, scale: 1.05, area: 'driveway', zone: 'driveway' },
   sedan: { xPercent: 27, yPercent: 60, scale: 1.1, area: 'driveway', zone: 'driveway' },
   suv: { xPercent: 27, yPercent: 59, scale: 1.15, area: 'driveway', zone: 'driveway' },
-  premium_car: { xPercent: 27, yPercent: 60, scale: 1.15, area: 'driveway', zone: 'driveway' },
-  dream_car: { xPercent: 26, yPercent: 60, scale: 1.25, area: 'driveway', zone: 'driveway' },
+  audi: { xPercent: 27, yPercent: 60, scale: 1.12, area: 'driveway', zone: 'driveway' },
+  bmw: { xPercent: 27, yPercent: 60, scale: 1.15, area: 'driveway', zone: 'driveway' },
+  mercedes: { xPercent: 26, yPercent: 60, scale: 1.18, area: 'driveway', zone: 'driveway' },
+  sports_car: { xPercent: 26, yPercent: 60, scale: 1.22, area: 'driveway', zone: 'driveway' },
 
   // ── Home interior — objects rest on the wooden-floor rooms ───────────────
   rug: { xPercent: 60, yPercent: 60, scale: 0.85, area: 'living_room', zone: 'interior', zIndex: 5 },

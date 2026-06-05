@@ -31,6 +31,11 @@ interface RewardCtx {
   isEquipped: (itemId: string) => boolean;
   /** How many items are currently equipped. */
   equippedCount: number;
+  /** Claimed/owned items (a superset of active items). */
+  isOwned: (itemId: string) => boolean;
+  markOwned: (itemId: string) => void;
+  /** Toggle owned for "collect"-style rewards (non-wearable lifestyle). */
+  toggleOwned: (itemId: string) => void;
   /** Save a custom avatar photo + activate it. */
   setCustomAvatar: (uri: string) => void;
   /** Switch back to a preset (persona) avatar. */
@@ -46,6 +51,9 @@ const Ctx = createContext<RewardCtx>({
   toggleEquip: () => {},
   isEquipped: () => false,
   equippedCount: 0,
+  isOwned: () => false,
+  markOwned: () => {},
+  toggleOwned: () => {},
   setCustomAvatar: () => {},
   useCustomAvatar: () => {},
 });
@@ -69,11 +77,35 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
   const toggleEquip = (itemId: string) => {
     setState((prev) => {
       const has = prev.equippedItemIds.includes(itemId);
+      const owned = prev.ownedItemIds.includes(itemId);
       const next: RewardState = {
         ...prev,
         equippedItemIds: has
           ? prev.equippedItemIds.filter((id) => id !== itemId)
           : [...prev.equippedItemIds, itemId],
+        // equipping implies owning (claimed); unequipping keeps it owned
+        ownedItemIds: !has && !owned ? [...prev.ownedItemIds, itemId] : prev.ownedItemIds,
+      };
+      saveRewardState(next);
+      return next;
+    });
+  };
+
+  const markOwned = (itemId: string) => {
+    setState((prev) => {
+      if (prev.ownedItemIds.includes(itemId)) return prev;
+      const next: RewardState = { ...prev, ownedItemIds: [...prev.ownedItemIds, itemId] };
+      saveRewardState(next);
+      return next;
+    });
+  };
+
+  const toggleOwned = (itemId: string) => {
+    setState((prev) => {
+      const has = prev.ownedItemIds.includes(itemId);
+      const next: RewardState = {
+        ...prev,
+        ownedItemIds: has ? prev.ownedItemIds.filter((id) => id !== itemId) : [...prev.ownedItemIds, itemId],
       };
       saveRewardState(next);
       return next;
@@ -111,6 +143,9 @@ export function RewardProvider({ children }: { children: React.ReactNode }) {
     toggleEquip,
     isEquipped: (id) => state.equippedItemIds.includes(id),
     equippedCount: state.equippedItemIds.length,
+    isOwned: (id) => state.ownedItemIds.includes(id),
+    markOwned,
+    toggleOwned,
     setCustomAvatar: (uri) => update({ ...state, customAvatarUri: uri, customAvatarActive: true }),
     useCustomAvatar: (active) => update({ ...state, customAvatarActive: active }),
   };

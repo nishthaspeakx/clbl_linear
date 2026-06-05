@@ -41,8 +41,18 @@ export default function DreamHomePreview({ placed, selection, equippedKeys, outf
   const score = lifeScore(unlockedItems, totalItems);
 
   return (
-    <View style={styles.glowWrap}>
-      <View style={styles.card}>
+    <View>
+      {/* lightweight progress line — directly under the header title, above the image */}
+      <Text style={styles.progressLine}>
+        <Text style={styles.pct}>{score}%</Text>
+        <Text style={styles.label}> Built  </Text>
+        <Text style={styles.sep}>•</Text>
+        <Text style={styles.count}>  {unlockedItems}/{totalItems}</Text>
+        <Text style={styles.label}> Items Unlocked</Text>
+      </Text>
+
+      <View style={styles.glowWrap}>
+        <View style={styles.card}>
         <DreamHomeCanvas
           width={CARD_W}
           placed={placed}
@@ -71,12 +81,6 @@ export default function DreamHomePreview({ placed, selection, equippedKeys, outf
         {/* tap anywhere on the image to open the editor */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onOpenEditor} />
 
-        {/* Life Score pill (top-left) */}
-        <View pointerEvents="none" style={styles.lifePill}>
-          <Text style={styles.lifeTop}>❤️ <Text style={styles.lifePct}>{score}%</Text> Alive</Text>
-          <Text style={styles.lifeItems}>{unlockedItems}/{totalItems} items</Text>
-        </View>
-
         {/* world-status line (bottom-left) */}
         <View pointerEvents="none" style={styles.statusWrap}>
           <Text style={styles.statusText} numberOfLines={2}>{lifeStatusText(score)}</Text>
@@ -86,27 +90,24 @@ export default function DreamHomePreview({ placed, selection, equippedKeys, outf
         <Pressable style={({ pressed }) => [styles.decorateBtn, pressed && { opacity: 0.9 }]} onPress={() => { playSound('button_tap'); onOpenEditor(); }}>
           <Text style={styles.decorateText}>🎨  Decorate</Text>
         </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  progressLine: { fontSize: 13.5, textAlign: 'center', marginTop: 2, marginBottom: 10 },
+  pct: { color: '#FF7A00', fontWeight: '800' },
+  count: { color: '#1F8B50', fontWeight: '800' },
+  label: { color: '#6B7178', fontWeight: '600' },
+  sep: { color: '#C7CDD3', fontWeight: '700' },
   glowWrap: { borderRadius: 26, marginTop: 2, shadowColor: '#FF8A3D', shadowOpacity: 0.28, shadowRadius: 22, shadowOffset: { width: 0, height: 10 }, elevation: 8 },
   card: {
     width: CARD_W, height: IMG_H, borderRadius: 24, overflow: 'hidden', backgroundColor: '#DCE8D8',
     borderWidth: 2, borderColor: '#FFFFFF',
     shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 16, shadowOffset: { width: 0, height: 8 },
   },
-  lifePill: {
-    position: 'absolute', top: 12, left: 12,
-    backgroundColor: 'rgba(255,255,255,0.86)', borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6,
-    borderWidth: 1, borderColor: 'rgba(255,138,61,0.55)',
-    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3,
-  },
-  lifeTop: { fontSize: 13, fontWeight: '800', color: '#C2410C' },
-  lifePct: { fontSize: 15, fontWeight: '900', color: '#21242B' },
-  lifeItems: { fontSize: 10.5, fontWeight: '700', color: '#6B7178', marginTop: 1 },
   statusWrap: { position: 'absolute', left: 14, bottom: 14, right: 130 },
   statusText: {
     color: '#FFFFFF', fontWeight: '900', fontSize: 16,

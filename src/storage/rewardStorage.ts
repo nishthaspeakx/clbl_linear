@@ -21,12 +21,16 @@ const KEY = '@english_town_map/reward_world_v1';
 export interface RewardState {
   /** Ids of equipped reward items (string ids from the reward registry). */
   equippedItemIds: string[];
+  /** Ids the learner has CLAIMED (owns) — a superset of active items; an item
+   *  can be claimed (owned) but not currently worn/placed/active. */
+  ownedItemIds: string[];
   customAvatarUri: string | null;
   customAvatarActive: boolean;
 }
 
 export const DEFAULT_REWARD_STATE: RewardState = {
   equippedItemIds: [],
+  ownedItemIds: [],
   customAvatarUri: null,
   customAvatarActive: false,
 };
@@ -39,6 +43,9 @@ export async function loadRewardState(): Promise<RewardState> {
     return {
       equippedItemIds: Array.isArray(p?.equippedItemIds)
         ? p.equippedItemIds.filter((x: unknown) => typeof x === 'string')
+        : [],
+      ownedItemIds: Array.isArray(p?.ownedItemIds)
+        ? p.ownedItemIds.filter((x: unknown) => typeof x === 'string')
         : [],
       customAvatarUri: typeof p?.customAvatarUri === 'string' ? p.customAvatarUri : null,
       customAvatarActive: !!p?.customAvatarActive,
