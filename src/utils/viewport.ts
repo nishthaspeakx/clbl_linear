@@ -17,7 +17,9 @@ const win = Dimensions.get('window');
 
 export const IS_WEB = Platform.OS === 'web';
 
-// Cap to a phone frame on web, but never exceed the actual browser window so
-// it still fits inside small/short browser viewports.
-export const VIEWPORT_W = IS_WEB ? Math.min(PHONE_W, win.width) : win.width;
-export const VIEWPORT_H = IS_WEB ? Math.min(PHONE_H, win.height) : win.height;
+// On web, always use the FULL phone size (440×956) regardless of the browser
+// window — the device mockup is then scaled down to fit (see AppTabs
+// DEVICE_SCALE). This keeps the layout/proportions identical on every screen,
+// instead of producing a short/stubby phone on a short browser window.
+export const VIEWPORT_W = IS_WEB ? PHONE_W : win.width;
+export const VIEWPORT_H = IS_WEB ? PHONE_H : win.height;

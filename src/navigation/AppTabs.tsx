@@ -28,8 +28,8 @@ const DEVICE_W = VIEWPORT_W + 32;
 const DEVICE_H = VIEWPORT_H + 32;
 const DEVICE_SCALE = (() => {
   if (!IS_WEB || typeof window === 'undefined') return 1;
-  const s = Math.min((window.innerHeight * 0.96) / DEVICE_H, (window.innerWidth * 0.96) / DEVICE_W);
-  return Math.max(0.7, Math.min(s, 2.2));
+  const s = Math.min((window.innerHeight * 0.95) / DEVICE_H, (window.innerWidth * 0.95) / DEVICE_W);
+  return Math.max(0.4, Math.min(s, 2.2));
 })();
 
 export default function AppTabs() {
