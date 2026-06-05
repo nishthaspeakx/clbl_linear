@@ -20,11 +20,14 @@ interface Props {
   level: number;
   equippedCount: number;
   coins: number;
+  /** Avatar evolution status (e.g. "Beginner"). */
+  statusTitle?: string;
+  statusEmoji?: string;
   onEditAvatar: () => void;
 }
 
 export default function AvatarRewardPreview({
-  selection, equippedKeys, outfit, customUri, level, equippedCount, coins, onEditAvatar,
+  selection, equippedKeys, outfit, customUri, level, equippedCount, coins, statusTitle, statusEmoji, onEditAvatar,
 }: Props) {
   return (
     <View style={styles.wrap}>
@@ -47,10 +50,15 @@ export default function AvatarRewardPreview({
       </View>
 
       <View style={styles.right}>
+        {!!statusTitle && (
+          <View style={styles.statusPill}>
+            <Text style={styles.statusText}>{statusEmoji} Level {level} · {statusTitle}</Text>
+          </View>
+        )}
         <Text style={styles.greeting}>Looking great! ✨</Text>
         <View style={styles.statsRow}>
           <Stat n={level} label="Level" />
-          <Stat n={equippedCount} label="Equipped" />
+          <Stat n={equippedCount} label="Claimed" />
           <Stat n={coins} label="Coins" />
         </View>
         <Pressable onPress={onEditAvatar} style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.85 }]}>
@@ -93,6 +101,11 @@ const styles = StyleSheet.create({
   avatarInner: { position: 'absolute', top: 8, alignItems: 'center' },
   avatarImage: { width: 78, height: 78 },
   right: { flex: 1 },
+  statusPill: {
+    alignSelf: 'flex-start', backgroundColor: '#FFF6E0', borderRadius: 10, paddingHorizontal: 9, paddingVertical: 3,
+    borderWidth: 1, borderColor: '#F4C84F', marginBottom: 5,
+  },
+  statusText: { fontSize: 11, fontWeight: '900', color: '#B8860B' },
   greeting: { fontSize: 15, fontWeight: '900', color: '#21242B' },
   statsRow: { flexDirection: 'row', marginTop: 8, marginBottom: 4 },
   stat: { marginRight: 18 },

@@ -64,6 +64,9 @@ export default function RewardUnlockPopup({ reward, levelId, levelTitle, onEquip
           </View>
 
           <Text style={styles.name}>{reward.name}</Text>
+          {!!reward.topic && (
+            <View style={styles.topicChip}><Text style={styles.topicChipText}>🗺️  Unlocked from: {reward.topic}</Text></View>
+          )}
           <Text style={styles.earned}>You earned this reward for completing:</Text>
           <Text style={styles.level}>Level {levelId}</Text>
           {!!levelTitle && <Text style={styles.levelTitle}>{levelTitle}</Text>}
@@ -71,7 +74,7 @@ export default function RewardUnlockPopup({ reward, levelId, levelTitle, onEquip
           {reward.isEquippable ? (
             <>
               <Pressable style={({ pressed }) => [styles.primary, pressed && { opacity: 0.9 }]} onPress={onEquip}>
-                <Text style={styles.primaryText}>👓  Equip Now</Text>
+                <Text style={styles.primaryText}>🎁  Claim Reward</Text>
               </Pressable>
               <Pressable style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.85 }]} onPress={onContinue}>
                 <Text style={styles.secondaryText}>➡  Continue Journey</Text>
@@ -125,6 +128,11 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', width: 132, height: 132, borderRadius: 66, backgroundColor: '#FFF1DE', borderWidth: 3, borderColor: '#FFC78F' },
   icon: { fontSize: 78 },
   name: { fontSize: 23, fontWeight: '900', color: '#21242B', marginTop: 12, textAlign: 'center' },
+  topicChip: {
+    marginTop: 10, backgroundColor: '#EAF7EE', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#BFE6CC',
+  },
+  topicChipText: { color: '#1F8B50', fontWeight: '800', fontSize: 12 },
   earned: { fontSize: 12.5, color: '#9AA0A6', fontWeight: '600', marginTop: 12, textAlign: 'center' },
   level: { fontSize: 17, fontWeight: '900', color: '#FF7A00', marginTop: 4 },
   levelTitle: { fontSize: 13.5, color: '#6B7177', fontWeight: '700', marginTop: 1, textAlign: 'center' },

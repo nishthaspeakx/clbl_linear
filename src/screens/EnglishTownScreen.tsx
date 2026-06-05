@@ -30,9 +30,11 @@ import { useRewards } from '../components/avatar/RewardContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import FlyingCoin from '../components/map/FlyingCoin';
 import ProgressionReward from '../components/map/ProgressionReward';
-import RewardUnlockPopup from '../components/map/RewardUnlockPopup';
+import PremiumRewardRevealModal from '../components/rewards/PremiumRewardRevealModal';
+import StatusUnlockedModal from '../components/map/StatusUnlockedModal';
 import RewardsScreen from './RewardsScreen';
 import { RewardItem, RewardCategoryKey, featuredRewardForLevel } from '../data/rewardCategories';
+import { Milestone, milestoneAt } from '../data/avatarMilestones';
 import { initSounds, playSound, setSoundEnabled } from '../utils/sound';
 import {
   loadProgress,
@@ -68,15 +70,18 @@ export default function EnglishTownScreen() {
   const [pendingLevel, setPendingLevel] = useState(1);
   const [showWorld, setShowWorld] = useState(false);
   const [worldCategory, setWorldCategory] = useState<RewardCategoryKey>('wardrobe');
+  // Avatar evolution: status crossed on this completion + its popup
+  const [crossedMilestone, setCrossedMilestone] = useState<Milestone | null>(null);
+  const [showStatus, setShowStatus] = useState(false);
 
-  /** Surface the level's headline reward, auto-equipping it (FIX 2 & 3). */
+  /** Surface the level's headline reward for the chest-reveal modal. The reward
+   * is claimed explicitly via the modal's "Claim Reward" button. */
   const surfaceReward = useCallback((levelId: number) => {
     const reward = featuredRewardForLevel(levelId);
     if (!reward) return;
-    if (reward.isEquippable && !isEquipped(reward.id)) toggleEquip(reward.id); // auto-equip
     setPendingLevel(levelId);
     setPendingReward(reward);
-  }, [isEquipped, toggleEquip]);
+  }, []);
   const [progress, setProgress] = useState<Progress>(DEFAULT_PROGRESS);
   const [selectedId, setSelectedId] = useState(1);
   const [rewardTrigger, setRewardTrigger] = useState(0);
@@ -243,8 +248,11 @@ export default function EnglishTownScreen() {
         setCoinTrail([]);
         setCoinsCollected(0);
         setBusy(false);
-        // Surface the headline reward for this level (auto-equip + popup).
+        // Surface the headline reward for this level (chest reveal).
         surfaceReward(id);
+        // Avatar evolution: reaching the next level may cross a status milestone.
+        const crossed = milestoneAt(nextId);
+        if (crossed) setCrossedMilestone(crossed);
         if (isTopicEnd(id)) setCelebrateTopic(SUBTOPICS[id - 1].topicIndex);
       }, WALK_MS + 260));
     },
@@ -287,6 +295,8 @@ export default function EnglishTownScreen() {
     setPendingReward(null);
     setShowWorld(false);
     setWorldCategory('wardrobe');
+    setCrossedMilestone(null);
+    setShowStatus(false);
   }, [charX, charY, focusLesson, walking]);
 
   if (!loaded) {
@@ -438,16 +448,29 @@ export default function EnglishTownScreen() {
       )}
 
       {/* Reward unlock popup (Part 4) — appears after the completion walk */}
-      <RewardUnlockPopup
+      <PremiumRewardRevealModal
+        key={pendingReward?.id ?? 'none'}
         reward={pendingReward}
         levelId={pendingLevel}
         levelTitle={pendingReward ? (SUBTOPICS[pendingLevel - 1]?.title ?? '') : ''}
-        onEquip={() => {
-          if (pendingReward && pendingReward.isEquippable && !isEquipped(pendingReward.id)) toggleEquip(pendingReward.id);
+        onClaim={() => {
+          if (pendingReward && !isEquipped(pendingReward.id)) toggleEquip(pendingReward.id); // add to claimedRewardIds
           setPendingReward(null);
+          if (crossedMilestone) setShowStatus(true);
         }}
-        onContinue={() => setPendingReward(null)}
+        onContinue={() => {
+          setPendingReward(null);
+          if (crossedMilestone) setShowStatus(true);
+        }}
       />
+
+      {/* Avatar evolution status popup (after the reward reveal) */}
+      {showStatus && crossedMilestone && (
+        <StatusUnlockedModal
+          milestone={crossedMilestone}
+          onClose={() => { setShowStatus(false); setCrossedMilestone(null); }}
+        />
+      )}
 
       {/* My World / Rewards page */}
       {showWorld && (

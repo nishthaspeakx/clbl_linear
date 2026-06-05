@@ -17,22 +17,21 @@ import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../utils/viewport';
 import { useAvatar } from '../components/avatar/AvatarContext';
 import { useRewards } from '../components/avatar/RewardContext';
 import AvatarSetupScreen from './AvatarSetupScreen';
-import RewardCategoryTabs from '../components/rewards/RewardCategoryTabs';
+import RewardCategoryTabs, { CategoryProgress } from '../components/rewards/RewardCategoryTabs';
 import RewardGrid from '../components/rewards/RewardGrid';
 import AvatarRewardPreview from '../components/rewards/AvatarRewardPreview';
+import NextRewardCard from '../components/rewards/NextRewardCard';
 import DreamHomePreview, { PreviewEntry } from '../components/rewards/DreamHomePreview';
 import DreamHomeEditorModal from '../components/rewards/DreamHomeEditorModal';
 import {
   REWARD_CATEGORIES,
   RewardCategoryKey,
-  CategoryCount,
   RewardItem,
   ALL_REWARD_ITEMS,
-  categoryCount,
-  overallCount,
   visibleItems,
   isItemUnlocked,
   rewardItemById,
+  featuredRewardForLevel,
 } from '../data/rewardCategories';
 import { placementFor } from '../data/dreamHomePlacements';
 import {
@@ -45,6 +44,7 @@ import {
   resetDreamHomeLayout,
 } from '../storage/dreamHomeLayoutStorage';
 import { COINS_PER_LEVEL, loadProgress } from '../storage/progressStorage';
+import { statusForLevel } from '../data/avatarMilestones';
 
 const PLACEABLE: RewardCategoryKey[] = ['home', 'garden', 'vehicles'];
 
@@ -57,7 +57,7 @@ interface Props {
 
 export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }: Props) {
   const { selection } = useAvatar();
-  const { equippedKeys, activeOutfit, activeCustomUri, isEquipped, toggleEquip, equippedCount } = useRewards();
+  const { state, equippedKeys, activeOutfit, activeCustomUri, isEquipped, toggleEquip } = useRewards();
 
   const [completedCount, setCompletedCount] = useState(0);
   const [level, setLevel] = useState(1);
@@ -115,6 +115,12 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const placedIds = useMemo(() => new Set(placedEntries.map((e) => e.item.id)), [placedEntries]);
 
+  // Dream Home progress = placeable rewards (home/garden/vehicles) unlocked / total.
+  const homeProgress = useMemo(() => {
+    const items = ALL_REWARD_ITEMS.filter((i) => PLACEABLE.includes(i.category));
+    return { total: items.length, unlocked: items.filter((i) => isItemUnlocked(i, completedCount)).length };
+  }, [completedCount]);
+
   const defaultScaleFor = (id: string) => {
     const item = rewardItemById(id);
     return (item && placementFor(item.imageKey)?.scale) ?? 0.8;
@@ -157,17 +163,30 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
 
   const profile = { gender: selection.gender, age: selection.age, userType: selection.userType };
 
+  // A reward is CLAIMED when the user equips it (wardrobe/lifestyle) or places it
+  // in the Dream Home (home/garden/vehicles). Locked-but-unclaimed never counts.
+  const claimedIds = useMemo(
+    () => new Set<string>([...(state.equippedItemIds || []), ...Object.keys(layout.placements)]),
+    [state.equippedItemIds, layout.placements]
+  );
+
+  // Per-category collection progress (claimed / total, after profile filtering).
   const counts = useMemo(() => {
-    const out = {} as Record<RewardCategoryKey, CategoryCount>;
-    REWARD_CATEGORIES.forEach((c) => { out[c.key] = categoryCount(c.key, completedCount, profile); });
+    const out = {} as Record<RewardCategoryKey, CategoryProgress>;
+    REWARD_CATEGORIES.forEach((c) => {
+      const list = visibleItems(c.key, profile);
+      out[c.key] = { total: list.length, claimed: list.filter((i) => claimedIds.has(i.id)).length };
+    });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedCount, selection.gender, selection.age, selection.userType]);
+  }, [claimedIds, selection.gender, selection.age, selection.userType]);
 
-  const overall = useMemo(
-    () => overallCount(completedCount, profile),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [completedCount, selection.gender, selection.age, selection.userType]
+  const overall = useMemo<CategoryProgress>(
+    () => REWARD_CATEGORIES.reduce<CategoryProgress>(
+      (a, c) => ({ claimed: a.claimed + counts[c.key].claimed, total: a.total + counts[c.key].total }),
+      { claimed: 0, total: 0 },
+    ),
+    [counts]
   );
 
   const items = useMemo(
@@ -189,7 +208,7 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
             </Pressable>
           </View>
           <Text style={styles.subtitle}>
-            {overall.unlocked}/{overall.total} rewards  •  {coins} coins  •  Level {level}
+            {overall.claimed}/{overall.total} rewards claimed  •  {coins} coins  •  Level {level}
           </Text>
 
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -200,10 +219,15 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
               equippedKeys={equippedKeys}
               outfit={activeOutfit}
               customUri={activeCustomUri}
+              unlockedItems={homeProgress.unlocked}
+              totalItems={homeProgress.total}
               onOpenEditor={() => { setEditorSelectedId(null); setEditorOpen(true); }}
             />
 
-            {/* 3. Category tabs */}
+            {/* 3. Next reward (always the next locked headline reward) */}
+            <NextRewardCard reward={featuredRewardForLevel(completedCount + 1) ?? null} completedCount={completedCount} />
+
+            {/* 4. Category tabs */}
             <View style={styles.tabsWrap}>
               <RewardCategoryTabs selected={category} counts={counts} onSelect={setCategory} />
             </View>
@@ -216,7 +240,9 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
                 outfit={activeOutfit}
                 customUri={activeCustomUri}
                 level={level}
-                equippedCount={equippedCount}
+                statusTitle={statusForLevel(level).title}
+                statusEmoji={statusForLevel(level).emoji}
+                equippedCount={claimedIds.size}
                 coins={coins}
                 onEditAvatar={() => setShowSetup(true)}
               />
@@ -228,7 +254,7 @@ export default function RewardsScreen({ onClose, initialCategory = 'wardrobe' }:
                 {REWARD_CATEGORIES.find((c) => c.key === category)?.icon}{' '}
                 {REWARD_CATEGORIES.find((c) => c.key === category)?.name}
               </Text>
-              <Text style={styles.sectionCount}>{counts[category]?.unlocked}/{counts[category]?.total} unlocked</Text>
+              <Text style={styles.sectionCount}>{counts[category]?.claimed}/{counts[category]?.total} claimed</Text>
             </View>
             {category === 'wardrobe' && (
               <Text style={styles.filterNote}>Showing outfits that suit your avatar's profile.</Text>

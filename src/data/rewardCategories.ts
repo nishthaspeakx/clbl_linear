@@ -19,11 +19,18 @@
 import { AgeGroup, Gender, UserType } from './avatarProfiles';
 import { EquipKey } from './rewards';
 import { ageToGroup } from '../utils/avatarResolver';
+import { SUBTOPICS } from './subtopics';
+import { RewardRarity, rarityForReward } from './rewardRarity';
 import { WARDROBE_REWARDS } from './wardrobeRewards';
 import { HOME_REWARDS } from './homeRewards';
 import { VEHICLE_REWARDS } from './vehicleRewards';
 import { LIFESTYLE_REWARDS } from './lifestyleRewards';
 import { GARDEN_REWARDS } from './gardenRewards';
+
+/** The learning topic a level belongs to (Everyday Life, My Family, …). */
+export function topicForLevel(level: number): string {
+  return SUBTOPICS[level - 1]?.topic ?? '';
+}
 
 export type RewardCategoryKey = 'wardrobe' | 'home' | 'vehicles' | 'lifestyle' | 'garden';
 
@@ -45,6 +52,10 @@ export interface RewardItem {
   isEquippable: boolean;
   /** If set, equipping this item drives an avatar overlay (see AvatarFigure). */
   equipKey?: EquipKey;
+  /** Learning topic the reward is earned from (derived from unlockLevel). */
+  topic?: string;
+  /** Rarity tier (derived; drives the card glow + badge). */
+  rarity?: RewardRarity;
 }
 
 export interface RewardCategoryDef {
@@ -61,13 +72,28 @@ export const REWARD_CATEGORIES: RewardCategoryDef[] = [
   { key: 'garden', name: 'Garden', icon: '🌳' },
 ];
 
-/** All items across every category (registry). */
+/** Tag a reward with its learning topic + rarity. */
+function withTopic(i: RewardItem): RewardItem {
+  return {
+    ...i,
+    topic: i.topic ?? topicForLevel(i.unlockLevel),
+    rarity: i.rarity ?? rarityForReward(i),
+  };
+}
+
+const WARDROBE = WARDROBE_REWARDS.map(withTopic);
+const HOME = HOME_REWARDS.map(withTopic);
+const VEHICLES = VEHICLE_REWARDS.map(withTopic);
+const LIFESTYLE = LIFESTYLE_REWARDS.map(withTopic);
+const GARDEN = GARDEN_REWARDS.map(withTopic);
+
+/** All items across every category (registry) — each tagged with its topic. */
 export const ALL_REWARD_ITEMS: RewardItem[] = [
-  ...WARDROBE_REWARDS,
-  ...HOME_REWARDS,
-  ...VEHICLE_REWARDS,
-  ...LIFESTYLE_REWARDS,
-  ...GARDEN_REWARDS,
+  ...WARDROBE,
+  ...HOME,
+  ...VEHICLES,
+  ...LIFESTYLE,
+  ...GARDEN,
 ];
 
 export function rewardItemById(id: string): RewardItem | undefined {
@@ -81,18 +107,18 @@ export function rewardItemById(id: string): RewardItem | undefined {
  */
 export function featuredRewardForLevel(levelId: number): RewardItem | undefined {
   return (
-    LIFESTYLE_REWARDS.find((i) => i.unlockLevel === levelId) ??
+    LIFESTYLE.find((i) => i.unlockLevel === levelId) ??
     ALL_REWARD_ITEMS.find((i) => i.unlockLevel === levelId)
   );
 }
 
 export function itemsForCategory(cat: RewardCategoryKey): RewardItem[] {
   switch (cat) {
-    case 'wardrobe': return WARDROBE_REWARDS;
-    case 'home': return HOME_REWARDS;
-    case 'vehicles': return VEHICLE_REWARDS;
-    case 'lifestyle': return LIFESTYLE_REWARDS;
-    case 'garden': return GARDEN_REWARDS;
+    case 'wardrobe': return WARDROBE;
+    case 'home': return HOME;
+    case 'vehicles': return VEHICLES;
+    case 'lifestyle': return LIFESTYLE;
+    case 'garden': return GARDEN;
   }
 }
 
