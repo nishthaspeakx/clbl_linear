@@ -417,8 +417,8 @@ export default function EnglishTownScreen() {
       {/* Level-complete reward burst (+coins / star burst, ~1.2s, non-blocking) */}
       <ProgressionReward nonce={rewardNonce} coins={rewardCoins} />
 
-      {/* Topic completion celebration — only after the reward chest is dismissed */}
-      {celebrateTopic !== null && pendingReward === null && (
+      {/* Topic completion celebration — shown FIRST, before the reward popup */}
+      {celebrateTopic !== null && (
         <View style={styles.celebration}>
           <View style={styles.celebrationCard}>
             <Text style={styles.celebrationEmoji}>{TOPIC_ZONES[celebrateTopic - 1].emoji}🎉</Text>
@@ -474,16 +474,21 @@ export default function EnglishTownScreen() {
         />
       )}
 
-      {/* Reward unlock reveal — treasure-chest celebration */}
-      <RewardChestModal
-        key={pendingReward?.id ?? 'none'}
-        reward={pendingReward}
-        onApply={applyReward}
-        onClose={() => {
-          setPendingReward(null);
-          if (crossedMilestone) setShowStatus(true);
-        }}
-      />
+      {/* Reward unlock reveal — premium hero-reward popup.
+          For topic ends it shows AFTER the Topic Complete screen (celebrateTopic cleared). */}
+      {celebrateTopic === null && (
+        <RewardChestModal
+          key={pendingReward?.id ?? 'none'}
+          reward={pendingReward}
+          headerKind={isTopicEnd(pendingLevel) ? 'topic' : 'level'}
+          levelNumber={levelInTopic(pendingLevel)}
+          onApply={applyReward}
+          onClose={() => {
+            setPendingReward(null);
+            if (crossedMilestone) setShowStatus(true);
+          }}
+        />
+      )}
 
       {/* Avatar evolution status popup — after the chest + topic celebration */}
       {showStatus && crossedMilestone && pendingReward === null && celebrateTopic === null && (

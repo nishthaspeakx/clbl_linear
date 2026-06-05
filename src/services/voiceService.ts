@@ -20,18 +20,12 @@ export function speak(text: string): void {
   }
 }
 
-/** "Awesome! You unlocked Sunglasses!" + alternates. */
-export function speakUnlock(name: string): void {
-  speak(pick([
-    `Awesome! You unlocked ${name}!`,
-    'Great job!',
-    'You earned a new reward!',
-    'Looking stylish!',
-    'Your world is growing!',
-  ]));
+/** Said when the reward popup appears. */
+export function speakUnlock(_name?: string): void {
+  speak('Great job!');
 }
 
 /** Said after the user wears/applies the reward. */
 export function speakApplied(): void {
-  speak(pick(['Looking great!', 'Nice choice!', 'That looks awesome!']));
+  speak('You look nice!');
 }
