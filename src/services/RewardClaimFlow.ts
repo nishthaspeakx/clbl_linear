@@ -16,7 +16,9 @@ export function isPlaceable(item: RewardItem): boolean {
 }
 
 export function primaryActionLabel(item: RewardItem): string {
-  return isPlaceable(item) ? 'Claim Now' : 'Wear Now';
+  if (item.category === 'wardrobe') return '👕  Wear Now';
+  if (item.category === 'lifestyle') return '👓  Wear Now';
+  return '🏡  Add To My World';
 }
 
 export function appliedToast(item: RewardItem): string {

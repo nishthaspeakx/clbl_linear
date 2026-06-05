@@ -30,7 +30,7 @@ import { useRewards } from '../components/avatar/RewardContext';
 import ExerciseJourneyOverlay from '../components/ExerciseJourneyOverlay';
 import FlyingCoin from '../components/map/FlyingCoin';
 import ProgressionReward from '../components/map/ProgressionReward';
-import RewardUnlockModal from '../components/rewards/RewardUnlockModal';
+import RewardChestModal from '../components/rewards/RewardChestModal';
 import { isPlaceable, appliedToast, placeRewardInDreamHome } from '../services/RewardClaimFlow';
 import StatusUnlockedModal from '../components/map/StatusUnlockedModal';
 import RewardsScreen from './RewardsScreen';
@@ -417,8 +417,8 @@ export default function EnglishTownScreen() {
       {/* Level-complete reward burst (+coins / star burst, ~1.2s, non-blocking) */}
       <ProgressionReward nonce={rewardNonce} coins={rewardCoins} />
 
-      {/* Topic completion celebration */}
-      {celebrateTopic !== null && (
+      {/* Topic completion celebration — only after the reward chest is dismissed */}
+      {celebrateTopic !== null && pendingReward === null && (
         <View style={styles.celebration}>
           <View style={styles.celebrationCard}>
             <Text style={styles.celebrationEmoji}>{TOPIC_ZONES[celebrateTopic - 1].emoji}🎉</Text>
@@ -474,21 +474,19 @@ export default function EnglishTownScreen() {
         />
       )}
 
-      {/* Reward unlock reveal — clean card (Level Complete → reward → Wear Now/Later) */}
-      <RewardUnlockModal
+      {/* Reward unlock reveal — treasure-chest celebration */}
+      <RewardChestModal
         key={pendingReward?.id ?? 'none'}
         reward={pendingReward}
-        coins={COINS_PER_LEVEL}
-        onWearNow={applyReward}
-        onLater={() => { /* leave it unlocked — shows Wear/Claim in My World */ }}
+        onApply={applyReward}
         onClose={() => {
           setPendingReward(null);
           if (crossedMilestone) setShowStatus(true);
         }}
       />
 
-      {/* Avatar evolution status popup (after the reward reveal) */}
-      {showStatus && crossedMilestone && (
+      {/* Avatar evolution status popup — after the chest + topic celebration */}
+      {showStatus && crossedMilestone && pendingReward === null && celebrateTopic === null && (
         <StatusUnlockedModal
           milestone={crossedMilestone}
           onClose={() => { setShowStatus(false); setCrossedMilestone(null); }}
