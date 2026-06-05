@@ -17,23 +17,25 @@ const MATURE: AgeGroup[] = ['25_40', '40_plus'];
 const ALL: AgeGroup[] = ['18_25', '25_40', '40_plus'];
 
 export const WARDROBE_REWARDS: RewardItem[] = [
-  // ── Male (10) ────────────────────────────────────────────────────────────
-  { id: 'wardrobe_m01', category: 'wardrobe', name: 'Casual T-Shirt', icon: '👕', imageKey: 'casual_tshirt', unlockLevel: 1, isEquippable: true,
+  // ── Male (10) — first 5 are premium AI assets in the spec sequence ────────
+  { id: 'wardrobe_m01', category: 'wardrobe', name: 'T-Shirt', icon: '👕', imageKey: 'casual_tshirt', unlockLevel: 1, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: ALL } },
-  { id: 'wardrobe_m03', category: 'wardrobe', name: 'Hoodie', icon: '🧥', imageKey: 'hoodie', unlockLevel: 3, isEquippable: true,
+  { id: 'wardrobe_m02', category: 'wardrobe', name: 'Shirt', icon: '👔', imageKey: 'shirt', unlockLevel: 2, isEquippable: true,
+    suitableFor: { gender: ['male'], ageGroup: ALL } },
+  { id: 'wardrobe_m03', category: 'wardrobe', name: 'Jeans', icon: '👖', imageKey: 'jeans', unlockLevel: 3, isEquippable: true,
+    suitableFor: { gender: ['male'], ageGroup: ALL } },
+  { id: 'wardrobe_m04', category: 'wardrobe', name: 'Kurta', icon: '🥻', imageKey: 'kurta', unlockLevel: 4, isEquippable: true,
+    suitableFor: { gender: ['male'], ageGroup: ALL } },
+  { id: 'wardrobe_m05', category: 'wardrobe', name: 'Formal Shirt', icon: '👔', imageKey: 'formal_shirt', unlockLevel: 5, isEquippable: true,
+    suitableFor: { gender: ['male'], ageGroup: ALL } },
+  { id: 'wardrobe_m06', category: 'wardrobe', name: 'Hoodie', icon: '🧥', imageKey: 'hoodie', unlockLevel: 6, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: YOUNG } },
-  { id: 'wardrobe_m04', category: 'wardrobe', name: 'Casual Jacket', icon: '🧥', imageKey: 'casual_jacket', unlockLevel: 4, isEquippable: true, equipKey: 'jacket',
+  { id: 'wardrobe_m07', category: 'wardrobe', name: 'Casual Jacket', icon: '🧥', imageKey: 'casual_jacket', unlockLevel: 7, isEquippable: true, equipKey: 'jacket',
     suitableFor: { gender: ['male'], ageGroup: YOUNG } },
-  { id: 'wardrobe_m05', category: 'wardrobe', name: 'Jeans', icon: '👖', imageKey: 'jeans', unlockLevel: 5, isEquippable: true,
-    suitableFor: { gender: ['male'], ageGroup: ALL } },
-  { id: 'wardrobe_m06', category: 'wardrobe', name: 'Formal Shirt', icon: '👔', imageKey: 'formal_shirt', unlockLevel: 6, isEquippable: true,
+  { id: 'wardrobe_m08', category: 'wardrobe', name: 'Blazer', icon: '🧥', imageKey: 'blazer', unlockLevel: 8, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: MATURE } },
-  { id: 'wardrobe_m07', category: 'wardrobe', name: 'Blazer', icon: '🧥', imageKey: 'blazer', unlockLevel: 7, isEquippable: true,
+  { id: 'wardrobe_m09', category: 'wardrobe', name: 'Business Suit', icon: '🤵', imageKey: 'business_suit', unlockLevel: 9, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: MATURE } },
-  { id: 'wardrobe_m08', category: 'wardrobe', name: 'Business Suit', icon: '🤵', imageKey: 'business_suit', unlockLevel: 8, isEquippable: true,
-    suitableFor: { gender: ['male'], ageGroup: MATURE } },
-  { id: 'wardrobe_m09', category: 'wardrobe', name: 'Premium Jacket', icon: '🧥', imageKey: 'premium_jacket', unlockLevel: 9, isEquippable: true, equipKey: 'jacket',
-    suitableFor: { gender: ['male'], ageGroup: ALL } },
   { id: 'wardrobe_m10', category: 'wardrobe', name: 'Sherwani', icon: '🤵', imageKey: 'sherwani', unlockLevel: 10, isEquippable: true,
     suitableFor: { gender: ['male'], ageGroup: MATURE } },
 

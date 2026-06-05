@@ -11,17 +11,18 @@
 import type { RewardItem } from './rewardCategories';
 
 export const LIFESTYLE_REWARDS: RewardItem[] = [
+  // First 5 are premium AI assets (spec sequence): Sunglasses, Shoes, Cap, Backpack, Laptop Bag.
   { id: 'lifestyle_01', category: 'lifestyle', name: 'Sunglasses', icon: '🕶️', imageKey: 'sunglasses', unlockLevel: 1, isEquippable: true, equipKey: 'sunglasses' },
-  { id: 'lifestyle_02', category: 'lifestyle', name: 'Backpack', icon: '🎒', imageKey: 'backpack', unlockLevel: 2, isEquippable: true, equipKey: 'backpack' },
-  { id: 'lifestyle_03', category: 'lifestyle', name: 'Watch', icon: '⌚', imageKey: 'watch', unlockLevel: 3, isEquippable: true },
-  { id: 'lifestyle_04', category: 'lifestyle', name: 'Sneakers', icon: '👟', imageKey: 'sneakers', unlockLevel: 4, isEquippable: true, equipKey: 'shoes' },
-  { id: 'lifestyle_05', category: 'lifestyle', name: 'Earbuds', icon: '🎵', imageKey: 'earbuds', unlockLevel: 5, isEquippable: true },
-  { id: 'lifestyle_06', category: 'lifestyle', name: 'Smartphone', icon: '📱', imageKey: 'smartphone', unlockLevel: 6, isEquippable: false },
-  { id: 'lifestyle_07', category: 'lifestyle', name: 'Laptop Bag', icon: '💼', imageKey: 'laptop_bag', unlockLevel: 7, isEquippable: true },
-  { id: 'lifestyle_08', category: 'lifestyle', name: 'Water Bottle', icon: '🍶', imageKey: 'water_bottle', unlockLevel: 8, isEquippable: false },
-  { id: 'lifestyle_09', category: 'lifestyle', name: 'Handbag', icon: '👜', imageKey: 'handbag', unlockLevel: 9, isEquippable: true },
-  { id: 'lifestyle_10', category: 'lifestyle', name: 'Coffee Mug', icon: '☕', imageKey: 'coffee_mug', unlockLevel: 10, isEquippable: false },
-  { id: 'lifestyle_11', category: 'lifestyle', name: 'Cap', icon: '🧢', imageKey: 'cap', unlockLevel: 11, isEquippable: true },
+  { id: 'lifestyle_04', category: 'lifestyle', name: 'Sneakers', icon: '👟', imageKey: 'sneakers', unlockLevel: 2, isEquippable: true, equipKey: 'shoes' },
+  { id: 'lifestyle_11', category: 'lifestyle', name: 'Cap', icon: '🧢', imageKey: 'cap', unlockLevel: 3, isEquippable: true },
+  { id: 'lifestyle_02', category: 'lifestyle', name: 'Backpack', icon: '🎒', imageKey: 'backpack', unlockLevel: 4, isEquippable: true, equipKey: 'backpack' },
+  { id: 'lifestyle_07', category: 'lifestyle', name: 'Laptop Bag', icon: '💼', imageKey: 'laptop_bag', unlockLevel: 5, isEquippable: true },
+  { id: 'lifestyle_03', category: 'lifestyle', name: 'Watch', icon: '⌚', imageKey: 'watch', unlockLevel: 6, isEquippable: true },
+  { id: 'lifestyle_05', category: 'lifestyle', name: 'Earbuds', icon: '🎵', imageKey: 'earbuds', unlockLevel: 7, isEquippable: true },
+  { id: 'lifestyle_06', category: 'lifestyle', name: 'Smartphone', icon: '📱', imageKey: 'smartphone', unlockLevel: 8, isEquippable: false },
+  { id: 'lifestyle_08', category: 'lifestyle', name: 'Water Bottle', icon: '🍶', imageKey: 'water_bottle', unlockLevel: 9, isEquippable: false },
+  { id: 'lifestyle_09', category: 'lifestyle', name: 'Handbag', icon: '👜', imageKey: 'handbag', unlockLevel: 10, isEquippable: true },
+  { id: 'lifestyle_10', category: 'lifestyle', name: 'Coffee Mug', icon: '☕', imageKey: 'coffee_mug', unlockLevel: 11, isEquippable: false },
   { id: 'lifestyle_12', category: 'lifestyle', name: 'Headphones', icon: '🎧', imageKey: 'headphones', unlockLevel: 12, isEquippable: true },
   { id: 'lifestyle_13', category: 'lifestyle', name: 'Wallet', icon: '👛', imageKey: 'wallet', unlockLevel: 13, isEquippable: false },
   { id: 'lifestyle_14', category: 'lifestyle', name: 'Makeup Kit', icon: '💄', imageKey: 'makeup_kit', unlockLevel: 14, isEquippable: false },

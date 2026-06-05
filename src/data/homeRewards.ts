@@ -6,14 +6,15 @@
 import type { RewardItem } from './rewardCategories';
 
 export const HOME_REWARDS: RewardItem[] = [
-  { id: 'home_01', category: 'home', name: 'Chair', icon: '🪑', imageKey: 'chair', unlockLevel: 1, isEquippable: false },
-  { id: 'home_02', category: 'home', name: 'Lamp', icon: '💡', imageKey: 'lamp', unlockLevel: 2, isEquippable: false },
-  { id: 'home_03', category: 'home', name: 'Study Table', icon: '🖥️', imageKey: 'study_table', unlockLevel: 3, isEquippable: false },
-  { id: 'home_04', category: 'home', name: 'Bookshelf', icon: '📚', imageKey: 'bookshelf', unlockLevel: 4, isEquippable: false },
-  { id: 'home_05', category: 'home', name: 'Rug', icon: '🟫', imageKey: 'rug', unlockLevel: 5, isEquippable: false },
-  { id: 'home_06', category: 'home', name: 'Bed', icon: '🛏️', imageKey: 'bed', unlockLevel: 6, isEquippable: false },
-  { id: 'home_07', category: 'home', name: 'Sofa', icon: '🛋️', imageKey: 'sofa', unlockLevel: 7, isEquippable: false },
-  { id: 'home_08', category: 'home', name: 'Dining Table', icon: '🍽️', imageKey: 'dining_table', unlockLevel: 8, isEquippable: false },
+  // First 5 are premium AI assets (spec sequence).
+  { id: 'home_06', category: 'home', name: 'Bed', icon: '🛏️', imageKey: 'bed', unlockLevel: 1, isEquippable: false },
+  { id: 'home_05', category: 'home', name: 'Rug', icon: '🟫', imageKey: 'rug', unlockLevel: 2, isEquippable: false },
+  { id: 'home_08', category: 'home', name: 'Dining Table', icon: '🍽️', imageKey: 'dining_table', unlockLevel: 3, isEquippable: false },
+  { id: 'home_02', category: 'home', name: 'Lamp', icon: '💡', imageKey: 'lamp', unlockLevel: 4, isEquippable: false },
+  { id: 'home_03', category: 'home', name: 'Study Table', icon: '🖥️', imageKey: 'study_table', unlockLevel: 5, isEquippable: false },
+  { id: 'home_01', category: 'home', name: 'Chair', icon: '🪑', imageKey: 'chair', unlockLevel: 6, isEquippable: false },
+  { id: 'home_04', category: 'home', name: 'Bookshelf', icon: '📚', imageKey: 'bookshelf', unlockLevel: 7, isEquippable: false },
+  { id: 'home_07', category: 'home', name: 'Sofa', icon: '🛋️', imageKey: 'sofa', unlockLevel: 8, isEquippable: false },
   { id: 'home_09', category: 'home', name: 'Cooler', icon: '❄️', imageKey: 'cooler', unlockLevel: 9, isEquippable: false },
   { id: 'home_10', category: 'home', name: 'TV', icon: '📺', imageKey: 'tv', unlockLevel: 10, isEquippable: false },
   { id: 'home_11', category: 'home', name: 'AC', icon: '🌬️', imageKey: 'ac', unlockLevel: 11, isEquippable: false },

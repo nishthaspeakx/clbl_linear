@@ -14,6 +14,8 @@ export type OutfitOverride = Partial<AvatarStyle>;
 export const WARDROBE_OUTFITS: Record<string, OutfitOverride> = {
   // male
   casual_tshirt: { topKind: 'tshirt', top: '#5BA6C9', inner: '#5BA6C9' },
+  shirt: { topKind: 'shirt', top: '#AFCDE8', inner: '#FFFFFF' },
+  kurta: { topKind: 'kurta', top: '#EFE7D3', inner: '#F6F1E4' },
   hoodie: { topKind: 'hoodie', top: '#E0764B', inner: '#F4ECD8' },
   jeans: { bottomKind: 'jeans', bottom: '#3E5C86' },
   formal_shirt: { topKind: 'shirt', top: '#EAF0F6', inner: '#FFFFFF' },

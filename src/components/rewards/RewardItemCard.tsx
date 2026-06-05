@@ -31,11 +31,7 @@ interface Props {
 export default function RewardItemCard({ item, unlocked, active, onAction }: Props) {
   const placeable = PLACEABLE.includes(item.category);
   const phase = !unlocked ? 'locked' : active ? 'active' : 'idle';
-  const label = !unlocked
-    ? `🔒 Level ${item.unlockLevel}`
-    : active
-      ? (placeable ? 'Claimed ✓' : 'Wearing ✓')
-      : (placeable ? 'Claim' : 'Wear');
+  const label = actionLabel(item, unlocked, active, placeable);
 
   return (
     <View style={styles.card}>
@@ -51,7 +47,7 @@ export default function RewardItemCard({ item, unlocked, active, onAction }: Pro
 
       {phase === 'locked' ? (
         <View style={[styles.btn, styles.btnLocked]}>
-          <Text style={styles.btnLockedText}>Level {item.unlockLevel}</Text>
+          <Text style={styles.btnLockedText}>🔒 Level {item.unlockLevel}</Text>
         </View>
       ) : (
         <Pressable onPress={onAction} style={({ pressed }) => [styles.btn, BTN[phase], pressed && { opacity: 0.85 }]}>
@@ -60,6 +56,17 @@ export default function RewardItemCard({ item, unlocked, active, onAction }: Pro
       )}
     </View>
   );
+}
+
+/** Per-category button copy with emoji prefixes (spec: BUTTON STATES). */
+function actionLabel(item: RewardItem, unlocked: boolean, active: boolean, placeable: boolean): string {
+  if (!unlocked) return `🔒 Level ${item.unlockLevel}`;
+  if (item.category === 'wardrobe') return active ? '✅ Wearing' : '👕 Wear';
+  if (item.category === 'lifestyle') return active ? '✅ Wearing' : '😎 Wear';
+  // placeables: Home / Garden / Vehicles
+  if (active) return '✅ Placed';
+  const claim = item.category === 'home' ? '🏡' : item.category === 'garden' ? '🌳' : '🚗';
+  return `${claim} Claim`;
 }
 
 const BTN: Record<string, object> = {

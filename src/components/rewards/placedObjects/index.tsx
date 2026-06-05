@@ -8,9 +8,10 @@
  * via the same registry without touching call sites.
  */
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
 import type { RewardItem } from '../../../data/rewardCategories';
+import { REWARD_IMAGES } from './rewardImages';
 
 type P = { size?: number };
 const VB = '0 0 100 100';
@@ -545,8 +546,15 @@ export function hasPlacedObject(imageKey: string): boolean {
  * so the same asset shows everywhere.
  */
 export function ObjectVisual({ item, size }: { item: RewardItem; size: number }) {
+  // 1) premium AI-generated PNG asset (preferred) — shown everywhere identically
+  const img = REWARD_IMAGES[item.imageKey];
+  if (img) {
+    return <Image source={img} style={{ width: size, height: size }} resizeMode="contain" />;
+  }
+  // 2) legacy code-drawn isometric object
   const Comp = REGISTRY[item.imageKey];
   if (Comp) return <Comp size={size} />;
+  // 3) emoji fallback (shadowed, no circle)
   return (
     <View style={evStyles.wrap}>
       <View style={[evStyles.shadow, { width: size * 0.56, height: size * 0.14, bottom: size * 0.04 }]} />

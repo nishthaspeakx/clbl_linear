@@ -17,8 +17,10 @@ export function isPlaceable(item: RewardItem): boolean {
 
 export function primaryActionLabel(item: RewardItem): string {
   if (item.category === 'wardrobe') return '👕  Wear Now';
-  if (item.category === 'lifestyle') return '👓  Wear Now';
-  return '🏡  Add To My World';
+  if (item.category === 'lifestyle') return '😎  Wear Now';
+  if (item.category === 'garden') return '🌳  Add To My World';
+  if (item.category === 'vehicles') return '🚗  Add To My World';
+  return '🏡  Add To My World'; // home
 }
 
 export function appliedToast(item: RewardItem): string {
