@@ -166,6 +166,9 @@ export default function EnglishTownScreen() {
     [progress, townDone]
   );
 
+  // Holds the (later-defined) completion fn so handlePinPress can call it.
+  const completeRef = useRef<(id: number) => void>(() => {});
+
   const handlePinPress = useCallback(
     (id: number) => {
       if (busy) return; // taps disabled during the completion walk
@@ -177,10 +180,17 @@ export default function EnglishTownScreen() {
       }
       setSelectedId(id);
       focusLesson(id);
-      // Open the exercise journey directly (no bottom sheet).
+      // DEMO: only Level 1 shows the full exercise journey. From Level 2 on,
+      // tapping the current pin completes it instantly (skip exercises).
+      const isCurrent = id === progress.currentId && !townDone;
+      if (isCurrent && id !== 1) {
+        completeRef.current(id);
+        return;
+      }
+      // Open the exercise journey (Level 1, or reviewing a completed level).
       setOverlayLevelId(id);
     },
-    [focusLesson, progress, showToast, busy]
+    [focusLesson, progress, showToast, busy, townDone]
   );
 
   /**
@@ -285,6 +295,7 @@ export default function EnglishTownScreen() {
     },
     [progress, townDone, busy, coins, charX, charY, walking, translateY, showToast, surfaceReward]
   );
+  completeRef.current = completeCurrentLevelWithAnimation;
 
   const toggleNight = useCallback(() => {
     playSound('toggle');

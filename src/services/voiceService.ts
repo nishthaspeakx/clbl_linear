@@ -25,7 +25,12 @@ export function speakUnlock(_name?: string): void {
   speak('Great job!');
 }
 
-/** Said after the user wears/applies the reward. */
+/** Said after the user wears a wearable reward. */
 export function speakApplied(): void {
   speak('You look nice!');
+}
+
+/** Said after a placeable reward is added to the Dream Home. */
+export function speakAddedToWorld(): void {
+  speak('Added to your world!');
 }

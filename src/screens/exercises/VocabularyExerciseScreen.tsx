@@ -87,8 +87,10 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
   const after = (ms: number, fn: () => void) => { timers.current.push(setTimeout(fn, ms)); };
 
-  const q: VocabQuestion = VOCAB_QUESTIONS[qi];
-  const last = qi >= VOCAB_QUESTIONS.length - 1;
+  // Demo: keep the vocab round short (max 4 questions).
+  const QUESTIONS = VOCAB_QUESTIONS.slice(0, 4);
+  const q: VocabQuestion = QUESTIONS[qi];
+  const last = qi >= QUESTIONS.length - 1;
 
   const advance = useCallback(() => {
     if (last) {
@@ -136,9 +138,9 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
     return 'idle';
   };
 
-  const answeredCount = phase === 'complete' ? VOCAB_QUESTIONS.length
+  const answeredCount = phase === 'complete' ? QUESTIONS.length
     : qi + (phase === 'correct' || phase === 'streak' ? 1 : 0);
-  const progress = answeredCount / VOCAB_QUESTIONS.length;
+  const progress = answeredCount / QUESTIONS.length;
   const showAudio = q.kind === 'image' || q.kind === 'word' || q.kind === 'fill';
 
   return (
@@ -201,7 +203,7 @@ export default function VocabularyExerciseScreen({ onClose, onComplete }: Props)
           <ExerciseCompleteScreen
             coins={coins}
             title="Vocabulary Complete!"
-            subtitle="Great job! You completed 6 sentences."
+            subtitle={`Great job! You completed ${QUESTIONS.length} sentences.`}
             ctaLabel="Continue to Reading"
             onContinue={onComplete}
           />
