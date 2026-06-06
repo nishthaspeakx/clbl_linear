@@ -14,16 +14,16 @@
  * on reveal and "You look nice!" after Wear Now. Silent on every other level.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 import { RewardItem } from '../../data/rewardCategories';
-import { VIEWPORT_W, VIEWPORT_H } from '../../utils/viewport';
+import { IS_WEB, VIEWPORT_W, VIEWPORT_H, WEB_SCALE } from '../../utils/viewport';
 import { playSound } from '../../services/soundService';
 import { triggerHaptic } from '../../services/hapticService';
-import { speak, speakApplied, speakAddedToWorld } from '../../services/voiceService';
+import { speakLevelReveal, speakLevelApplied } from '../../services/voiceService';
 import { primaryActionLabel, isPlaceable } from '../../services/RewardClaimFlow';
 import { anchorOffset } from '../../utils/avatarAnchorPoints';
 import { ObjectVisual } from './placedObjects';
@@ -36,30 +36,30 @@ type Phase = 'drop' | 'shake' | 'open' | 'revealed' | 'flying';
 const GOLD = '#F5B431';
 const MESSAGES = ['Looking stylish!', 'You look nice!', 'Awesome choice!'];
 
+// Sized to the design viewport (the popup renders inside the scaled phone frame,
+// so it always fits — see the `frame` wrapper below).
+const CARD_W = Math.round(VIEWPORT_W * 0.86);
+const MAX_H = Math.round(VIEWPORT_H * 0.72);
+const SMALL = VIEWPORT_H < 720;
+const BOX = SMALL ? 92 : 104;
+const REWARD = SMALL ? 96 : 112;
+const STAGE_H = 150;
+const GLOW_SZ = REWARD + 96;
+const CTA_W = Math.min(220, CARD_W - 40);
+
 interface Props {
   reward: RewardItem | null;
   headerKind?: 'level' | 'topic';
   levelNumber?: number | null;
-  /** True only for the very first level (global id 1) — gates demo voice. */
-  isFirstLevel?: boolean;
+  /** Global id of the just-completed level — drives the per-level demo voice. */
+  completedLevelId?: number;
   onApply: (item: RewardItem) => void;
   onClose: () => void;
 }
 
 export default function RewardChestModal({
-  reward, headerKind = 'level', levelNumber, isFirstLevel = false, onApply, onClose,
+  reward, headerKind = 'level', levelNumber, completedLevelId, onApply, onClose,
 }: Props) {
-  const win = useWindowDimensions();
-  const SW = Math.min(win.width || VIEWPORT_W, VIEWPORT_W);
-  const SH = Math.min(win.height || VIEWPORT_H, VIEWPORT_H);
-  const CARD_W = Math.round(SW * 0.86);
-  const MAX_H = Math.round(SH * 0.72);
-  const small = SH < 720;
-  const BOX = small ? 92 : 104;
-  const REWARD = small ? 96 : 112;
-  const STAGE_H = 150;
-  const GLOW_SZ = REWARD + 96;
-  const CTA_W = Math.min(220, CARD_W - 40);
 
   const [phase, setPhase] = useState<Phase>('drop');
   const phaseRef = useRef<Phase>('drop');
@@ -134,7 +134,7 @@ export default function RewardChestModal({
     breathe.value = withDelay(560, withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.ease) }), -1, true));
     sway.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }), -1, true);
     textO.value = withDelay(260, withTiming(1, { duration: 260 }));
-    if (isFirstLevel) speak("Great job, let's move to level 2.");
+    speakLevelReveal(completedLevelId);
   };
 
   const onPrimary = () => {
@@ -144,10 +144,10 @@ export default function RewardChestModal({
     const place = isPlaceable(reward);
     playSound(place ? 'item_placed' : 'claim_reward');
     triggerHaptic('medium');
-    if (isFirstLevel) { if (place) speakAddedToWorld(); else speakApplied(); }
+    speakLevelApplied(completedLevelId);
     const off = anchorOffset(reward);
-    const targetX = place ? -SW * 0.26 : off.xOffset;
-    const targetY = place ? SH * 0.30 : SH * 0.20 + off.yOffset;
+    const targetX = place ? -VIEWPORT_W * 0.26 : off.xOffset;
+    const targetY = place ? VIEWPORT_H * 0.30 : VIEWPORT_H * 0.20 + off.yOffset;
     flyX.value = withTiming(targetX, { duration: 760, easing: Easing.in(Easing.cubic) });
     flyY.value = withSpring(targetY, { damping: 16, stiffness: 90, mass: 0.9 });
     flyScale.value = withTiming(0.35, { duration: 760 });
@@ -184,12 +184,14 @@ export default function RewardChestModal({
   if (!reward) return null;
   const showReward = phase === 'revealed' || phase === 'flying';
   const headerText = headerKind === 'topic' ? '🏆  Topic Complete' : `✅  Level ${levelNumber ?? ''} Complete`;
-  const msg = isFirstLevel ? 'Awesome choice!' : MESSAGES[(reward.unlockLevel ?? 0) % MESSAGES.length];
+  const msg = completedLevelId === 1 ? 'Awesome choice!' : MESSAGES[(reward.unlockLevel ?? 0) % MESSAGES.length];
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onLater}>
-      <Animated.View style={[styles.overlay, backdropStyle]} />
-      <View style={styles.center} pointerEvents="box-none">
+      <View style={styles.backdrop}>
+       <View style={styles.frame}>
+        <Animated.View style={[styles.overlay, backdropStyle]} />
+        <View style={styles.center} pointerEvents="box-none">
         {confetti && <ConfettiLayer count={20} />}
 
         <Animated.View style={[styles.card, { width: CARD_W, maxHeight: MAX_H }, cardStyle]}>
@@ -244,14 +246,22 @@ export default function RewardChestModal({
             </Pressable>
           </Animated.View>
         </Animated.View>
+        </View>
+       </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  // On web the popup lives inside the scaled phone frame so it never spills out
+  // of the device mockup; on native the frame is the full screen.
+  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: IS_WEB ? 'rgba(8,10,14,0.55)' : 'transparent' },
+  frame: IS_WEB
+    ? { width: VIEWPORT_W, height: VIEWPORT_H, overflow: 'hidden', transform: [{ scale: WEB_SCALE }] }
+    : { ...StyleSheet.absoluteFillObject },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8,10,14,0.55)' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 20 },
+  center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 20 },
   card: {
     borderRadius: 28, paddingTop: 16, paddingBottom: 18, paddingHorizontal: 18,
     backgroundColor: '#FFFDFA', alignItems: 'center', overflow: 'hidden',
