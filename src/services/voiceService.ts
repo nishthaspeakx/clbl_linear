@@ -55,12 +55,12 @@ export function speak(text: string): void {
 
 /** Spoken when the reward popup appears (only Levels 1–2 for the demo). */
 export function speakLevelReveal(levelId?: number): void {
-  if (levelId === 1) speak("Great job! Let's move to level 2.");
-  else if (levelId === 2) speak('Great! Level 2 is complete.');
+  if (levelId === 1) speak('Great job, you unlocked level 2!');
+  else if (levelId === 2) speak('Awesome! Level 2 is completed.');
 }
 
 /** Spoken after the user wears/applies the reward (only Levels 1–2). */
 export function speakLevelApplied(levelId?: number): void {
-  if (levelId === 1) speak("Wow! Sunglasses suit you. Let's go to the park.");
-  else if (levelId === 2) speak("New shoes! Let's run to level 3.");
+  if (levelId === 1) speak('Wow! Sunglasses suit you. You are at a park.');
+  else if (levelId === 2) speak('New shoes fit you right! Your new friend is waiting. Time to have a cup of coffee.');
 }
