@@ -493,6 +493,7 @@ export default function EnglishTownScreen() {
           reward={pendingReward}
           headerKind={isTopicEnd(pendingLevel) ? 'topic' : 'level'}
           levelNumber={levelInTopic(pendingLevel)}
+          isFirstLevel={pendingLevel === 1}
           onApply={applyReward}
           onClose={() => {
             setPendingReward(null);
