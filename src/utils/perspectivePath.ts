@@ -27,9 +27,12 @@ export const ANCHOR_T = (BOTTOM_Y - ANCHOR_Y) / (BOTTOM_Y - HORIZON_Y);
 
 /** The current pin settles this far AHEAD of the avatar (journey units) —
  * effectively underfoot, so the traveller stands ON the glowing current node. */
-export const PIN_AHEAD = 0.1;
+export const PIN_AHEAD = 0.05;
 
-const B = 2.6;                       // perspective rate (smaller = faster recede)
+/** Perspective rate. SMALL B = one journey unit spans most of the screen, so
+ * the next destination sits far up the road (long-travel feel, like the
+ * reference video) and passed places exit quickly behind the player. */
+const B = 0.68;
 const A = (1 - ANCHOR_T) * B;        // so T(0) === ANCHOR_T
 const SLOPE0 = A / (B * B);          // dT/du at u = 0 (for the behind-extension)
 
@@ -56,9 +59,10 @@ export function roadHalfWidth(t: number): number {
   return w / 2;
 }
 
-/** Element scale by depth (pins, props, labels). */
+/** Element scale by depth (pins, props, labels): ~100% at the player,
+ * ~60% at the next destination, 30–40% in the far distance. */
 export function scaleForDepth(t: number): number {
-  return Math.max(0.4, Math.min(1.12, 0.4 + (1 - t) * 0.98));
+  return Math.max(0.34, Math.min(1.12, 0.34 + (1 - t) * 1.06));
 }
 
 /** Lateral bend of the road (−1..1) at absolute journey distance s. A tighter
@@ -67,11 +71,11 @@ function bend(s: number): number {
   return Math.sin(s * 1.38) * 0.62 + Math.sin(s * 0.57 + 1.35) * 0.38;
 }
 
-const AMP_NEAR = 172; // max lateral sway at the bottom edge (px)
+const AMP_NEAR = 150; // max lateral sway at the bottom edge (px)
 
 /** Screen x of the road centre for a world point at distance s, depth t. */
 export function roadCenterX(s: number, t: number): number {
-  const amp = AMP_NEAR * Math.pow(Math.max(0, 1 - t), 1.32);
+  const amp = AMP_NEAR * Math.max(0, 1 - t); // linear falloff keeps far curves visible
   return CENTER_X + bend(s) * amp;
 }
 
@@ -131,7 +135,7 @@ export function decorBetween(from: number, to: number): DecorItem[] {
   const k0 = Math.floor(from);
   const k1 = Math.ceil(to);
   for (let k = k0; k <= k1; k++) {
-    for (let slot = 0; slot < 5; slot++) {
+    for (let slot = 0; slot < 6; slot++) {
       const s = k + rnd(k, slot, 1);
       if (s < from || s > to) continue;
       out.push({

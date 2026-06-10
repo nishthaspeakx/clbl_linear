@@ -263,15 +263,15 @@ function PerspectivePathWorld({
     .filter(Boolean) as { d: DecorItem; t: number; x: number; y: number; k: number }[];
   decor.sort((a, b) => b.t - a.t); // far → near
 
-  // Pins come ONE BY ONE: only the current level + the next TWO locked levels
-  // are ever shown ahead (no wall of future locks). Just-completed pins stay
-  // briefly behind the player and fade out as they recede.
+  // ONE destination at a time: only the current pin + the next locked pin are
+  // ever rendered. Everything further stays undiscovered; just-completed pins
+  // fade as they slip behind the player.
   const pins = SUBTOPICS.map((s) => {
-    if (s.id > currentId + 2) return null; // hide everything beyond next 2
+    if (s.id > currentId + 1) return null; // current + next only
     const u = s.id - journey;
     const t = depthForOffset(u);
     if (t < -0.02 || t > 0.945) return null;
-    const fade = u >= -0.4 ? 1 : Math.max(0, 1 - (-u - 0.4) / 1.1); // recede-fade behind
+    const fade = u >= -0.25 ? 1 : Math.max(0, 1 - (-u - 0.25) / 0.5); // recede-fade behind
     if (fade <= 0.02) return null;
     return { id: s.id, u, t, x: roadCenterX(s.id, t), y: yForDepth(t), k: scaleForDepth(t), fade };
   }).filter(Boolean) as { id: number; u: number; t: number; x: number; y: number; k: number; fade: number }[];
@@ -281,10 +281,10 @@ function PerspectivePathWorld({
   // road beside its pin — appearing in the distance, growing as you approach,
   // and sliding behind once passed ("the road takes you into the place").
   const sceneItems = locationScenes
-    .filter((sc) => sc.id <= currentId + 2)
+    .filter((sc) => sc.id <= currentId + 1)
     .map((sc) => {
       const u = sc.id - journey;
-      if (u < -1.5 || u > 1.9) return null; // one place behind, one ahead
+      if (u < -1.2 || u > 1.5) return null; // the place you're at + the one ahead
       const t = depthForOffset(u);
       if (t < -0.05) return null;
       const k = 0.84 * Math.pow(scaleForDepth(t), 1.25);
@@ -297,21 +297,21 @@ function PerspectivePathWorld({
       else if (sc.side === 'left') cx = xPin - (roadHalfWidth(t) + W / 2 + 6 * (1 - t));
       else cx = xPin + (roadHalfWidth(t) + W / 2 + 6 * (1 - t));
       const oy = sc.side === 'center' ? y - H - 30 * k : y - H + 16 * k;
-      // approach fade-in → full beside the player → recede fade-out
+      // discovered, not permanent: silhouette far away → grows + sharpens on
+      // approach → full beside the player → slips away behind
       let op = 1;
-      if (u > 0.6) op = Math.max(0, Math.min(1, (1.9 - u) / 1.0));
-      if (u < -0.5) op = Math.max(0, 1 - (-u - 0.5));
+      if (u > 0.45) op = Math.max(0.18, Math.min(1, (1.5 - u) / 1.05));
+      if (u < -0.4) op = Math.max(0, 1 - (-u - 0.4) / 0.8);
       return { sc, t, ox: cx - W / 2, oy, k, op };
     })
     .filter(Boolean) as { sc: (typeof locationScenes)[number]; t: number; ox: number; oy: number; k: number; op: number }[];
   sceneItems.sort((a, b) => b.t - a.t);
 
-  // Labels stay readable: the current node and the next two ahead. Passed
-  // nodes drop their label (keeps the bottom edge clear of the Rewards FAB).
+  // Labels: only the current node and the single upcoming destination.
   const labels = visibleLabels(currentId, completedIds)
     .map((L) => {
       const p = pins.find((q) => q.id === L.id);
-      if (!p || p.t < 0 || p.u < -0.35 || p.u > 2.7) return null;
+      if (!p || p.t < 0 || p.u < -0.25 || p.u > 1.5) return null;
       return { L, p };
     })
     .filter(Boolean) as { L: ReturnType<typeof visibleLabels>[number]; p: { id: number; u: number; t: number; x: number; y: number; k: number; fade: number } }[];
