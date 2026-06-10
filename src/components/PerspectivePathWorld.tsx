@@ -16,7 +16,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 import { VIEWPORT_W, VIEWPORT_H } from '../utils/viewport';
 import {
@@ -26,10 +26,12 @@ import {
 } from '../utils/perspectivePath';
 import { SUBTOPICS, TOTAL_SUBTOPICS } from '../data/subtopics';
 import { topicZoneOf } from '../data/topicZones';
+import { locationScenes } from '../data/locationScenes';
 import { visibleLabels } from '../utils/labelPlacement';
 import LessonPin, { PinStatus } from './LessonPin';
 import LevelLabel from './map/LevelLabel';
 import CharacterAvatar from './CharacterAvatar';
+import LocationScene, { NightContext } from './LocationScene';
 
 const JOURNEY_MIN = 1 - PIN_AHEAD;
 const JOURNEY_MAX = TOTAL_SUBTOPICS - PIN_AHEAD;
@@ -55,14 +57,17 @@ interface Props {
 const easeInOutCubic = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 const clampJ = (v: number) => Math.max(JOURNEY_MIN, Math.min(JOURNEY_MAX, v));
 
-/** Camera distance along the road; follows `target` with eased RAF animation. */
+/** Camera distance along the road; follows `target` with eased RAF animation.
+ * `pulse` (0→1→0 across a travel) drives a subtle camera zoom for premium feel. */
 function useJourney(target: number) {
   const [journey, setJourneyState] = React.useState(() => clampJ(target));
+  const [pulse, setPulse] = React.useState(0);
   const jRef = React.useRef(journey);
   const raf = React.useRef<number | null>(null);
 
   const stop = React.useCallback(() => {
     if (raf.current != null) { cancelAnimationFrame(raf.current); raf.current = null; }
+    setPulse(0);
   }, []);
 
   const set = React.useCallback((v: number) => {
@@ -83,14 +88,15 @@ function useJourney(target: number) {
       const p = Math.min(1, (Date.now() - t0) / ms);
       jRef.current = from + (dest - from) * easeInOutCubic(p);
       setJourneyState(jRef.current);
+      setPulse(Math.sin(Math.PI * p));
       if (p < 1) raf.current = requestAnimationFrame(tick);
-      else raf.current = null;
+      else { raf.current = null; setPulse(0); }
     };
     raf.current = requestAnimationFrame(tick);
   }, [stop]);
 
   React.useEffect(() => () => stop(), [stop]);
-  return { journey, jRef, set, animateTo };
+  return { journey, pulse, jRef, set, animateTo };
 }
 
 // ── Soft decorative props (drawn small, scaled by depth) ────────────────────
@@ -222,7 +228,7 @@ function PerspectivePathWorld({
   statusOf, onPinPress, night, walking, avatar, equipped = [], outfit, currentId, completedIds,
 }: Props) {
   const targetJourney = clampJ(currentId - PIN_AHEAD);
-  const { journey, jRef, set, animateTo } = useJourney(targetJourney);
+  const { journey, pulse, jRef, set, animateTo } = useJourney(targetJourney);
 
   // Follow level progress with a smooth travel (the world moves, not the avatar).
   const lastTarget = React.useRef(targetJourney);
@@ -257,18 +263,48 @@ function PerspectivePathWorld({
     .filter(Boolean) as { d: DecorItem; t: number; x: number; y: number; k: number }[];
   decor.sort((a, b) => b.t - a.t); // far → near
 
-  // Pins: the just-passed node behind + the next few ahead. Distant ones fade
-  // out instead of stacking at the horizon (the road itself carries the
-  // "endless journey" feel).
+  // Pins come ONE BY ONE: only the current level + the next TWO locked levels
+  // are ever shown ahead (no wall of future locks). Just-completed pins stay
+  // briefly behind the player and fade out as they recede.
   const pins = SUBTOPICS.map((s) => {
+    if (s.id > currentId + 2) return null; // hide everything beyond next 2
     const u = s.id - journey;
-    if (u > 5.5) return null;
     const t = depthForOffset(u);
     if (t < -0.02 || t > 0.945) return null;
-    const fade = u <= 3.2 ? 1 : Math.max(0, 1 - (u - 3.2) / 2.4);
+    const fade = u >= -0.4 ? 1 : Math.max(0, 1 - (-u - 0.4) / 1.1); // recede-fade behind
+    if (fade <= 0.02) return null;
     return { id: s.id, u, t, x: roadCenterX(s.id, t), y: yForDepth(t), k: scaleForDepth(t), fade };
   }).filter(Boolean) as { id: number; u: number; t: number; x: number; y: number; k: number; fade: number }[];
   pins.sort((a, b) => b.t - a.t); // far first → near pins draw (and press) on top
+
+  // Destination PLACES: each level's existing LocationScene artwork rides the
+  // road beside its pin — appearing in the distance, growing as you approach,
+  // and sliding behind once passed ("the road takes you into the place").
+  const sceneItems = locationScenes
+    .filter((sc) => sc.id <= currentId + 2)
+    .map((sc) => {
+      const u = sc.id - journey;
+      if (u < -1.5 || u > 1.9) return null; // one place behind, one ahead
+      const t = depthForOffset(u);
+      if (t < -0.05) return null;
+      const k = 0.84 * Math.pow(scaleForDepth(t), 1.25);
+      const W = 220 * k;
+      const H = 170 * k;
+      const xPin = roadCenterX(sc.id, t);
+      const y = yForDepth(t);
+      let cx: number;
+      if (sc.side === 'center') cx = xPin; // town square / gate straddle the road
+      else if (sc.side === 'left') cx = xPin - (roadHalfWidth(t) + W / 2 + 6 * (1 - t));
+      else cx = xPin + (roadHalfWidth(t) + W / 2 + 6 * (1 - t));
+      const oy = sc.side === 'center' ? y - H - 30 * k : y - H + 16 * k;
+      // approach fade-in → full beside the player → recede fade-out
+      let op = 1;
+      if (u > 0.6) op = Math.max(0, Math.min(1, (1.9 - u) / 1.0));
+      if (u < -0.5) op = Math.max(0, 1 - (-u - 0.5));
+      return { sc, t, ox: cx - W / 2, oy, k, op };
+    })
+    .filter(Boolean) as { sc: (typeof locationScenes)[number]; t: number; ox: number; oy: number; k: number; op: number }[];
+  sceneItems.sort((a, b) => b.t - a.t);
 
   // Labels stay readable: the current node and the next two ahead. Passed
   // nodes drop their label (keeps the bottom edge clear of the Rewards FAB).
@@ -289,8 +325,11 @@ function PerspectivePathWorld({
   const groundBottom = night ? '#2A3052' : zone.groundBottom;
 
   return (
+    <NightContext.Provider value={night}>
     <GestureDetector gesture={pan}>
       <View style={[styles.viewport, { backgroundColor: night ? '#1F2540' : '#DCEBD6' }]}>
+       {/* Camera: subtle zoom-in pulse mid-travel for a premium dolly feel */}
+       <View style={[StyleSheet.absoluteFill, { transform: [{ scale: 1 + pulse * 0.045 }] }]}>
         {/* Ground */}
         <Svg width={VIEWPORT_W} height={VIEWPORT_H} style={StyleSheet.absoluteFill} pointerEvents="none">
           <Defs>
@@ -316,6 +355,16 @@ function PerspectivePathWorld({
           {/* Roadside props */}
           {decor.map((it) => (
             <Prop key={it.d.key} d={it.d} x={it.x} y={it.y} k={it.k} night={night} />
+          ))}
+        </Svg>
+
+        {/* Destination places — the level's existing scene artwork, reused
+            untouched, anchored beside (or straddling) the road at its pin */}
+        <Svg width={VIEWPORT_W} height={VIEWPORT_H} style={StyleSheet.absoluteFill} pointerEvents="none">
+          {sceneItems.map((it) => (
+            <G key={`scene${it.sc.id}`} opacity={it.op}>
+              <LocationScene scene={{ id: it.sc.id, sceneType: it.sc.sceneType, side: it.sc.side, ox: it.ox, oy: it.oy, s: it.k }} />
+            </G>
           ))}
         </Svg>
 
@@ -382,8 +431,10 @@ function PerspectivePathWorld({
             outfit={outfit}
           />
         </View>
+       </View>
       </View>
     </GestureDetector>
+    </NightContext.Provider>
   );
 }
 

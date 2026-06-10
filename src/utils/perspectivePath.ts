@@ -61,12 +61,13 @@ export function scaleForDepth(t: number): number {
   return Math.max(0.4, Math.min(1.12, 0.4 + (1 - t) * 0.98));
 }
 
-/** Lateral bend of the road (−1..1) at absolute journey distance s. */
+/** Lateral bend of the road (−1..1) at absolute journey distance s. A tighter
+ * S-frequency keeps 1.5–2 visible curves on screen (reference-video feel). */
 function bend(s: number): number {
-  return Math.sin(s * 0.82) * 0.62 + Math.sin(s * 0.353 + 1.4) * 0.38;
+  return Math.sin(s * 1.22) * 0.6 + Math.sin(s * 0.51 + 1.35) * 0.4;
 }
 
-const AMP_NEAR = 118; // max lateral sway at the bottom edge (px)
+const AMP_NEAR = 148; // max lateral sway at the bottom edge (px)
 
 /** Screen x of the road centre for a world point at distance s, depth t. */
 export function roadCenterX(s: number, t: number): number {
