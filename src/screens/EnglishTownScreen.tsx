@@ -48,6 +48,8 @@ import {
   COINS_PER_LEVEL,
 } from '../storage/progressStorage';
 import VerticalIsometricTownMap from '../components/VerticalIsometricTownMap';
+import PerspectivePathWorld from '../components/PerspectivePathWorld';
+import { PERSPECTIVE_WORLD } from '../utils/featureFlags';
 import { PinStatus } from '../components/LessonPin';
 import RewardAnimation from '../components/RewardAnimation';
 
@@ -354,22 +356,44 @@ export default function EnglishTownScreen() {
     <View style={styles.root}>
       <StatusBar style="dark" />
 
-      <VerticalIsometricTownMap
-        statusOf={statusOf}
-        onPinPress={handlePinPress}
-        night={night}
-        translateY={translateY}
-        charX={charX}
-        charY={charY}
-        walking={walking}
-        avatar={avatar}
-        equipped={equippedKeys}
-        outfit={activeOutfit}
-        currentId={progress.currentId}
-        completedIds={progress.completedIds}
-        coinTrail={coinTrail}
-        coinsCollected={coinsCollected}
-      />
+      {/* World renderer — new Fable/Mythos moving world (avatar anchored, world
+          scrolls) or the classic static isometric map (?world=classic). Both
+          take the SAME props; all data/handlers/logic are shared untouched. */}
+      {PERSPECTIVE_WORLD ? (
+        <PerspectivePathWorld
+          statusOf={statusOf}
+          onPinPress={handlePinPress}
+          night={night}
+          translateY={translateY}
+          charX={charX}
+          charY={charY}
+          walking={walking}
+          avatar={avatar}
+          equipped={equippedKeys}
+          outfit={activeOutfit}
+          currentId={progress.currentId}
+          completedIds={progress.completedIds}
+          coinTrail={coinTrail}
+          coinsCollected={coinsCollected}
+        />
+      ) : (
+        <VerticalIsometricTownMap
+          statusOf={statusOf}
+          onPinPress={handlePinPress}
+          night={night}
+          translateY={translateY}
+          charX={charX}
+          charY={charY}
+          walking={walking}
+          avatar={avatar}
+          equipped={equippedKeys}
+          outfit={activeOutfit}
+          currentId={progress.currentId}
+          completedIds={progress.completedIds}
+          coinTrail={coinTrail}
+          coinsCollected={coinsCollected}
+        />
+      )}
 
       {/* SpeakX-style app header (language · translate · trophy · coin) */}
       <AppHeader trophies={completedCount} coins={coins} />
