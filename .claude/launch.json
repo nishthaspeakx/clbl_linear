@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
       "port": 8081
+    },
+    {
+      "name": "english-town-flutter",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/nishthaagarwal/CLBL_Linear_new_flutter/CLBL_Linear_New/speakx_feature/english_town_app/build/web && python3 -m http.server 8099"],
+      "port": 8099
     }
   ]
 }

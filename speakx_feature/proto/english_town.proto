@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package speakx.englishtown.v1;
+
+option go_package = "github.com/speakx/englishtown/gen/v1;englishtownv1";
+
+// EnglishTownService is the gRPC contract for the English Town feature.
+// Start with Progress; add Rewards/Avatar/DreamHome/Exercises as the migration
+// proceeds (see docs/FLUTTER_MIGRATION_PLAN.md §2).
+service EnglishTownService {
+  // Returns the caller's progress (userId comes from auth metadata, not the body).
+  rpc GetProgress(GetProgressRequest) returns (Progress);
+  // Upserts the caller's progress.
+  rpc SaveProgress(SaveProgressRequest) returns (Progress);
+}
+
+message Progress {
+  // id of the lesson the learner is currently on (1-based).
+  int32 current_id = 1;
+  // ids of lessons already completed.
+  repeated int32 completed_ids = 2;
+  // running coin total.
+  int32 coins = 3;
+}
+
+message GetProgressRequest {}
+
+message SaveProgressRequest {
+  Progress progress = 1;
+}
