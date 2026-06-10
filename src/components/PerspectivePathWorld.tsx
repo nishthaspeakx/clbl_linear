@@ -35,7 +35,7 @@ import LocationScene, { NightContext } from './LocationScene';
 
 const JOURNEY_MIN = 1 - PIN_AHEAD;
 const JOURNEY_MAX = TOTAL_SUBTOPICS - PIN_AHEAD;
-const TRAVEL_MS = 1450; // matches the screen's WALK_MS rhythm
+const TRAVEL_MS = 1900; // leisurely travel — the longer distance should be felt
 
 interface Props {
   statusOf: (id: number) => PinStatus;
@@ -62,12 +62,14 @@ const clampJ = (v: number) => Math.max(JOURNEY_MIN, Math.min(JOURNEY_MAX, v));
 function useJourney(target: number) {
   const [journey, setJourneyState] = React.useState(() => clampJ(target));
   const [pulse, setPulse] = React.useState(0);
+  const [traveling, setTraveling] = React.useState(false);
   const jRef = React.useRef(journey);
   const raf = React.useRef<number | null>(null);
 
   const stop = React.useCallback(() => {
     if (raf.current != null) { cancelAnimationFrame(raf.current); raf.current = null; }
     setPulse(0);
+    setTraveling(false);
   }, []);
 
   const set = React.useCallback((v: number) => {
@@ -84,19 +86,20 @@ function useJourney(target: number) {
     if (d < 0.001) return;
     const ms = dur ?? Math.max(900, Math.min(1800, 700 + d * 520));
     const t0 = Date.now();
+    setTraveling(true);
     const tick = () => {
       const p = Math.min(1, (Date.now() - t0) / ms);
       jRef.current = from + (dest - from) * easeInOutCubic(p);
       setJourneyState(jRef.current);
       setPulse(Math.sin(Math.PI * p));
       if (p < 1) raf.current = requestAnimationFrame(tick);
-      else { raf.current = null; setPulse(0); }
+      else { raf.current = null; setPulse(0); setTraveling(false); }
     };
     raf.current = requestAnimationFrame(tick);
   }, [stop]);
 
   React.useEffect(() => () => stop(), [stop]);
-  return { journey, pulse, jRef, set, animateTo };
+  return { journey, pulse, traveling, jRef, set, animateTo };
 }
 
 // ── Soft decorative props (drawn small, scaled by depth) ────────────────────
@@ -228,7 +231,12 @@ function PerspectivePathWorld({
   statusOf, onPinPress, night, walking, avatar, equipped = [], outfit, currentId, completedIds,
 }: Props) {
   const targetJourney = clampJ(currentId - PIN_AHEAD);
-  const { journey, pulse, jRef, set, animateTo } = useJourney(targetJourney);
+  const { journey, pulse, traveling, jRef, set, animateTo } = useJourney(targetJourney);
+
+  // The world drives the walk: the avatar strides for the FULL travel (which
+  // may outlast the screen's classic walk timer), then settles to idle.
+  const travelWalk = useSharedValue(0);
+  React.useEffect(() => { travelWalk.value = traveling ? 1 : 0; }, [traveling, travelWalk]);
 
   // Follow level progress with a smooth travel (the world moves, not the avatar).
   const lastTarget = React.useRef(targetJourney);
@@ -423,7 +431,7 @@ function PerspectivePathWorld({
           <CharacterAvatar
             x={zeroX}
             y={zeroY}
-            walking={walking}
+            walking={travelWalk}
             userType={avatar.userType}
             gender={avatar.gender}
             age={avatar.age}
