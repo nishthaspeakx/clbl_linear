@@ -32,6 +32,7 @@ import LessonPin, { PinStatus } from './LessonPin';
 import LevelLabel from './map/LevelLabel';
 import CharacterAvatar from './CharacterAvatar';
 import LocationScene, { NightContext } from './LocationScene';
+import { playSound } from '../services/soundService';
 
 const JOURNEY_MIN = 1 - PIN_AHEAD;
 const JOURNEY_MAX = TOTAL_SUBTOPICS - PIN_AHEAD;
@@ -237,6 +238,14 @@ function PerspectivePathWorld({
   // may outlast the screen's classic walk timer), then settles to idle.
   const travelWalk = useSharedValue(0);
   React.useEffect(() => { travelWalk.value = traveling ? 1 : 0; }, [traveling, travelWalk]);
+
+  // Soft footsteps for the whole journey (gentle, pitch-varied, ~3 steps/sec).
+  React.useEffect(() => {
+    if (!traveling) return;
+    playSound('character_walk', { vary: true });
+    const steps = setInterval(() => playSound('character_walk', { vary: true }), 340);
+    return () => clearInterval(steps);
+  }, [traveling]);
 
   // Follow level progress with a smooth travel (the world moves, not the avatar).
   const lastTarget = React.useRef(targetJourney);
